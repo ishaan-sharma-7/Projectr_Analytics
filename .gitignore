@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Node / JS
+node_modules/
+.next/
+dist/
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# API keys / secrets
+*.env
+secrets.json
+service_account.json
