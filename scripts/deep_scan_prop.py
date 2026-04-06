@@ -115,26 +115,42 @@ FALSE_POS_NAMES = re.compile(
 # ============================================================
 # PROP.TXT FIELD POSITIONS (fixed-width)
 # ============================================================
-# Approximate character positions from the TCAD export layout:
+# Verified positions from TCAD 2025 certified export:
+#   0-12:     Property ID (numeric + "R" suffix)
+#   596-607:  Owner entity number (numeric, skip)
+#   608-677:  Owner name (70 chars)
+#   678-692:  Flag field ("F000000000000", skip)
+#   693-752:  Mailing line 1
+#   753-872:  Mailing line 2
+#   873-922:  Mailing city
+#   923-977:  Mailing state
+#   978-988:  Mailing zip (5+4 digits)
+#   989-990:  Flag ("FF", skip)
+#   1011:     Situs flag (Y/N)
+#   1039-1048: Situs direction prefix (S, N, E, W)
+#   1049-1094: Situs street name
+#   1095-1138: Situs suffix (BLVD, ST, DR, etc.)
+#   1139-1144: Situs zip
+# NOTE: Situs house number is NOT in PROP.TXT. Use EARS CSV for full addresses.
 def parse_line(line):
     """Extract key fields from a PROP.TXT fixed-width line."""
     if len(line) < 700:
         return None
 
-    prop_id_raw = line[0:30].strip().replace("R", "").lstrip("0")
+    # Property ID: positions 0-12, strip "R" suffix and leading zeros
+    prop_id_raw = line[0:13].strip().replace("R", "").lstrip("0")
     if not prop_id_raw:
-        prop_id_raw = line[0:30].strip()
+        prop_id_raw = line[0:13].strip()
 
-    # Owner name area (~580-693)
-    owner_raw = line[580:693].strip().lstrip("0123456789")
-    owner_name = re.sub(r'\s+', ' ', owner_raw).strip()
+    # Owner name: positions 608-677 (after entity number, before flag field)
+    owner_name = re.sub(r'\s+', ' ', line[608:678]).strip()
 
     # Mailing address fields
     mail_line1 = line[693:753].strip()
     mail_line2 = line[753:873].strip()
     mail_city = line[873:923].strip()
     mail_state = line[923:978].strip()
-    mail_zip_raw = line[978:990].strip()
+    mail_zip_raw = line[978:989].strip()
 
     mailing_full = re.sub(r'\s+', ' ', f"{mail_line1} {mail_line2} {mail_city} {mail_state} {mail_zip_raw}").strip()
 
@@ -144,8 +160,12 @@ def parse_line(line):
     # Extract state abbreviation (first 2 non-space chars)
     mail_state_clean = mail_state.strip()[:2]
 
-    # Property address (~1010-1100)
-    prop_addr = re.sub(r'\s+', ' ', line[1010:1100]).strip()
+    # Property address: direction + street + suffix + zip (no house number available)
+    situs_dir = line[1039:1049].strip()
+    situs_street = line[1049:1095].strip()
+    situs_suffix = line[1095:1139].strip()
+    situs_zip = line[1139:1145].strip()
+    prop_addr = re.sub(r'\s+', ' ', f"{situs_dir} {situs_street} {situs_suffix} {situs_zip}").strip()
 
     return {
         'prop_id': prop_id_raw,
