@@ -1,0 +1,19 @@
+{
+  "name": "@trackrock/scripts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "seed:austin": "tsx seed-austin.ts",
+    "seed:atlanta": "tsx seed-atlanta.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0",
+    "@trackrock/shared": "*",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.5"
+  }
+}

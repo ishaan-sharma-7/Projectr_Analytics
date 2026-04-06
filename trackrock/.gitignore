@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Prisma
+backend/prisma/dev.db
+backend/prisma/*.db-journal
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Uploads (temp files)
+backend/uploads/
+
+# PDF outputs (generated at runtime)
+backend/reports/
+
+# Test coverage
+coverage/
