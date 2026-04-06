@@ -72,10 +72,22 @@ KEYWORDS = [
     # Main Street Renewal
     "MAIN STREET RENEWAL",
 
+    # Home Partners of America (Blackstone) — 2025 Q4 deed scrape confirmed
+    "HPA TEXAS",                    # HPA TEXAS SUB 2017-1 LLC etc.
+    "HPA BORROWER",
+    "HOME PARTNERS OF AMERICA",
+
+    # New institutional owners discovered in deed records
+    "RH PARTNERS OWNERCO",          # buying from Main Street Renewal
+    "SOUTH LAMAR VENTURE",          # c/o BlackRock Realty Advisors
+
+    # Amherst Holdings (institutional SFR)
+    "AMHERST HOLDINGS",
+    "AMHERST RESIDENTIAL",
+
     # Other known institutional SFR operators
     "VINEBROOK HOMES",
     "MYND MANAGEMENT",
-    "HOME PARTNERS OF AMERICA",
     "PATHLIGHT PROPERTY",
     "SYLVAN HOMES",
     "FUNDRISE",
