@@ -53,4 +53,8 @@ main()
     console.error('[Seed] Error:', err.message);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+    const { redis } = await import('../backend/src/lib/redis.js');
+    await redis.quit();
+  });
