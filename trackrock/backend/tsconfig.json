@@ -1,7 +1,6 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
     "outDir": "dist",
     "module": "CommonJS",
     "moduleResolution": "Node",
@@ -9,6 +8,6 @@
       "@trackrock/shared": ["../shared/src/index.ts"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../shared/src/**/*"],
   "exclude": ["dist", "node_modules"]
 }
