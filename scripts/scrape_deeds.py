@@ -146,12 +146,38 @@ TIER3_OTHER = [
     "HOME OPTION CAPITAL",
     "HPA II BORROWER",
     "GREEN TREE HE/HI BORROWER",
-    "TOORAK CAPITAL",
     "FIREBIRD SFE",
     "TRANS AM SFE",
 ]
 
-ALL_KEYWORDS = TIER1_KEYWORDS + TIER2_FEEDERS + TIER3_OTHER
+# --- Tier 4: Fix-and-flip lender REO pools ---
+# These are NOT buy-to-rent landlords. They originate fix-flip loans and end
+# up holding REO from defaults. Functionally institutional but displacement
+# story differs from AMH/Pretium/HPA. Group together for separate analysis.
+#
+# TOORAK was a single keyword hitting 291/300 cap — broken into sub-searches.
+# PURCHASING FUND = LendingHome/Kiavi securitization SPV (confirmed via deed
+# counterparty analysis: 52 cross-transactions with LendingHome Funding Corp).
+TIER4_LENDER_REO = [
+    "TOORAK CAPITAL PARTNERS",
+    "TOORAK REAL ESTATE HOLDINGS",
+    "LENDINGHOME FUNDING",
+    "LENDING HOME FUNDING",
+    "KIAVI FUNDING",                # Post-2021 LendingHome rebrand
+    "TUSKER CAPITAL FUND",
+    "GENESIS CAPITAL",
+    "HOUSEMAX FUNDING",
+    "PARK PLACE FINANCE",
+    "PATCH OF LAND LENDING",
+    "RCN CAPITAL",
+    "CALCAP LENDING",
+    "ANCHOR LOANS",
+    "DOMINION FINANCIAL SERVICES",
+    "MERCHANTS FUNDING",
+    "HOMEWARD PROPERTIES",
+]
+
+ALL_KEYWORDS = TIER1_KEYWORDS + TIER2_FEEDERS + TIER3_OTHER + TIER4_LENDER_REO
 
 TEST_KEYWORDS = [
     "AMH ADDISON",
