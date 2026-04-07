@@ -149,3 +149,4 @@ async def score_university(req: ScoreRequest):
     )
 
     return result
+
