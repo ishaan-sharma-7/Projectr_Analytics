@@ -1,0 +1,256 @@
+"""Gemini agent for CampusLens — market summary generation and streaming orchestration.
+
+Two responsibilities:
+
+1. generate_gemini_summary(score) — takes an already-computed HousingPressureScore
+   and asks Gemini 2.0 Flash to write a 3-sentence plain-English market brief
+   in the voice of a student housing analyst speaking to a developer.
+
+2. score_with_streaming(req, prescored, adapters) — async generator used by the
+   POST /score/stream SSE endpoint. Runs the full data-fetch pipeline while
+   yielding structured log events that the frontend renders as the agent log panel.
+   After all data is fetched, calls generate_gemini_summary for the final brief.
+"""
+
+import asyncio
+import json
+from typing import AsyncGenerator
+
+from backend.config import config
+from backend.models.schemas import HousingPressureScore, ScoreRequest
+
+# ── System prompt for Gemini market summaries ──
+_SUMMARY_SYSTEM_PROMPT = """You are a student housing market analyst writing investment briefs for real estate developers.
+Your audience: professionals evaluating new purpose-built student housing development sites.
+Your output: exactly 3 sentences. No headers, no bullet points, no markdown.
+Sentence 1: Describe the core supply/demand dynamic for this university market.
+Sentence 2: Cite the single most important data signal (enrollment growth, rent trajectory, or permit pace).
+Sentence 3: State the opportunity or risk for a developer entering this market today — be specific and actionable."""
+
+_SUMMARY_PROMPT_TEMPLATE = """Write a 3-sentence student housing market brief for this university:
+
+University: {name} ({city}, {state})
+Housing Pressure Score: {score}/100 ({label})
+
+Key data:
+- Enrollment CAGR (5-year): {enrollment_cagr}
+- Residential permits filed (5-year, county): {permits_5yr:,} units
+- Annual rent growth (3-year avg): {rent_growth}
+- Enrollment pressure component: {ep:.0f}/100
+- Permit gap component: {pg:.0f}/100
+- Rent pressure component: {rp:.0f}/100
+
+Write exactly 3 sentences as described. Be specific, data-driven, and developer-focused."""
+
+
+def _build_summary_prompt(score: HousingPressureScore) -> str:
+    from backend.adapters.ipeds import compute_enrollment_cagr
+    from backend.adapters.rent import compute_rent_growth
+
+    cagr = compute_enrollment_cagr(score.enrollment_trend, years=5)
+    rent_growth = compute_rent_growth(score.rent_history, years=3)
+    permits_5yr = sum(p.permits for p in score.permit_history[-5:])
+
+    label = "High Pressure" if score.score >= 70 else "Emerging" if score.score >= 40 else "Balanced"
+    cagr_str = f"{cagr:+.1f}% per year" if cagr is not None else "insufficient data"
+    rent_str = f"{rent_growth:+.1f}% per year" if rent_growth is not None else "insufficient data"
+
+    return _SUMMARY_PROMPT_TEMPLATE.format(
+        name=score.university.name,
+        city=score.university.city,
+        state=score.university.state,
+        score=score.score,
+        label=label,
+        enrollment_cagr=cagr_str,
+        permits_5yr=permits_5yr,
+        rent_growth=rent_str,
+        ep=score.components.enrollment_pressure,
+        pg=score.components.permit_gap,
+        rp=score.components.rent_pressure,
+    )
+
+
+async def generate_gemini_summary(score: HousingPressureScore) -> str:
+    """Call Gemini to generate a plain-English 3-sentence market brief.
+
+    Returns empty string if the API key is absent or the call fails.
+    The caller should treat an empty string as "summary unavailable" and
+    render the side panel without it rather than erroring.
+    """
+    if not config.gemini_api_key:
+        return ""
+
+    try:
+        from google import genai  # lazy import — not needed if key absent
+        from google.genai import types
+    except ImportError:
+        print("[Gemini] google-genai not installed. Run: pip install google-genai")
+        return ""
+
+    prompt = _build_summary_prompt(score)
+
+    try:
+        client = genai.Client(api_key=config.gemini_api_key)
+        response = await client.aio.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=_SUMMARY_SYSTEM_PROMPT,
+                # Gemini 2.5 Flash uses internal thinking tokens; set a generous
+                # limit so the 3-sentence output isn't truncated.
+                max_output_tokens=2048,
+                temperature=0.4,
+                thinking_config=types.ThinkingConfig(thinking_budget=512),
+            ),
+        )
+        return response.text.strip()
+    except Exception as exc:
+        print(f"[Gemini] Summary generation failed: {exc}")
+        return ""
+
+
+# ── SSE event helpers ──
+
+def _log_event(message: str) -> str:
+    """Format a log-type SSE event."""
+    return f"data: {json.dumps({'type': 'log', 'message': message})}\n\n"
+
+
+def _result_event(score: HousingPressureScore) -> str:
+    """Format a result-type SSE event carrying the full score payload."""
+    return f"data: {json.dumps({'type': 'result', 'data': score.model_dump()})}\n\n"
+
+
+def _error_event(message: str) -> str:
+    return f"data: {json.dumps({'type': 'error', 'message': message})}\n\n"
+
+
+async def score_with_streaming(
+    req: ScoreRequest,
+    prescored: dict,
+) -> AsyncGenerator[str, None]:
+    """Async generator that runs the full scoring pipeline and streams SSE events.
+
+    Yields SSE-formatted strings:
+      - {"type": "log", "message": "..."}  — progress update
+      - {"type": "result", "data": {...}}  — final HousingPressureScore
+      - {"type": "error", "message": "..."} — fatal error
+
+    This is used by POST /score/stream. The frontend appends each log line to
+    the agent log panel and replaces the score display when "result" arrives.
+
+    Args:
+        req: ScoreRequest with university_name (and optional unitid).
+        prescored: The _prescored dict from main.py (dict[int, HousingPressureScore]).
+    """
+    # Lazy imports to avoid circular deps at module load
+    from backend.adapters import scorecard, ipeds, census_bps, census_acs, rent
+    from backend.scoring.pressure import compute_pressure_score
+
+    try:
+        # ── Step 1: Resolve university ──
+        yield _log_event(f"Resolving university: {req.university_name}...")
+
+        if req.unitid and req.unitid in prescored:
+            cached = prescored[req.unitid]
+            yield _log_event(f"Found in cache: {cached.university.name}")
+            if not cached.gemini_summary:
+                yield _log_event("Generating Gemini market summary...")
+                summary = await generate_gemini_summary(cached)
+                cached = cached.model_copy(update={"gemini_summary": summary})
+            yield _result_event(cached)
+            return
+
+        if req.unitid:
+            uni = await scorecard.get_university_by_id(req.unitid)
+        else:
+            uni = await scorecard.search_university(req.university_name)
+
+        if not uni:
+            yield _error_event(f"University not found: {req.university_name}")
+            return
+
+        yield _log_event(f"Found: {uni.name} ({uni.city}, {uni.state}) — IPEDS ID {uni.unitid}")
+
+        if uni.unitid in prescored:
+            cached = prescored[uni.unitid]
+            yield _log_event(f"Loaded from pre-scored cache.")
+            if not cached.gemini_summary:
+                yield _log_event("Generating Gemini market summary...")
+                summary = await generate_gemini_summary(cached)
+                cached = cached.model_copy(update={"gemini_summary": summary})
+            yield _result_event(cached)
+            return
+
+        # ── Step 2: Enrollment ──
+        yield _log_event(f"Fetching enrollment trend (2013–2023) from Urban Institute...")
+        enrollment_trend = await ipeds.fetch_enrollment_trend(uni.unitid)
+        year_range = f"{enrollment_trend[0].year}–{enrollment_trend[-1].year}" if enrollment_trend else "no data"
+        yield _log_event(f"Enrollment data: {len(enrollment_trend)} years ({year_range})")
+
+        # ── Step 3: County FIPS ──
+        yield _log_event(f"Resolving county FIPS for {uni.city}, {uni.state}...")
+        county_info = await census_bps.fetch_county_fips(uni.lat, uni.lon)
+        state_fips = county_info[0] if county_info else ""
+        county_fips = county_info[1] if county_info else ""
+        if county_info:
+            yield _log_event(f"County FIPS: {state_fips}{county_fips}")
+        else:
+            yield _log_event("County FIPS lookup failed — permit data may be unavailable")
+
+        # ── Step 4: Building permits ──
+        permit_history = []
+        if state_fips and county_fips:
+            yield _log_event(f"Pulling building permits from Census BPS (2019–2023)...")
+            permit_history = await census_bps.fetch_permits_by_county(uni.state, county_fips)
+            total_permits = sum(p.permits for p in permit_history)
+            yield _log_event(f"Permits: {total_permits:,} residential units filed over {len(permit_history)} years")
+        else:
+            yield _log_event("Skipping permit fetch — county not resolved")
+
+        # ── Step 5: Housing units ──
+        housing_units = 0
+        if state_fips and county_fips:
+            yield _log_event(f"Fetching housing unit count from Census ACS 5-Year...")
+            housing_units = await census_acs.get_county_housing_total(state_fips, county_fips)
+            yield _log_event(f"Housing units in county: {housing_units:,}")
+
+        # ── Step 6: Rent ──
+        yield _log_event(f"Loading rent data for {uni.city}, {uni.state}...")
+        fips = f"{state_fips}{county_fips}" if state_fips and county_fips else ""
+        rent_history = await rent.load_rent_data(uni.city, uni.state, fips)
+        if rent_history:
+            latest_rent = rent_history[-1].median_rent
+            yield _log_event(f"Median rent: ${latest_rent:,.0f}/mo ({rent_history[-1].source})")
+        else:
+            yield _log_event("Rent data unavailable for this market")
+
+        # ── Step 7: Compute score ──
+        yield _log_event("Computing Housing Pressure Score...")
+        result = compute_pressure_score(
+            university=uni,
+            enrollment_trend=enrollment_trend,
+            permit_history=permit_history,
+            housing_units=housing_units,
+            rent_history=rent_history,
+        )
+        yield _log_event(
+            f"Score: {result.score}/100 — "
+            f"Enrollment {result.components.enrollment_pressure:.0f} | "
+            f"Permit gap {result.components.permit_gap:.0f} | "
+            f"Rent {result.components.rent_pressure:.0f}"
+        )
+
+        # ── Step 8: Gemini summary ──
+        yield _log_event("Generating Gemini market summary...")
+        summary = await generate_gemini_summary(result)
+        if summary:
+            result = result.model_copy(update={"gemini_summary": summary})
+            yield _log_event("Market summary ready.")
+        else:
+            yield _log_event("Gemini summary unavailable (check GEMINI_API_KEY).")
+
+        yield _result_event(result)
+
+    except Exception as exc:
+        yield _error_event(f"Pipeline error: {exc}")
