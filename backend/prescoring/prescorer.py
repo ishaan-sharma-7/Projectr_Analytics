@@ -17,6 +17,17 @@ from backend.scoring.pressure import compute_pressure_score
 from backend.agent.gemini_agent import generate_gemini_summary
 from backend.config import config
 
+# Hardcoded IPEDS unit IDs for universities that the name-search resolves incorrectly.
+# Maps display name → (unitid, display_name_override)
+UNIT_ID_OVERRIDES: dict[str, int] = {
+    "University of Virginia": 234076,
+    "University of Florida": 134130,       # search returns USF instead
+    "University of Georgia": 139959,       # search returns Georgia State instead
+    "Ohio State University": 204796,       # search returns Newark campus instead
+    "Texas A&M University": 228723,        # search returns UT Austin instead
+    "Pennsylvania State University": 214777,  # search returns Altoona instead
+}
+
 # The 20 target universities from the CampusLens roadmap
 TARGET_UNIVERSITIES = [
     "Virginia Tech",
@@ -46,7 +57,10 @@ CACHE_PATH = Path(__file__).resolve().parent.parent / "cache" / "prescored.json"
 
 async def score_one(name: str) -> dict | None:
     print(f"\n[{name}] Resolving...")
-    uni = await scorecard.search_university(name)
+    if name in UNIT_ID_OVERRIDES:
+        uni = await scorecard.get_university_by_id(UNIT_ID_OVERRIDES[name])
+    else:
+        uni = await scorecard.search_university(name)
     if not uni:
         print(f"[{name}] NOT FOUND — skipping")
         return None
