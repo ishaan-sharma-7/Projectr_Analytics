@@ -1,0 +1,1734 @@
+[
+  {
+    "university": {
+      "unitid": 233921,
+      "name": "Virginia Polytechnic Institute and State University",
+      "city": "Blacksburg",
+      "state": "VA",
+      "lat": 37.229012,
+      "lon": -80.423675,
+      "enrollment": 30923,
+      "url": "www.vt.edu/"
+    },
+    "score": 73.4,
+    "components": {
+      "enrollment_pressure": 71.3,
+      "permit_gap": 92.4,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 31636
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 31841
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 33041
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 33517
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 34809
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 35796
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 37128
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 37974
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 37878
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 533,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2020,
+        "permits": 1625,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2021,
+        "permits": 297,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2022,
+        "permits": 370,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2023,
+        "permits": 374,
+        "fips_place": "51121"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 42229,
+    "gemini_summary": "Virginia Tech's student housing market is under significant pressure, characterized by robust enrollment growth consistently outstripping new supply. The most critical signal is the 92/100 permit gap component, indicating a severe deficit in new residential units relative to demand over the past five years. Developers have a clear opportunity to capitalize on this persistent undersupply by delivering purpose-built student housing to meet the unmet and growing demand.",
+    "scored_at": "2026-04-07T21:41:54.577714+00:00"
+  },
+  {
+    "university": {
+      "unitid": 233921,
+      "name": "Virginia Polytechnic Institute and State University",
+      "city": "Blacksburg",
+      "state": "VA",
+      "lat": 37.229012,
+      "lon": -80.423675,
+      "enrollment": 30923,
+      "url": "www.vt.edu/"
+    },
+    "score": 73.4,
+    "components": {
+      "enrollment_pressure": 71.3,
+      "permit_gap": 92.4,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 31636
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 31841
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 33041
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 33517
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 34809
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 35796
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 37128
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 37974
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 37878
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 533,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2020,
+        "permits": 1625,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2021,
+        "permits": 297,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2022,
+        "permits": 370,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2023,
+        "permits": 374,
+        "fips_place": "51121"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 42229,
+    "gemini_summary": "Virginia Tech presents a high-pressure student housing market where consistent enrollment growth is significantly outpacing new residential supply. The most critical data signal is the Permit Gap Component of 92/100, indicating a severe deficit in new housing units relative to demand over the past five years. Developers have a clear opportunity to address this substantial supply-demand imbalance by delivering purpose-built student housing in Blacksburg.",
+    "scored_at": "2026-04-07T21:42:00.659916+00:00"
+  },
+  {
+    "university": {
+      "unitid": 221759,
+      "name": "The University of Tennessee-Knoxville",
+      "city": "Knoxville",
+      "state": "TN",
+      "lat": 35.952082,
+      "lon": -83.925852,
+      "enrollment": 30418,
+      "url": "www.utk.edu/"
+    },
+    "score": 77.8,
+    "components": {
+      "enrollment_pressure": 81.7,
+      "permit_gap": 93.2,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 28771
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 26185
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 26606
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 26734
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 27062
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 27582
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 28250
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 29555
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 30666
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 2028,
+        "fips_place": "47093"
+      },
+      {
+        "year": 2020,
+        "permits": 2978,
+        "fips_place": "47093"
+      },
+      {
+        "year": 2021,
+        "permits": 2831,
+        "fips_place": "47093"
+      },
+      {
+        "year": 2022,
+        "permits": 2503,
+        "fips_place": "47093"
+      },
+      {
+        "year": 2023,
+        "permits": 4293,
+        "fips_place": "47093"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 214606,
+    "gemini_summary": "The University of Tennessee-Knoxville exhibits a high-pressure student housing market where consistent 3.2% annual enrollment growth over five years is significantly outstripping available supply. The most critical data signal is the extreme 93/100 permit gap component, indicating that new residential permitting is not adequately addressing the burgeoning demand. Developers have a clear opportunity to capitalize on this supply-demand imbalance by delivering purpose-built student housing to a market with substantial unmet need.",
+    "scored_at": "2026-04-07T21:42:11.675523+00:00"
+  },
+  {
+    "university": {
+      "unitid": 199120,
+      "name": "University of North Carolina at Chapel Hill",
+      "city": "Chapel Hill",
+      "state": "NC",
+      "lat": 35.911769,
+      "lon": -79.050969,
+      "enrollment": 20752,
+      "url": "https://www.unc.edu/"
+    },
+    "score": 67.9,
+    "components": {
+      "enrollment_pressure": 55.8,
+      "permit_gap": 94.6,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 28938
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 28575
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 28447
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 28890
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 29222
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 29266
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 29041
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 28963
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 29906
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 495,
+        "fips_place": "37135"
+      },
+      {
+        "year": 2020,
+        "permits": 465,
+        "fips_place": "37135"
+      },
+      {
+        "year": 2021,
+        "permits": 912,
+        "fips_place": "37135"
+      },
+      {
+        "year": 2022,
+        "permits": 485,
+        "fips_place": "37135"
+      },
+      {
+        "year": 2023,
+        "permits": 1011,
+        "fips_place": "37135"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 62127,
+    "gemini_summary": "Despite modest 5-year enrollment growth of +0.6%, the Chapel Hill market faces significant supply constraints, indicating an emerging imbalance between student housing demand and available units. The permit gap component score of 95/100 is the most critical signal, highlighting a severe lack of new residential development relative to demand over the past five years. Developers should target this market with purpose-built student housing to capitalize on the substantial undersupply and capture unmet demand, even with slower enrollment expansion.",
+    "scored_at": "2026-04-07T21:42:18.418511+00:00"
+  },
+  {
+    "university": {
+      "unitid": 137351,
+      "name": "University of South Florida",
+      "city": "Tampa",
+      "state": "FL",
+      "lat": 28.061458,
+      "lon": -82.413232,
+      "enrollment": 37207,
+      "url": "www.usf.edu/"
+    },
+    "score": 78.9,
+    "components": {
+      "enrollment_pressure": 88.2,
+      "permit_gap": 89.0,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 36284
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 36508
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 36964
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 36873
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 37486
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 37587
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 44055
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 44444
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 43553
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 14422,
+        "fips_place": "12057"
+      },
+      {
+        "year": 2020,
+        "permits": 12392,
+        "fips_place": "12057"
+      },
+      {
+        "year": 2021,
+        "permits": 11281,
+        "fips_place": "12057"
+      },
+      {
+        "year": 2022,
+        "permits": 17443,
+        "fips_place": "12057"
+      },
+      {
+        "year": 2023,
+        "permits": 12716,
+        "fips_place": "12057"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 618220,
+    "gemini_summary": "The University of South Florida market exhibits a significant supply-demand imbalance driven by robust enrollment growth and a substantial housing deficit. The most critical data signal is the impressive 5-year enrollment CAGR of +3.8% annually, coupled with an 89/100 permit gap component, indicating persistent demand outstripping new supply. Developers should target new purpose-built student housing projects near campus to capture this unmet demand, particularly given the high overall housing pressure score.",
+    "scored_at": "2026-04-07T21:42:25.103004+00:00"
+  },
+  {
+    "university": {
+      "unitid": 104151,
+      "name": "Arizona State University Campus Immersion",
+      "city": "Tempe",
+      "state": "AZ",
+      "lat": 33.417721,
+      "lon": -111.934383,
+      "enrollment": 64674,
+      "url": "www.asu.edu/"
+    },
+    "score": 83.8,
+    "components": {
+      "enrollment_pressure": 100.0,
+      "permit_gap": 89.5,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 46791
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 48470
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 50653
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 50705
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 50035
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 50833
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 74849
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 73871
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 76398
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 30779,
+        "fips_place": "04013"
+      },
+      {
+        "year": 2020,
+        "permits": 41895,
+        "fips_place": "04013"
+      },
+      {
+        "year": 2021,
+        "permits": 42123,
+        "fips_place": "04013"
+      },
+      {
+        "year": 2022,
+        "permits": 40550,
+        "fips_place": "04013"
+      },
+      {
+        "year": 2023,
+        "permits": 38292,
+        "fips_place": "04013"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 1850862,
+    "gemini_summary": "Arizona State University's Tempe campus faces extreme housing pressure, driven by explosive enrollment growth that significantly outstrips available student housing supply. The most critical data signal is the remarkable 5-year enrollment CAGR of +11.2%, indicating robust and sustained demand for student accommodations. Developers have a strong opportunity to deliver new purpose-built student housing to capture this substantial unmet demand, particularly given the market's high housing pressure score.",
+    "scored_at": "2026-04-07T21:42:30.858907+00:00"
+  },
+  {
+    "university": {
+      "unitid": 139940,
+      "name": "Georgia State University",
+      "city": "Atlanta",
+      "state": "GA",
+      "lat": 33.7527,
+      "lon": -84.38667,
+      "enrollment": 26623,
+      "url": "www.gsu.edu/"
+    },
+    "score": 68.7,
+    "components": {
+      "enrollment_pressure": 60.2,
+      "permit_gap": 91.9,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 31494
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 31702
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 31633
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 32245
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 32780
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 34097
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 35273
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 35121
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 34144
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 6396,
+        "fips_place": "13121"
+      },
+      {
+        "year": 2020,
+        "permits": 4289,
+        "fips_place": "13121"
+      },
+      {
+        "year": 2021,
+        "permits": 5170,
+        "fips_place": "13121"
+      },
+      {
+        "year": 2022,
+        "permits": 14577,
+        "fips_place": "13121"
+      },
+      {
+        "year": 2023,
+        "permits": 10101,
+        "fips_place": "13121"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 500404,
+    "gemini_summary": "Georgia State University exhibits an emerging housing pressure, driven by consistent enrollment growth and a significant deficit in purpose-built student housing relative to its large student body. The permit gap component of 92/100 strongly indicates a severe undersupply of student-specific housing options, despite broader county-level residential development. Developers should target new purpose-built student housing near campus to capture demand from students currently competing in the broader Atlanta rental market.",
+    "scored_at": "2026-04-07T21:42:36.567938+00:00"
+  },
+  {
+    "university": {
+      "unitid": 217882,
+      "name": "Clemson University",
+      "city": "Clemson",
+      "state": "SC",
+      "lat": 34.679381,
+      "lon": -82.835114,
+      "enrollment": 23300,
+      "url": "www.clemson.edu/"
+    },
+    "score": 74.9,
+    "components": {
+      "enrollment_pressure": 76.5,
+      "permit_gap": 90.8,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 21314
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 21356
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 22199
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 21774
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 23773
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 24208
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 24960
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 25620
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 26400
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 654,
+        "fips_place": "45077"
+      },
+      {
+        "year": 2020,
+        "permits": 857,
+        "fips_place": "45077"
+      },
+      {
+        "year": 2021,
+        "permits": 1030,
+        "fips_place": "45077"
+      },
+      {
+        "year": 2022,
+        "permits": 1658,
+        "fips_place": "45077"
+      },
+      {
+        "year": 2023,
+        "permits": 1087,
+        "fips_place": "45077"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 57695,
+    "gemini_summary": "Clemson University faces significant housing pressure, driven by sustained enrollment growth that has consistently outpaced new residential development. The permit gap component of 91/100 strongly indicates that new supply has severely lagged behind demand despite a 2.6% annual enrollment growth over five years. Developers have a clear opportunity to deliver purpose-built student housing to capture this unmet demand in a high-pressure market.",
+    "scored_at": "2026-04-07T21:42:43.081658+00:00"
+  },
+  {
+    "university": {
+      "unitid": 199193,
+      "name": "North Carolina State University at Raleigh",
+      "city": "Raleigh",
+      "state": "NC",
+      "lat": 35.785111,
+      "lon": -78.674517,
+      "enrollment": 27371,
+      "url": "www.ncsu.edu/"
+    },
+    "score": 65.9,
+    "components": {
+      "enrollment_pressure": 59.7,
+      "permit_gap": 84.4,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 30250
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 30116
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 29891
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 29824
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 30596
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 31346
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 31969
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 31731
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 31799
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 9751,
+        "fips_place": "37183"
+      },
+      {
+        "year": 2020,
+        "permits": 12598,
+        "fips_place": "37183"
+      },
+      {
+        "year": 2021,
+        "permits": 16988,
+        "fips_place": "37183"
+      },
+      {
+        "year": 2022,
+        "permits": 18471,
+        "fips_place": "37183"
+      },
+      {
+        "year": 2023,
+        "permits": 17389,
+        "fips_place": "37183"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 481999,
+    "gemini_summary": "North Carolina State University exhibits an emerging student housing market where modest enrollment growth of +1.0% annually is still outpacing purpose-built supply, despite a high volume of general residential permits issued county-wide. The most critical data signal is the 84/100 permit gap component, indicating that general housing development is not adequately addressing specific student housing demand. Developers should focus on delivering well-located, purpose-built student housing to capture unmet demand not served by the broader residential market.",
+    "scored_at": "2026-04-07T21:42:49.083008+00:00"
+  },
+  {
+    "university": {
+      "unitid": 142115,
+      "name": "Boise State University",
+      "city": "Boise",
+      "state": "ID",
+      "lat": 43.604284,
+      "lon": -116.203301,
+      "enrollment": 17674,
+      "url": "https://www.boisestate.edu/"
+    },
+    "score": 70.5,
+    "components": {
+      "enrollment_pressure": 71.7,
+      "permit_gap": 83.8,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 16311
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 16173
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 16203
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 16638
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 17010
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 17618
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 18409
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 18297
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 18535
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 7048,
+        "fips_place": "16001"
+      },
+      {
+        "year": 2020,
+        "permits": 6060,
+        "fips_place": "16001"
+      },
+      {
+        "year": 2021,
+        "permits": 7487,
+        "fips_place": "16001"
+      },
+      {
+        "year": 2022,
+        "permits": 6530,
+        "fips_place": "16001"
+      },
+      {
+        "year": 2023,
+        "permits": 6089,
+        "fips_place": "16001"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 205068,
+    "gemini_summary": "Boise State University exhibits a significant student housing supply deficit, driven by consistent enrollment growth and a substantial gap in appropriate residential permits relative to demand. The most critical data signal is the 84/100 Permit Gap Component, indicating severe under-supply despite broader county-level residential development. Developers have a clear opportunity to capitalize on this unmet demand by delivering purpose-built student housing proximate to campus, which will likely command strong occupancy and rent growth.",
+    "scored_at": "2026-04-07T21:42:55.369436+00:00"
+  },
+  {
+    "university": {
+      "unitid": 100751,
+      "name": "The University of Alabama",
+      "city": "Tuscaloosa",
+      "state": "AL",
+      "lat": 33.211875,
+      "lon": -87.545978,
+      "enrollment": 33227,
+      "url": "www.ua.edu/"
+    },
+    "score": 61.6,
+    "components": {
+      "enrollment_pressure": 39.9,
+      "permit_gap": 94.6,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 32795
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 33853
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 34985
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 35565
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 36398
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 36241
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 35737
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 35095
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 34949
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 1436,
+        "fips_place": "01125"
+      },
+      {
+        "year": 2020,
+        "permits": 1223,
+        "fips_place": "01125"
+      },
+      {
+        "year": 2021,
+        "permits": 1361,
+        "fips_place": "01125"
+      },
+      {
+        "year": 2022,
+        "permits": 923,
+        "fips_place": "01125"
+      },
+      {
+        "year": 2023,
+        "permits": 656,
+        "fips_place": "01125"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 102935,
+    "gemini_summary": "The University of Alabama market is experiencing declining student enrollment while simultaneously absorbing a substantial volume of new residential construction, indicating an emerging oversupply dynamic. The most critical signal is the -1.0% 5-year enrollment CAGR, which directly impacts demand for student housing. Developers should exercise caution, focusing on highly differentiated projects or value-add acquisitions, as new ground-up development faces significant headwinds from shrinking demand and ample recent supply.",
+    "scored_at": "2026-04-07T21:43:01.793335+00:00"
+  },
+  {
+    "university": {
+      "unitid": 218663,
+      "name": "University of South Carolina-Columbia",
+      "city": "Columbia",
+      "state": "SC",
+      "lat": 33.996788,
+      "lon": -81.026935,
+      "enrollment": 29820,
+      "url": "www.sc.edu/"
+    },
+    "score": 67.8,
+    "components": {
+      "enrollment_pressure": 56.9,
+      "permit_gap": 93.0,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 32655
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 33290
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 33218
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 33902
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 35288
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 35526
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 36210
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 36581
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 36275
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 1687,
+        "fips_place": "45079"
+      },
+      {
+        "year": 2020,
+        "permits": 1781,
+        "fips_place": "45079"
+      },
+      {
+        "year": 2021,
+        "permits": 3263,
+        "fips_place": "45079"
+      },
+      {
+        "year": 2022,
+        "permits": 3439,
+        "fips_place": "45079"
+      },
+      {
+        "year": 2023,
+        "permits": 2843,
+        "fips_place": "45079"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 185196,
+    "gemini_summary": "Despite moderate overall housing pressure, slow enrollment growth at UofSC-Columbia is being met with a significant influx of new residential supply, suggesting a softening market. The most critical signal is the high permit gap component of 93/100, indicating substantial recent or planned development relative to demand. Developers should proceed cautiously, focusing on highly differentiated projects or value-add acquisitions, as the market faces potential oversupply and limited organic demand growth.",
+    "scored_at": "2026-04-07T21:43:07.967422+00:00"
+  },
+  {
+    "university": {
+      "unitid": 204705,
+      "name": "Ohio State University-Newark Campus",
+      "city": "Newark",
+      "state": "OH",
+      "lat": 40.069314,
+      "lon": -82.447441,
+      "enrollment": 2396,
+      "url": "newark.osu.edu/"
+    },
+    "score": 64.8,
+    "components": {
+      "enrollment_pressure": 44.8,
+      "permit_gap": 98.1,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 1990
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 2060
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 2104
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 2185
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 2263
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 2461
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 2510
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 2369
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 2216
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 262,
+        "fips_place": "39089"
+      },
+      {
+        "year": 2020,
+        "permits": 292,
+        "fips_place": "39089"
+      },
+      {
+        "year": 2021,
+        "permits": 363,
+        "fips_place": "39089"
+      },
+      {
+        "year": 2022,
+        "permits": 270,
+        "fips_place": "39089"
+      },
+      {
+        "year": 2023,
+        "permits": 174,
+        "fips_place": "39089"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 73021,
+    "gemini_summary": "The OSU-Newark campus faces a challenging student housing market characterized by declining enrollment, which dampens student-specific demand, yet the broader county market exhibits a significant undersupply of housing. The most critical signal is the 98/100 permit gap component, indicating a severe lack of new residential development relative to overall housing needs in the area. Developers should approach cautiously, focusing on broader market housing needs rather than purpose-built student housing, given the negative enrollment trend and insufficient rent data for the student segment.",
+    "scored_at": "2026-04-07T21:43:16.084912+00:00"
+  },
+  {
+    "university": {
+      "unitid": 171100,
+      "name": "Michigan State University",
+      "city": "East Lansing",
+      "state": "MI",
+      "lat": 42.73212,
+      "lon": -84.476111,
+      "enrollment": 40922,
+      "url": "https://www.msu.edu/"
+    },
+    "score": 67.1,
+    "components": {
+      "enrollment_pressure": 51.1,
+      "permit_gap": 97.6,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 44853
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 45353
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 45445
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 45231
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 45353
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 45414
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 46946
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 46250
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 45559
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 557,
+        "fips_place": "26065"
+      },
+      {
+        "year": 2020,
+        "permits": 571,
+        "fips_place": "26065"
+      },
+      {
+        "year": 2021,
+        "permits": 665,
+        "fips_place": "26065"
+      },
+      {
+        "year": 2022,
+        "permits": 568,
+        "fips_place": "26065"
+      },
+      {
+        "year": 2023,
+        "permits": 632,
+        "fips_place": "26065"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 125812,
+    "gemini_summary": "Michigan State University faces an emerging housing pressure, primarily driven by a significant supply deficit despite flat enrollment growth. The most critical data signal is the permit gap component of 98/100, indicating a severe lack of new residential development relative to demand. Developers have a clear opportunity to address this undersupply by introducing new purpose-built student housing, which will likely be well-absorbed by the existing student population.",
+    "scored_at": "2026-04-07T21:43:21.741146+00:00"
+  },
+  {
+    "university": {
+      "unitid": 228778,
+      "name": "The University of Texas at Austin",
+      "city": "Austin",
+      "state": "TX",
+      "lat": 30.282825,
+      "lon": -97.738273,
+      "enrollment": 42855,
+      "url": "https://www.utexas.edu/"
+    },
+    "score": 60.6,
+    "components": {
+      "enrollment_pressure": 51.5,
+      "permit_gap": 78.7,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 47197
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 46079
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 45835
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 46353
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 46816
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 47274
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 46096
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 47014
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 47100
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 21417,
+        "fips_place": "48453"
+      },
+      {
+        "year": 2020,
+        "permits": 27110,
+        "fips_place": "48453"
+      },
+      {
+        "year": 2021,
+        "permits": 29052,
+        "fips_place": "48453"
+      },
+      {
+        "year": 2022,
+        "permits": 25870,
+        "fips_place": "48453"
+      },
+      {
+        "year": 2023,
+        "permits": 23148,
+        "fips_place": "48453"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 594638,
+    "gemini_summary": "Despite nearly flat enrollment growth at +0.1% annually, The University of Texas at Austin market exhibits significant supply constraints, as indicated by a 79/100 permit gap component score. The most important data signal is the high permit gap, suggesting that despite robust county-wide development, student-specific housing supply is not adequately meeting existing demand. Developers should focus on acquiring shovel-ready sites near campus to capitalize on the persistent undersupply and moderate rent pressure, leveraging the strong overall Austin market fundamentals.",
+    "scored_at": "2026-04-07T21:43:29.469027+00:00"
+  },
+  {
+    "university": {
+      "unitid": 214689,
+      "name": "Pennsylvania State University-Penn State Altoona",
+      "city": "Altoona",
+      "state": "PA",
+      "lat": 40.541759,
+      "lon": -78.409601,
+      "enrollment": 2367,
+      "url": "https://altoona.psu.edu/"
+    },
+    "score": 47.1,
+    "components": {
+      "enrollment_pressure": 0.0,
+      "permit_gap": 99.0,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 3897
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 3854
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 3781
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 3395
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 3484
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 3288
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 2686
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 111,
+        "fips_place": "42013"
+      },
+      {
+        "year": 2020,
+        "permits": 96,
+        "fips_place": "42013"
+      },
+      {
+        "year": 2021,
+        "permits": 94,
+        "fips_place": "42013"
+      },
+      {
+        "year": 2022,
+        "permits": 123,
+        "fips_place": "42013"
+      },
+      {
+        "year": 2023,
+        "permits": 110,
+        "fips_place": "42013"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 55788,
+    "gemini_summary": "Penn State Altoona faces a challenging demand environment due to a significant five-year enrollment decline, though the market has seen very limited new residential supply. The most critical signal for this market is the -5.5% annual enrollment CAGR over the past five years, indicating a shrinking student population. Developers should recognize the substantial risk of declining occupancy and revenue potential, making new purpose-built student housing development highly speculative without a clear reversal in enrollment trends.",
+    "scored_at": "2026-04-07T21:43:37.544885+00:00"
+  },
+  {
+    "university": {
+      "unitid": 151351,
+      "name": "Indiana University-Bloomington",
+      "city": "Bloomington",
+      "state": "IN",
+      "lat": 39.16609,
+      "lon": -86.526559,
+      "enrollment": 37806,
+      "url": "https://bloomington.iu.edu/"
+    },
+    "score": 74.4,
+    "components": {
+      "enrollment_pressure": 73.1,
+      "permit_gap": 93.3,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 41358
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 41697
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 42352
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 42687
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 41618
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 41336
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 41725
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 41847
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 45592
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 732,
+        "fips_place": "18105"
+      },
+      {
+        "year": 2020,
+        "permits": 619,
+        "fips_place": "18105"
+      },
+      {
+        "year": 2021,
+        "permits": 2053,
+        "fips_place": "18105"
+      },
+      {
+        "year": 2022,
+        "permits": 462,
+        "fips_place": "18105"
+      },
+      {
+        "year": 2023,
+        "permits": 479,
+        "fips_place": "18105"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 64850,
+    "gemini_summary": "Indiana University-Bloomington exhibits a significant housing supply deficit, driven by consistent enrollment growth and a substantial gap in new residential development. The most critical data signal is the 93/100 permit gap component, indicating severe undersupply relative to demand. Developers have a clear opportunity to meet this unmet demand by delivering new purpose-built student housing, particularly given the sustained enrollment increases.",
+    "scored_at": "2026-04-07T21:43:44.829468+00:00"
+  },
+  {
+    "university": {
+      "unitid": 157085,
+      "name": "University of Kentucky",
+      "city": "Lexington",
+      "state": "KY",
+      "lat": 38.038911,
+      "lon": -84.504747,
+      "enrollment": 24763,
+      "url": "www.uky.edu/"
+    },
+    "score": 67.5,
+    "components": {
+      "enrollment_pressure": 54.5,
+      "permit_gap": 94.9,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 26236
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 27070
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 27299
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 27079
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 26838
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 26483
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 27164
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 27540
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 27322
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 1383,
+        "fips_place": "21067"
+      },
+      {
+        "year": 2020,
+        "permits": 1437,
+        "fips_place": "21067"
+      },
+      {
+        "year": 2021,
+        "permits": 1655,
+        "fips_place": "21067"
+      },
+      {
+        "year": 2022,
+        "permits": 1731,
+        "fips_place": "21067"
+      },
+      {
+        "year": 2023,
+        "permits": 1398,
+        "fips_place": "21067"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 147720,
+    "gemini_summary": "Despite modest enrollment growth, the University of Kentucky market exhibits an emerging housing pressure driven by a significant permit gap suggesting undersupply relative to demand. The most important data signal is the exceptionally high 95/100 permit gap component, indicating a substantial deficit in new housing units over the past five years. Developers should investigate the specific student housing supply pipeline to capitalize on this permit gap and meet latent demand not captured by overall enrollment growth.",
+    "scored_at": "2026-04-07T21:43:53.485816+00:00"
+  },
+  {
+    "university": {
+      "unitid": 176080,
+      "name": "Mississippi State University",
+      "city": "Mississippi State",
+      "state": "MS",
+      "lat": 33.454852,
+      "lon": -88.790139,
+      "enrollment": 18397,
+      "url": "https://www.msstate.edu/"
+    },
+    "score": 68.9,
+    "components": {
+      "enrollment_pressure": 54.8,
+      "permit_gap": 98.5,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 18725
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 18805
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 19551
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 20758
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 21095
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 21247
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 21143
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 22048
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 21504
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 109,
+        "fips_place": "28105"
+      },
+      {
+        "year": 2020,
+        "permits": 52,
+        "fips_place": "28105"
+      },
+      {
+        "year": 2021,
+        "permits": 77,
+        "fips_place": "28105"
+      },
+      {
+        "year": 2022,
+        "permits": 55,
+        "fips_place": "28105"
+      },
+      {
+        "year": 2023,
+        "permits": 90,
+        "fips_place": "28105"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 25426,
+    "gemini_summary": "Mississippi State University presents a market with significant supply constraints, as new residential development has not kept pace with even modest enrollment increases. The most critical data signal is the permit gap component of 98/100, indicating an extreme lack of new supply relative to demand over the past five years. Developers have a clear opportunity to address this undersupply by delivering modern purpose-built student housing, which should find strong demand given the existing housing pressure.",
+    "scored_at": "2026-04-07T21:43:59.756889+00:00"
+  },
+  {
+    "university": {
+      "unitid": 182281,
+      "name": "University of Nevada-Las Vegas",
+      "city": "Las Vegas",
+      "state": "NV",
+      "lat": 36.106047,
+      "lon": -115.138462,
+      "enrollment": 24622,
+      "url": "www.unlv.edu/"
+    },
+    "score": 65.0,
+    "components": {
+      "enrollment_pressure": 50.4,
+      "permit_gap": 92.5,
+      "rent_pressure": 50.0
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 24551
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 25824
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 26389
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 27055
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 27856
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 28278
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 29280
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 29601
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 27903
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 13903,
+        "fips_place": "32003"
+      },
+      {
+        "year": 2020,
+        "permits": 14100,
+        "fips_place": "32003"
+      },
+      {
+        "year": 2021,
+        "permits": 16307,
+        "fips_place": "32003"
+      },
+      {
+        "year": 2022,
+        "permits": 13066,
+        "fips_place": "32003"
+      },
+      {
+        "year": 2023,
+        "permits": 13073,
+        "fips_place": "32003"
+      }
+    ],
+    "rent_history": [],
+    "nearby_housing_units": 935960,
+    "gemini_summary": "The UNLV market is characterized by flat student enrollment, indicating stable but not growing organic demand, set against a backdrop of extremely high general housing supply in the surrounding county. The most critical data signal is the 70,449 residential permits filed over five years in the county, suggesting significant competition from the broader housing market. Developers face the risk of oversupply and limited rent growth potential given the lack of enrollment expansion and robust general housing construction.",
+    "scored_at": "2026-04-07T21:44:06.823240+00:00"
+  }
+]
