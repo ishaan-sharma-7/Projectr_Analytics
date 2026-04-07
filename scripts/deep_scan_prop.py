@@ -67,7 +67,6 @@ KEYWORDS = [
 
     # BlackRock
     "BLACKROCK REALTY ADVISORS",
-    "GUTHRIE PROPERTY OWNER",
 
     # Main Street Renewal
     "MAIN STREET RENEWAL",
@@ -75,7 +74,18 @@ KEYWORDS = [
     # Home Partners of America (Blackstone) — 2025 Q4 deed scrape confirmed
     "HPA TEXAS",                    # HPA TEXAS SUB 2017-1 LLC etc.
     "HPA BORROWER",
+    "HPA JV",                       # HPA JV BORROWER 2019-1 ML LLC
+    "HPA US",                       # HPA US1 LLC
+    "HP TEXAS",                     # HP TEXAS I LLC (Home Partners Texas subsidiary)
     "HOME PARTNERS OF AMERICA",
+    "HOME PARTNERS REALTY",         # HOME PARTNERS REALTY TEXAS LLC
+
+    # Generic SFR borrower/acquisition series discovered in 2026 deed scrape
+    "SFR ACQUISITIONS",             # SFR ACQUISITIONS 4 LLC, SFR ACQUISITIONS 6 LLC
+    "SFR BORROWER 2021",
+    "SFR BORROWER 2022",
+    "SFR II BORROWER",
+    "PURCHASING FUND",              # PURCHASING FUND 2020-1 LLC
 
     # New institutional owners discovered in deed records
     "RH PARTNERS OWNERCO",          # buying from Main Street Renewal
@@ -214,21 +224,17 @@ def pass1(filepath):
             line_upper = parsed['line_upper']
             owner_upper = parsed['owner_name'].upper()
 
-            # --- Skip known false positives ---
-            if FALSE_POS_NAMES.search(line_upper):
-                # But still allow if a strong keyword matches in the owner name specifically
-                strong_match = False
-                for kw in KEYWORDS:
-                    if kw in owner_upper:
-                        strong_match = True
-                        break
-                if not strong_match:
-                    continue
+            # --- Skip known false positives (street names in owner field) ---
+            if FALSE_POS_NAMES.search(owner_upper):
+                continue
 
-            # --- Layer A: Keyword matching ---
+            # --- Layer A: Keyword matching (owner name only) ---
+            # IMPORTANT: Match against owner_name only, NOT the full line.
+            # PROP.TXT lines are 9,248 chars and contain historical seller
+            # chains — matching on line_upper catches PAST owners, not current.
             match_reason = None
             for kw in KEYWORDS:
-                if kw in line_upper:
+                if kw in owner_upper:
                     match_reason = f"Keyword: {kw}"
                     break
 
@@ -300,8 +306,14 @@ def pass2(filepath, keyword_matches, cluster_addresses):
             if parsed['prop_id'] in keyword_matches:
                 continue
 
-            # Skip false positives
-            if FALSE_POS_NAMES.search(parsed['line_upper']):
+            # Skip false positives in owner name
+            if FALSE_POS_NAMES.search(parsed['owner_name'].upper()):
+                continue
+
+            # Only count cluster matches where the current owner is actually a
+            # corporate entity. Otherwise we sweep in individuals who happen to
+            # mail to an attorney/property-management cluster address.
+            if not CORP_PATTERN.search(parsed['owner_name']):
                 continue
 
             # Check if mailing address matches a cluster
@@ -380,10 +392,16 @@ def write_output(keyword_matches, cluster_matches, cluster_addresses, output_dir
                 reasons["Tricon"] += 1
             elif any(x in kw for x in ["FIRSTKEY", "FIRST KEY", "CERBERUS", "CF REAL"]):
                 reasons["FirstKey Homes"] += 1
-            elif any(x in kw for x in ["BLACKROCK", "GUTHRIE"]):
+            elif any(x in kw for x in ["BLACKROCK", "SOUTH LAMAR"]):
                 reasons["BlackRock"] += 1
-            elif any(x in kw for x in ["MAIN STREET"]):
-                reasons["Main Street Renewal"] += 1
+            elif any(x in kw for x in ["MAIN STREET", "RH PARTNERS"]):
+                reasons["Main Street Renewal / RH Partners"] += 1
+            elif any(x in kw for x in ["HPA", "HP TEXAS", "HOME PARTNERS"]):
+                reasons["Home Partners of America (Blackstone)"] += 1
+            elif any(x in kw for x in ["AMHERST"]):
+                reasons["Amherst Holdings"] += 1
+            elif any(x in kw for x in ["SFR ACQUISITIONS", "SFR BORROWER", "SFR II BORROWER", "PURCHASING FUND"]):
+                reasons["Unclassified SFR borrower series"] += 1
             else:
                 reasons[f"Other ({kw})"] += 1
         elif reason.startswith("HQ Zip:"):

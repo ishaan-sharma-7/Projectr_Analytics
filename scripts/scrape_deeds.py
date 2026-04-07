@@ -78,7 +78,18 @@ TIER1_KEYWORDS = [
     # Home Partners of America (Blackstone) — was missing entirely
     "HPA TEXAS",
     "HPA BORROWER",
+    "HPA JV",
+    "HPA US",
+    "HP TEXAS",
     "HOME PARTNERS OF AMERICA",
+    "HOME PARTNERS REALTY",
+
+    # Generic SFR borrower / acquisition series discovered in 2026 scrape
+    "SFR ACQUISITIONS",
+    "SFR BORROWER 2021",
+    "SFR BORROWER 2022",
+    "SFR II BORROWER",
+    "PURCHASING FUND",
 
     # Invitation Homes (previously returned zero — may not operate here)
     "INVH LP",
@@ -94,8 +105,6 @@ TIER1_KEYWORDS = [
 
     # BlackRock direct
     "BLACKROCK REALTY",
-    "GUTHRIE PROPERTY",
-    "CRP/ARGYLE GUTHRIE",
     "SOUTH LAMAR VENTURE",
 
     # Main Street Renewal
@@ -121,7 +130,7 @@ TIER2_FEEDERS = [
     "LNV CORPORATION",
 ]
 
-# --- Tier 3: Other known institutional SFR operators ---
+# --- Tier 3: Other known institutional SFR operators + historical exiters ---
 TIER3_OTHER = [
     "VINEBROOK HOMES",
     "MYND MANAGEMENT",
@@ -130,6 +139,16 @@ TIER3_OTHER = [
     "FRONT YARD RESIDENTIAL",
     "AMHERST HOLDINGS",
     "AMHERST RESIDENTIAL",
+
+    # Historical / exited iBuyers and REO pools — deed-only, not current owners
+    "ZILLOW HOMES",
+    "ORCHARD PROPERTY",
+    "HOME OPTION CAPITAL",
+    "HPA II BORROWER",
+    "GREEN TREE HE/HI BORROWER",
+    "TOORAK CAPITAL",
+    "FIREBIRD SFE",
+    "TRANS AM SFE",
 ]
 
 ALL_KEYWORDS = TIER1_KEYWORDS + TIER2_FEEDERS + TIER3_OTHER

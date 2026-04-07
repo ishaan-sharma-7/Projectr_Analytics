@@ -104,7 +104,7 @@ def build_proptxt_fallback(unmatched_ids):
 
 
 def main():
-    input_file = os.path.join(PROCESSED_DIR, 'institutional_owners_2025_deep_clean.csv')
+    input_file = os.path.join(PROCESSED_DIR, 'institutional_owners_2025_deep.csv')
     output_file = os.path.join(PROCESSED_DIR, 'institutional_owners_2025_deep_clean.csv')
 
     if not os.path.exists(input_file):
