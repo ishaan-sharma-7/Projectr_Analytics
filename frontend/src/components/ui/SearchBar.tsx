@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { Search, X, MapPin, ArrowRight } from "lucide-react";
+import { Search, X, MapPin, ArrowRight, GitCompareArrows } from "lucide-react";
 import { UNIVERSITIES } from "../../lib/universityList";
 
 interface SearchBarProps {
@@ -8,6 +8,9 @@ interface SearchBarProps {
   onSubmit: (e: React.FormEvent) => void;
   onSelectUniversity: (name: string) => void;
   disabled?: boolean;
+  compareMode?: boolean;
+  onToggleCompare?: () => void;
+  compareGuide?: string;
 }
 
 export function SearchBar({
@@ -16,6 +19,9 @@ export function SearchBar({
   onSubmit,
   onSelectUniversity,
   disabled,
+  compareMode,
+  onToggleCompare,
+  compareGuide,
 }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -129,8 +135,8 @@ export function SearchBar({
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search any US university..."
-            className={`w-full bg-zinc-900 border border-zinc-700 focus:border-blue-500 px-5 py-2.5 pl-11 pr-10 outline-none text-sm transition-colors disabled:opacity-50 ${
+            placeholder={compareGuide ?? "Search any US university..."}
+            className={`w-full bg-zinc-900 border ${compareMode ? 'border-blue-500/50' : 'border-zinc-700'} focus:border-blue-500 px-5 py-2.5 pl-11 pr-10 outline-none text-sm transition-colors disabled:opacity-50 ${
               open && query.trim().length > 0
                 ? "rounded-t-2xl rounded-b-none border-b-zinc-800"
                 : "rounded-full"
@@ -222,7 +228,23 @@ export function SearchBar({
         </div>
       </form>
 
-      <div className="text-sm text-zinc-400 font-medium">vt-2026</div>
+      <div className="flex items-center gap-3">
+        {onToggleCompare && (
+          <button
+            onClick={onToggleCompare}
+            title={compareMode ? "Exit compare mode" : "Compare two universities"}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              compareMode
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
+                : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:border-blue-500"
+            }`}
+          >
+            <GitCompareArrows className="w-3.5 h-3.5" />
+            {compareMode ? "Comparing" : "Compare"}
+          </button>
+        )}
+        <span className="text-sm text-zinc-400 font-medium">vt-2026</span>
+      </div>
     </header>
   );
 }
