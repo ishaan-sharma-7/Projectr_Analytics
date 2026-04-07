@@ -1,0 +1,103 @@
+# CONTEXT
+
+I am building a public-interest dataset on institutional ownership of
+single-family homes in Travis County, Texas (Austin). I have scraped
+the county clerk's deed records and grouped corporate entities into
+buckets by name pattern. The 9 buckets below need to be linked
+to their ultimate corporate parent — the publicly-traded REIT, PE firm,
+fund, or operating company that controls them. Each bucket represents a
+group of LLCs/LPs that appear to be coordinated based on naming and
+counterparty patterns in deed records.
+
+# RULES
+
+1. For each bucket, identify the ultimate corporate parent.
+2. CITE A SOURCE for every answer. Acceptable sources, in order of
+   preference:
+     - SEC EDGAR filings (10-K, 10-Q, S-1, ABS-EE, prospectus)
+     - Company press release
+     - Major news outlet (WSJ, Bloomberg, Reuters, FT, NYT)
+     - Crunchbase, Pitchbook, or PE firm portfolio page (lower confidence)
+3. If you cannot find a citable source, write 'UNKNOWN' for the parent
+   and 'no_public_source' for the URL. DO NOT GUESS based on naming
+   similarity. A wrong answer is worse than no answer.
+4. For securitization SPVs (e.g., 'BORROWER 2021-1' style names), the
+   sponsor is named in the EDGAR ABS-EE filing — that is the parent.
+5. Confidence rating: HIGH (SEC filing or press release), MEDIUM (news
+   article or PE portfolio page), LOW (only Crunchbase / unconfirmed).
+
+# OUTPUT FORMAT
+
+Return a single markdown table with these columns and nothing else
+after the table (no commentary, no preamble):
+
+| bucket | parent | confidence | source_url | notes |
+|---|---|---|---|---|
+| EXAMPLE BUCKET | Example Parent Inc | HIGH | https://www.sec.gov/... | brief context |
+
+- One row per bucket, in the same order I list them below.
+- If a bucket has multiple plausible parents, pick the most likely and
+  list the alternatives in the notes column.
+- Keep notes under 25 words.
+
+# BUCKETS TO RESEARCH
+
+## 1. `TUSKER CAPITAL FUND`
+   - 4 entities, 226 deed events
+   - Sample entities:
+     - TUSKER CAPITAL FUND LLC
+     - TUSKER CAPITAL FUND
+     - TUSKER CAPITAL FUND LLC(+)
+     - TUSKER CAPITAL FUNDING LLC
+
+## 2. `KAISER PROPERTIES BLUE`
+   - 3 entities, 163 deed events
+   - Sample entities:
+     - KAISER PROPERTIES BLUE LLC
+     - KAISER PROPERTIES BLUE LLC(+)
+     - KAISER PROPERTIES BLUES LLC
+
+## 3. `HOMEWARD PROPERTIES`
+   - 1 entities, 38 deed events
+   - Sample entities:
+     - HOMEWARD PROPERTIES LLC
+
+## 4. `RH PARTNERS OWNERCO`
+   - 2 entities, 16 deed events
+   - Sample entities:
+     - RH PARTNERS OWNERCO LLC
+     - RH PARTNERS OWNERCO, LLC
+
+## 5. `PATCH OF LAND LENDING`
+   - 2 entities, 13 deed events
+   - Sample entities:
+     - PATCH OF LAND LENDING LLC
+     - PATCH OF LAND LENDING LLC(+)
+
+## 6. `GREEN TREE HE/HI BORROWER`
+   - 1 entities, 7 deed events
+   - Sample entities:
+     - GREEN TREE HE/HI BORROWER LLC
+
+## 7. `SFR INVESTMENTS V`
+   - 1 entities, 5 deed events
+   - Sample entities:
+     - SFR INVESTMENTS V BORROWER 1 LLC
+
+## 8. `3105 ETHEREDGE`
+   - 1 entities, 4 deed events
+   - Sample entities:
+     - 3105 ETHEREDGE LLC
+
+## 9. `SOUTH LAMAR VENTURE`
+   - 1 entities, 0 deed events
+   - Sample entities:
+     - 1219 SOUTH LAMAR VENTURE LLC
+   - Mailing addresses observed:
+     - % BLACKROCK REALTY ADVISORS JENNIFER FREEDMAN 400 HOWARD ST SAN FRANCISCO CA 941052618
+
+# END OF BUCKETS
+
+Now produce the markdown table per the OUTPUT FORMAT rules above.
+Remember: cite a source for every row, write UNKNOWN if you cannot,
+and never guess based on naming similarity.
