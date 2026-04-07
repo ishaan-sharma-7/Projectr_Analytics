@@ -1,4 +1,4 @@
-import { TrendingUp, Building2, DollarSign, MapPin } from "lucide-react";
+import { TrendingUp, Building2, DollarSign, MapPin, RefreshCw } from "lucide-react";
 import { ScoreGauge } from "../ui/ScoreGauge";
 import { EnrollmentChart } from "../charts/EnrollmentChart";
 import { RentChart } from "../charts/RentChart";
@@ -34,7 +34,7 @@ function ChartSection({
   );
 }
 
-export function ScorePanel({ score }: { score: HousingPressureScore }) {
+export function ScorePanel({ score, onRecompute }: { score: HousingPressureScore; onRecompute?: () => void }) {
   const label = getLabel(score.score);
 
   const latestEnrollment = score.enrollment_trend.at(-1)?.total_enrollment;
@@ -56,15 +56,29 @@ export function ScorePanel({ score }: { score: HousingPressureScore }) {
   return (
     <div className="p-6 space-y-5">
       {/* Header */}
-      <div>
-        <p className="text-xs font-semibold text-blue-400 mb-1 tracking-widest uppercase">
-          {score.university.city}, {score.university.state}
-        </p>
-        <h2 className="text-xl font-bold leading-tight">{score.university.name}</h2>
-        {score.university.enrollment && (
-          <p className="text-xs text-zinc-500 mt-1">
-            {score.university.enrollment.toLocaleString()} students enrolled
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold text-blue-400 mb-1 tracking-widest uppercase">
+            {score.university.city}, {score.university.state}
           </p>
+          <h2 className="text-xl font-bold leading-tight">{score.university.name}</h2>
+          {score.university.enrollment && (
+            <p className="text-xs text-zinc-500 mt-1">
+              {score.university.enrollment.toLocaleString()} students enrolled
+            </p>
+          )}
+        </div>
+        {onRecompute && (
+          <button
+            onClick={onRecompute}
+            title="Re-run live analysis"
+            className="shrink-0 mt-1 flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                       bg-zinc-800 border border-zinc-700 hover:border-blue-500
+                       text-zinc-400 hover:text-white text-xs font-medium transition-all"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Recompute
+          </button>
         )}
       </div>
 

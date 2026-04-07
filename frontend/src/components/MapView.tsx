@@ -9,54 +9,86 @@ import {
 } from "@vis.gl/react-google-maps";
 import { Crosshair } from "lucide-react";
 import { HexChoropleth } from "./HexChoropleth";
-import type { UniversityListItem, HousingPressureScore } from "../lib/api";
+import { UNIVERSITIES } from "../lib/universityList";
+import type { HousingPressureScore } from "../lib/api";
 import type { HexGeoJSON } from "../lib/hexApi";
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 const SCORE_COLOR = (score: number) =>
   score >= 70 ? "#ef4444" : score >= 40 ? "#eab308" : "#22c55e";
-
-const LABEL_TEXT: Record<string, string> = {
-  high: "High Pressure",
-  medium: "Emerging",
-  low: "Balanced",
-};
 
 const NATIONAL_CENTER = { lat: 39.5, lng: -98.35 };
 const NATIONAL_ZOOM = 4;
 const CAMPUS_ZOOM = 12;
 
-// ── CameraController — must live inside <Map> to access useMap() ──────────────
+// ── CameraController ──────────────────────────────────────────────────────────
+// Pans immediately on selectedName change using static list coordinates,
+// so the camera moves on pin click — not after the 15-second computation.
 
-function CameraController({ target }: { target: HousingPressureScore | null }) {
+interface CameraProps {
+  selectedName: string | null;
+  scoreCache: Record<string, HousingPressureScore>;
+}
+
+function CameraController({ selectedName, scoreCache }: CameraProps) {
   const map = useMap();
 
   useEffect(() => {
     if (!map) return;
-    if (target) {
-      map.panTo({ lat: target.university.lat, lng: target.university.lon });
-      const t = setTimeout(() => map.setZoom(CAMPUS_ZOOM), 250);
-      return () => clearTimeout(t);
-    } else {
+
+    if (!selectedName) {
       map.panTo(NATIONAL_CENTER);
       const t = setTimeout(() => map.setZoom(NATIONAL_ZOOM), 250);
       return () => clearTimeout(t);
     }
-  }, [map, target]);
+
+    // Prefer exact lat/lon from computed result if available
+    const computed = scoreCache[selectedName];
+    const target = computed
+      ? { lat: computed.university.lat, lng: computed.university.lon }
+      : (() => {
+          const u = UNIVERSITIES.find((u) => u.name === selectedName);
+          return u ? { lat: u.lat, lng: u.lon } : null;
+        })();
+
+    if (target) {
+      map.panTo(target);
+      const t = setTimeout(() => map.setZoom(CAMPUS_ZOOM), 250);
+      return () => clearTimeout(t);
+    }
+  }, [map, selectedName]); // intentionally exclude scoreCache — only move on selection change
 
   return null;
 }
 
-// ── RecenterButton — must live inside <Map> to access useMap() ───────────────
+// ── RecenterButton ────────────────────────────────────────────────────────────
 
-function RecenterButton({ target }: { target: HousingPressureScore | null }) {
+interface RecenterProps {
+  selectedName: string | null;
+  scoreCache: Record<string, HousingPressureScore>;
+}
+
+function RecenterButton({ selectedName, scoreCache }: RecenterProps) {
   const map = useMap();
 
   const handleClick = () => {
     if (!map) return;
+
+    if (!selectedName) {
+      map.panTo(NATIONAL_CENTER);
+      setTimeout(() => map.setZoom(NATIONAL_ZOOM), 250);
+      return;
+    }
+
+    const computed = scoreCache[selectedName];
+    const target = computed
+      ? { lat: computed.university.lat, lng: computed.university.lon }
+      : (() => {
+          const u = UNIVERSITIES.find((u) => u.name === selectedName);
+          return u ? { lat: u.lat, lng: u.lon } : null;
+        })();
+
     if (target) {
-      map.panTo({ lat: target.university.lat, lng: target.university.lon });
+      map.panTo(target);
       setTimeout(() => map.setZoom(CAMPUS_ZOOM), 250);
     } else {
       map.panTo(NATIONAL_CENTER);
@@ -68,7 +100,7 @@ function RecenterButton({ target }: { target: HousingPressureScore | null }) {
     <MapControl position={ControlPosition.RIGHT_BOTTOM}>
       <button
         onClick={handleClick}
-        title={target ? "Re-center on campus" : "Re-center national view"}
+        title={selectedName ? "Re-center on campus" : "Re-center national view"}
         className="mb-3 mr-3 w-10 h-10 bg-zinc-900/90 border border-zinc-700
                    hover:border-blue-500 rounded-xl flex items-center justify-center
                    text-zinc-400 hover:text-white transition-all shadow-lg backdrop-blur-sm"
@@ -82,14 +114,14 @@ function RecenterButton({ target }: { target: HousingPressureScore | null }) {
 // ── MapView ───────────────────────────────────────────────────────────────────
 
 interface MapViewProps {
-  universities: UniversityListItem[];
-  activeScore: HousingPressureScore | null;
-  hexData: HexGeoJSON | null;
-  onMarkerClick: (unitid: number) => void;
+  selectedName: string | null;
+  scoreCache: Record<string, HousingPressureScore>;
+  activeHexData: HexGeoJSON | null;
+  onPinClick: (name: string) => void;
 }
 
-export function MapView({ universities, activeScore, hexData, onMarkerClick }: MapViewProps) {
-  const [hoveredUniId, setHoveredUniId] = useState<number | null>(null);
+export function MapView({ selectedName, scoreCache, activeHexData, onPinClick }: MapViewProps) {
+  const [hoveredName, setHoveredName] = useState<string | null>(null);
 
   return (
     <div className="flex-1 bg-zinc-900 relative">
@@ -101,86 +133,111 @@ export function MapView({ universities, activeScore, hexData, onMarkerClick }: M
         zoomControl={true}
         gestureHandling="greedy"
       >
-        <CameraController target={activeScore} />
-        <RecenterButton target={activeScore} />
+        <CameraController selectedName={selectedName} scoreCache={scoreCache} />
+        <RecenterButton selectedName={selectedName} scoreCache={scoreCache} />
 
-        {/* H3 hex choropleth — shown when a university is active */}
-        {hexData && <HexChoropleth hexData={hexData} />}
+        {/* H3 hex choropleth for the selected university (persists until recomputed) */}
+        {activeHexData && <HexChoropleth hexData={activeHexData} />}
 
-        {/* National pre-scored university markers */}
-        {universities.map((uni, i) => {
-          const isActive = activeScore?.university.unitid === uni.unitid;
-          const isHovered = hoveredUniId === uni.unitid;
+        {/* University pins */}
+        {UNIVERSITIES.map((uni, i) => {
+          const computed = scoreCache[uni.name];
+          const isSelected = selectedName === uni.name;
+          const isHovered = hoveredName === uni.name;
+
+          // Color priority: computed score > selected (blue) > neutral
+          const pinBg = computed
+            ? SCORE_COLOR(computed.score)
+            : isSelected
+            ? "#3b82f6"
+            : "#52525b";
+          const pinBorder = isSelected ? "#18181b" : computed ? "#18181b" : "#3f3f46";
 
           return (
             <AdvancedMarker
-              key={uni.unitid}
+              key={uni.name}
               position={{ lat: uni.lat, lng: uni.lon }}
-              onClick={() => onMarkerClick(uni.unitid)}
-              onMouseEnter={() => setHoveredUniId(uni.unitid)}
-              onMouseLeave={() => setHoveredUniId(null)}
-              title={`${uni.name} — ${uni.score.toFixed(0)}/100`}
-              zIndex={isActive ? 10 : isHovered ? 5 : 1}
+              onClick={() => onPinClick(uni.name)}
+              onMouseEnter={() => setHoveredName(uni.name)}
+              onMouseLeave={() => setHoveredName(null)}
+              title={uni.name}
+              zIndex={isSelected ? 10 : computed ? 4 : isHovered ? 5 : 1}
             >
               {/* Staggered entrance animation */}
               <div
                 style={{
-                  animationDelay: `${i * 40}ms`,
+                  animationDelay: `${i * 30}ms`,
                   animation: "markerIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards",
                   opacity: 0,
                 }}
               >
                 <Pin
-                  background={SCORE_COLOR(uni.score)}
-                  borderColor="#18181b"
+                  background={pinBg}
+                  borderColor={pinBorder}
                   glyphColor="#ffffff"
-                  scale={isActive ? 1.4 : 1.0}
+                  scale={isSelected ? 1.4 : isHovered ? 1.15 : 1.0}
                 />
               </div>
 
-              {/* Hover tooltip */}
-              {isHovered && !isActive && (
-                <div
-                  className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2
-                             bg-zinc-900/95 border border-zinc-700 rounded-xl px-3 py-2.5
-                             whitespace-nowrap shadow-2xl pointer-events-none z-50"
-                  style={{ backdropFilter: "blur(8px)" }}
-                >
-                  <p className="text-xs font-semibold text-white leading-tight">{uni.name}</p>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    {uni.city}, {uni.state}
-                  </p>
+              {/* Hover tooltip — always mounted, toggled via CSS to avoid DOM conflicts */}
+              <div
+                className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2
+                           bg-zinc-900/95 border border-zinc-700 rounded-xl px-3 py-2.5
+                           whitespace-nowrap shadow-2xl pointer-events-none z-50
+                           transition-opacity duration-150"
+                style={{
+                  backdropFilter: "blur(8px)",
+                  opacity: isHovered ? 1 : 0,
+                  visibility: isHovered ? "visible" : "hidden",
+                }}
+              >
+                <p className="text-xs font-semibold text-white leading-tight">{uni.name}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  {uni.city}, {uni.state}
+                </p>
+                {computed ? (
                   <div className="flex items-center gap-1.5 mt-1.5">
                     <div
                       className="w-2 h-2 rounded-full"
-                      style={{ background: SCORE_COLOR(uni.score) }}
+                      style={{ background: SCORE_COLOR(computed.score) }}
                     />
                     <span
                       className="text-xs font-medium"
-                      style={{ color: SCORE_COLOR(uni.score) }}
+                      style={{ color: SCORE_COLOR(computed.score) }}
                     >
-                      {uni.score.toFixed(0)}/100 · {LABEL_TEXT[uni.score_label]}
+                      {computed.score.toFixed(0)}/100
                     </span>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-xs text-blue-400 mt-1.5">Click to view →</p>
+                )}
+              </div>
             </AdvancedMarker>
           );
         })}
       </Map>
 
-      {/* Map legend */}
-      <div className="absolute bottom-6 left-6 bg-zinc-950/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 text-xs flex gap-4 pointer-events-none">
-        {[
-          ["High Pressure", "#ef4444"],
-          ["Emerging", "#eab308"],
-          ["Balanced", "#22c55e"],
-        ].map(([label, color]) => (
-          <div key={label} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-            <span className="text-zinc-400">{label}</span>
+      {/* Map hint / legend */}
+      <div className="absolute bottom-6 left-6 bg-zinc-950/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 text-xs pointer-events-none">
+        {activeHexData ? (
+          <div className="flex gap-4">
+            {[
+              ["High Pressure", "#ef4444"],
+              ["Emerging", "#eab308"],
+              ["Balanced", "#22c55e"],
+            ].map(([label, color]) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                <span className="text-zinc-400">{label}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          <p className="text-zinc-500">
+            <span className="text-zinc-300 font-medium">{UNIVERSITIES.length} universities</span>
+            {" "}· click any pin to explore
+          </p>
+        )}
       </div>
     </div>
   );

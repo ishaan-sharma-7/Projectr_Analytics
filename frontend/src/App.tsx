@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { APIProvider } from "@vis.gl/react-google-maps";
-import { fetchUniversities, streamScore, computeScoreById } from "./lib/api";
+import { streamScore } from "./lib/api";
 import { fetchHexGrid } from "./lib/hexApi";
 import { SearchBar } from "./components/ui/SearchBar";
 import { MapView } from "./components/MapView";
 import { SidePanel } from "./components/SidePanel";
-import type { HousingPressureScore, UniversityListItem } from "./lib/api";
+import type { HousingPressureScore } from "./lib/api";
 import type { HexGeoJSON } from "./lib/hexApi";
 
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -17,43 +17,40 @@ interface LogEntry {
 
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [universities, setUniversities] = useState<UniversityListItem[]>([]);
-  const [activeScore, setActiveScore] = useState<HousingPressureScore | null>(null);
-  const [hexData, setHexData] = useState<HexGeoJSON | null>(null);
+
+  // Which pin/university is currently focused in the side panel
+  const [selectedName, setSelectedName] = useState<string | null>(null);
+
+  // Persistent caches — computed results stay until explicitly recomputed
+  const [scoreCache, setScoreCache] = useState<Record<string, HousingPressureScore>>({});
+  const [hexCache, setHexCache] = useState<Record<string, HexGeoJSON>>({});
+
+  // Loading / log state (for the currently running computation)
   const [loading, setLoading] = useState(false);
   const [agentLogs, setAgentLogs] = useState<LogEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Load pre-scored universities for national map on mount
-  useEffect(() => {
-    fetchUniversities()
-      .then(setUniversities)
-      .catch(() => {});
-  }, []);
+  // Derived — what the side panel shows right now
+  const activeScore = selectedName ? (scoreCache[selectedName] ?? null) : null;
+  const activeHexData = selectedName ? (hexCache[selectedName] ?? null) : null;
 
-  // Fetch H3 hex grid whenever a new score is set
-  const loadHexData = (score: HousingPressureScore) => {
-    setHexData(null);
-    fetchHexGrid(score.university.name).then(setHexData).catch(() => {});
-  };
+  // ── Core computation ────────────────────────────────────────────────────────
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-
+  const runReport = async (name: string) => {
     setLoading(true);
     setError(null);
-    setActiveScore(null);
-    setHexData(null);
     setAgentLogs([]);
 
     try {
-      for await (const event of streamScore(searchQuery)) {
+      for await (const event of streamScore(name)) {
         if (event.type === "log") {
           setAgentLogs((prev) => [...prev, { message: event.message, ts: new Date() }]);
         } else if (event.type === "result") {
-          setActiveScore(event.data);
-          loadHexData(event.data);
+          // Store in persistent cache keyed by the queried name
+          setScoreCache((prev) => ({ ...prev, [name]: event.data }));
+          fetchHexGrid(event.data.university.name)
+            .then((hex) => setHexCache((prev) => ({ ...prev, [name]: hex })))
+            .catch(() => {});
           setLoading(false);
         } else if (event.type === "error") {
           setError(event.message);
@@ -66,21 +63,35 @@ function App() {
     }
   };
 
-  const handleMarkerClick = async (unitid: number) => {
-    setLoading(true);
-    setError(null);
-    setActiveScore(null);
-    setHexData(null);
-    setAgentLogs([{ message: "Loading from pre-scored cache...", ts: new Date() }]);
-    try {
-      const result = await computeScoreById(unitid);
-      setActiveScore(result);
-      loadHexData(result);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to load university");
-    } finally {
-      setLoading(false);
-    }
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
+  // Pin click or suggestion select — navigate to university, show preview or cached result
+  const handleSelectUniversity = (name: string) => {
+    setSelectedName(name);
+    setSearchQuery(name);
+    // No computation — PreviewPanel shows with "Generate Report" button
+    // If already cached, ScorePanel shows instantly
+  };
+
+  // Search bar "Enter" or "Search for X" row — explicit request to compute
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = searchQuery.trim();
+    if (!name) return;
+    setSelectedName(name);
+    await runReport(name);
+  };
+
+  // "Generate Report" button in PreviewPanel
+  const handleGenerateReport = async (name: string) => {
+    setSelectedName(name);
+    await runReport(name);
+  };
+
+  // "Recompute" button in ScorePanel
+  const handleRecompute = async () => {
+    if (!selectedName) return;
+    await runReport(selectedName);
   };
 
   return (
@@ -89,28 +100,26 @@ function App() {
         query={searchQuery}
         onChange={setSearchQuery}
         onSubmit={handleSearch}
-        onSelectUniversity={(unitid, name) => {
-          setSearchQuery(name);
-          handleMarkerClick(unitid);
-        }}
-        universities={universities}
+        onSelectUniversity={handleSelectUniversity}
         disabled={loading}
       />
       <main className="flex-1 flex mt-[73px]">
         <APIProvider apiKey={MAPS_API_KEY}>
           <MapView
-            universities={universities}
-            activeScore={activeScore}
-            hexData={hexData}
-            onMarkerClick={handleMarkerClick}
+            selectedName={selectedName}
+            scoreCache={scoreCache}
+            activeHexData={activeHexData}
+            onPinClick={handleSelectUniversity}
           />
         </APIProvider>
         <SidePanel
           loading={loading}
           error={error}
+          selectedName={selectedName}
           activeScore={activeScore}
           agentLogs={agentLogs}
-          universityCount={universities.length}
+          onRecompute={handleRecompute}
+          onGenerateReport={handleGenerateReport}
         />
       </main>
     </div>
