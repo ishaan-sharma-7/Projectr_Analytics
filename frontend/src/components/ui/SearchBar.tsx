@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { Search, X, MapPin, ArrowRight, GitCompareArrows } from "lucide-react";
+import { Search, X, MapPin, ArrowRight, GitCompareArrows, Trophy } from "lucide-react";
 import { UNIVERSITIES } from "../../lib/universityList";
 
 interface SearchBarProps {
@@ -11,6 +11,8 @@ interface SearchBarProps {
   compareMode?: boolean;
   onToggleCompare?: () => void;
   compareGuide?: string;
+  rankingMode?: boolean;
+  onToggleRanking?: () => void;
 }
 
 export function SearchBar({
@@ -22,6 +24,8 @@ export function SearchBar({
   compareMode,
   onToggleCompare,
   compareGuide,
+  rankingMode,
+  onToggleRanking,
 }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -228,7 +232,21 @@ export function SearchBar({
         </div>
       </form>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        {onToggleRanking && (
+          <button
+            onClick={onToggleRanking}
+            title={rankingMode ? "Exit rankings" : "View market rankings"}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              rankingMode
+                ? "bg-amber-500 text-black shadow-lg shadow-amber-500/25"
+                : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:border-amber-500"
+            }`}
+          >
+            <Trophy className="w-3.5 h-3.5" />
+            {rankingMode ? "Rankings" : "Rankings"}
+          </button>
+        )}
         {onToggleCompare && (
           <button
             onClick={onToggleCompare}

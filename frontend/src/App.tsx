@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { APIProvider } from "@vis.gl/react-google-maps";
-import { streamScore } from "./lib/api";
+import { streamScore, fetchUniversities } from "./lib/api";
 import { fetchHexGrid } from "./lib/hexApi";
 import { SearchBar } from "./components/ui/SearchBar";
 import { MapView } from "./components/MapView";
 import { SidePanel } from "./components/SidePanel";
 import { ComparePanel } from "./components/panels/ComparePanel";
 import { CompareSetupPanel } from "./components/panels/CompareSetupPanel";
-import type { HousingPressureScore } from "./lib/api";
+import { RankingView } from "./components/RankingView";
+import type { HousingPressureScore, UniversityListItem } from "./lib/api";
 import type { HexGeoJSON } from "./lib/hexApi";
 
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -36,9 +37,18 @@ function App() {
   // ── Compare mode state ──────────────────────────────────────────────────────
   const [compareMode, setCompareMode] = useState(false);
   const [compareNames, setCompareNames] = useState<[string | null, string | null]>([null, null]);
-
-  // Queue: name to auto-run report for after current loading finishes
   const pendingReportRef = useRef<string | null>(null);
+
+  // ── Ranking mode state ──────────────────────────────────────────────────────
+  const [rankingMode, setRankingMode] = useState(false);
+  const [universities, setUniversities] = useState<UniversityListItem[]>([]);
+
+  // Fetch pre-scored universities on mount
+  useEffect(() => {
+    fetchUniversities()
+      .then(setUniversities)
+      .catch(() => {});
+  }, []);
 
   // Derived — what the side panel shows right now
   const activeScore = selectedName ? (scoreCache[selectedName] ?? null) : null;
@@ -82,7 +92,6 @@ function App() {
   };
 
   // ── Auto-run queued compare reports ─────────────────────────────────────────
-  // When loading finishes and there's a pending name, auto-run it
   useEffect(() => {
     if (!loading && pendingReportRef.current) {
       const pending = pendingReportRef.current;
@@ -93,7 +102,6 @@ function App() {
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
-  // Pin click or suggestion select
   const handleSelectUniversity = (name: string) => {
     if (compareMode) {
       setCompareNames((prev) => {
@@ -103,15 +111,12 @@ function App() {
         } else if (prev[1] === null && prev[0] !== name) {
           next = [prev[0], name];
         } else {
-          // Both filled or same name — restart with this one
           next = [name, null];
         }
 
-        // Auto-trigger reports for any slot that isn't cached yet
         const needsReport = (n: string | null) => n && !scoreCache[n];
 
         if (needsReport(next[0]) && needsReport(next[1])) {
-          // Both need reports — run first now, queue second
           if (!loading) {
             runReport(next[0]!);
             pendingReportRef.current = next[1]!;
@@ -119,7 +124,6 @@ function App() {
             pendingReportRef.current = next[0]!;
           }
         } else if (needsReport(name)) {
-          // Only the newly selected one needs a report
           if (!loading) {
             runReport(name);
           } else {
@@ -134,16 +138,16 @@ function App() {
       return;
     }
 
-    // Normal mode — no auto-compute
     setSelectedName(name);
     setSearchQuery(name);
   };
 
-  // Search bar "Enter"
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const name = searchQuery.trim();
     if (!name) return;
+    // Exit ranking mode on search
+    if (rankingMode) setRankingMode(false);
     if (compareMode) {
       handleSelectUniversity(name);
     } else {
@@ -152,13 +156,11 @@ function App() {
     }
   };
 
-  // "Generate Report" button in PreviewPanel
   const handleGenerateReport = async (name: string) => {
     setSelectedName(name);
     await runReport(name);
   };
 
-  // "Recompute" button in ScorePanel
   const handleRecompute = async () => {
     if (!selectedName) return;
     await runReport(selectedName);
@@ -166,6 +168,7 @@ function App() {
 
   // Toggle compare mode
   const handleToggleCompare = () => {
+    if (rankingMode) setRankingMode(false); // exit ranking if entering compare
     setCompareMode((prev) => {
       if (!prev) {
         if (selectedName) {
@@ -181,7 +184,6 @@ function App() {
     });
   };
 
-  // Clear compare selections
   const handleClearCompare = () => {
     setCompareNames([null, null]);
     pendingReportRef.current = null;
@@ -189,7 +191,22 @@ function App() {
     setSearchQuery("");
   };
 
-  // Compare guide text for the search bar
+  // Toggle ranking mode
+  const handleToggleRanking = () => {
+    if (compareMode) setCompareMode(false); // exit compare if entering ranking
+    setRankingMode((prev) => !prev);
+  };
+
+  // Ranking row click → exit ranking, select university, auto-generate report
+  const handleRankingSelect = (name: string) => {
+    setSelectedName(name);
+    setSearchQuery(name);
+    // If already cached, just show it; if not, auto-generate
+    if (!scoreCache[name]) {
+      runReport(name);
+    }
+  };
+
   const compareGuide = compareMode
     ? compareNames[0] === null
       ? "Click a pin or search for first university…"
@@ -209,44 +226,56 @@ function App() {
         compareMode={compareMode}
         onToggleCompare={handleToggleCompare}
         compareGuide={compareGuide}
+        rankingMode={rankingMode}
+        onToggleRanking={handleToggleRanking}
       />
       <main className="flex-1 flex mt-[73px]">
-        <APIProvider apiKey={MAPS_API_KEY}>
-          <MapView
-            selectedName={selectedName}
-            scoreCache={scoreCache}
-            activeHexData={activeHexData}
-            onPinClick={handleSelectUniversity}
+        {rankingMode ? (
+          /* ── Ranking view (full width, no map / side panel) ── */
+          <RankingView
+            universities={universities}
+            onSelect={handleRankingSelect}
+            onExitRanking={() => setRankingMode(false)}
           />
-        </APIProvider>
-
-        {/* Side panel: compare result → compare setup → normal */}
-        {showCompareResult ? (
-          <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
-            <ComparePanel
-              scoreA={compareScoreA!}
-              scoreB={compareScoreB!}
-              onClear={handleClearCompare}
-            />
-          </aside>
-        ) : compareMode ? (
-          <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
-            <CompareSetupPanel
-              compareNames={compareNames}
-              scoreCache={scoreCache}
-              loadingName={loadingName}
-            />
-          </aside>
         ) : (
-          <SidePanel
-            loading={loading}
-            error={error}
-            selectedName={selectedName}
-            activeScore={activeScore}
-            agentLogs={agentLogs}
-            onRecompute={handleRecompute}
-            onGenerateReport={handleGenerateReport}
-          />
+          <>
+            <APIProvider apiKey={MAPS_API_KEY}>
+              <MapView
+                selectedName={selectedName}
+                scoreCache={scoreCache}
+                activeHexData={activeHexData}
+                onPinClick={handleSelectUniversity}
+              />
+            </APIProvider>
+
+            {showCompareResult ? (
+              <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
+                <ComparePanel
+                  scoreA={compareScoreA!}
+                  scoreB={compareScoreB!}
+                  onClear={handleClearCompare}
+                />
+              </aside>
+            ) : compareMode ? (
+              <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
+                <CompareSetupPanel
+                  compareNames={compareNames}
+                  scoreCache={scoreCache}
+                  loadingName={loadingName}
+                />
+              </aside>
+            ) : (
+              <SidePanel
+                loading={loading}
+                error={error}
+                selectedName={selectedName}
+                activeScore={activeScore}
+                agentLogs={agentLogs}
+                onRecompute={handleRecompute}
+                onGenerateReport={handleGenerateReport}
+              />
+            )}
+          </>
         )}
       </main>
     </div>
