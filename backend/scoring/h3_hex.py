@@ -52,9 +52,12 @@ class HexFeature:
     center_lng: float
     boundary: list[list[float]]  # GeoJSON [[lng, lat], ...] closed ring
     distance_km: float
+    distance_to_campus_miles: float
     pressure_score: float
     permit_density: float        # estimated permits per km²
     unit_density: float          # estimated housing units per km²
+    bus_stop_count: int          # OSM transit nodes whose H3 cell == this hex
+    transit_label: str           # "Transit Hub" | "Walkable" | "Isolated"
     label: str                   # "high" | "medium" | "low"
 
 
@@ -122,12 +125,19 @@ def compute_hex_features(
     permits_5yr: int,
     housing_units: int,
     radius_miles: float = 1.5,
+    bus_stops: list[tuple[float, float]] | None = None,
+    resolution: int = 8,
 ) -> list[HexFeature]:
     """Compute pressure features for each hex in the grid.
 
     Pressure is highest at the campus core and decays toward the radius edge.
     Permit and unit density are spatially distributed using proximity weighting
     (student housing activity concentrates near campus).
+
+    Transit access (``bus_stops``) is layered on top: hexes that contain at
+    least one OSM transit node get a small pressure boost, modelling the fact
+    that an apartment two miles out on a dedicated bus route effectively
+    behaves like one a few blocks from campus.
 
     Args:
         hex_indices: H3 cell indices from generate_campus_hex_grid.
@@ -136,6 +146,8 @@ def compute_hex_features(
         permits_5yr: Total residential permits filed in county over 5 years.
         housing_units: Total housing units in county from ACS.
         radius_miles: Max radius (for normalization).
+        bus_stops: Optional list of (lat, lon) for OSM transit nodes nearby.
+        resolution: H3 resolution to use when bucketing bus stops into hexes.
 
     Returns:
         List of HexFeature, sorted by distance from campus.
@@ -154,10 +166,20 @@ def compute_hex_features(
     }
     total_proximity = sum(proximities.values()) or 1.0
 
+    # ── Bucket bus stops into hex cells at the same resolution ──
+    bus_stop_counts: dict[str, int] = {}
+    if bus_stops:
+        hex_set = set(hex_indices)
+        for slat, slng in bus_stops:
+            cell = _latlng_to_cell(slat, slng, resolution)
+            if cell in hex_set:
+                bus_stop_counts[cell] = bus_stop_counts.get(cell, 0) + 1
+
     features: list[HexFeature] = []
     for hex_id in hex_indices:
         c_lat, c_lng = _cell_to_latlng(hex_id)
         distance_km = hex_distances[hex_id]
+        distance_miles = distance_km * 0.621371
         proximity = proximities[hex_id]
 
         # ── Spatial distribution of permits and housing units ──
@@ -177,8 +199,29 @@ def compute_hex_features(
         # Near-campus hexes inherit more of the base score.
         # Formula: score scales linearly from base_score (at campus) to
         # base_score * 0.4 (at radius edge), creating a visible gradient.
-        hex_pressure = round(base_score * (0.4 + 0.6 * proximity), 1)
-        hex_pressure = max(0.0, min(100.0, hex_pressure))
+        hex_pressure = base_score * (0.4 + 0.6 * proximity)
+
+        # ── Transit boost ──
+        # Hexes with concentrated transit get a pressure bump because students
+        # will rent there even at distance. Cap the boost so it can't overpower
+        # the geometric gradient entirely.
+        stop_count = bus_stop_counts.get(hex_id, 0)
+        if stop_count >= 3:
+            hex_pressure += 10.0   # transit hub
+        elif stop_count >= 1:
+            hex_pressure += 4.0    # at least one stop in this cell
+
+        hex_pressure = max(0.0, min(100.0, round(hex_pressure, 1)))
+
+        # ── Transit label classification ──
+        # Walkable = either it has a transit node OR it's already inside the
+        # 0.5 mi pedestrian zone. Anything else with no transit is "Isolated".
+        if stop_count >= 3:
+            transit_label = "Transit Hub"
+        elif stop_count >= 1 or distance_miles <= 0.5:
+            transit_label = "Walkable"
+        else:
+            transit_label = "Isolated"
 
         label = (
             "high" if hex_pressure >= 70
@@ -197,9 +240,12 @@ def compute_hex_features(
             center_lng=round(c_lng, 6),
             boundary=boundary,
             distance_km=round(distance_km, 3),
+            distance_to_campus_miles=round(distance_miles, 3),
             pressure_score=hex_pressure,
             permit_density=permit_density,
             unit_density=unit_density,
+            bus_stop_count=stop_count,
+            transit_label=transit_label,
             label=label,
         ))
 
@@ -227,9 +273,12 @@ def to_geojson(features: list[HexFeature]) -> dict:
                     "center_lat": feat.center_lat,
                     "center_lng": feat.center_lng,
                     "distance_km": feat.distance_km,
+                    "distance_to_campus_miles": feat.distance_to_campus_miles,
                     "pressure_score": feat.pressure_score,
                     "permit_density": feat.permit_density,
                     "unit_density": feat.unit_density,
+                    "bus_stop_count": feat.bus_stop_count,
+                    "transit_label": feat.transit_label,
                     "label": feat.label,
                 },
             }

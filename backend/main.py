@@ -32,6 +32,7 @@ from backend.adapters import (
     census_acs_extra,
     rent,
     fema_disasters,
+    osm_transit,
 )
 from backend.scoring.pressure import compute_pressure_score
 from backend.scoring.h3_hex import (
@@ -243,14 +244,18 @@ async def get_hex_grid(
 
     Each hex feature carries:
       - pressure_score (0–100): drives fill color on the map
-      - distance_km: distance from campus centroid
+      - distance_km / distance_to_campus_miles: distance from campus centroid
       - permit_density: estimated permits per km² (spatially distributed)
       - unit_density: housing units per km²
+      - bus_stop_count: OSM transit nodes inside this hex cell
+      - transit_label: "Transit Hub" | "Walkable" | "Isolated"
       - label: "high" | "medium" | "low"
 
     Query params:
       radius_miles: Search radius around campus (0.5–3.0, default 1.5).
     """
+    import asyncio
+
     # ── Resolve university ──
     uni = await scorecard.search_university(university_name)
     if not uni:
@@ -260,6 +265,13 @@ async def get_hex_grid(
     base_score = 50.0  # neutral default
     permits_5yr = 0
     housing_units = 0
+
+    # Bus stop fetch is independent of base-score data and can run concurrently
+    # with everything else. Even on a cache hit we still need it for the hex
+    # transit layer.
+    bus_stops_task = asyncio.create_task(
+        osm_transit.fetch_bus_stops(uni.lat, uni.lon, radius_miles)
+    )
 
     if uni.unitid in _prescored:
         cached = _prescored[uni.unitid]
@@ -278,6 +290,13 @@ async def get_hex_grid(
             )
             permits_5yr = sum(p.permits for p in permit_history[-5:])
 
+    # ── Await transit data (may be empty if Overpass unreachable) ──
+    try:
+        bus_stops = await bus_stops_task
+    except Exception as exc:
+        print(f"[/hex] Overpass task failed: {exc}")
+        bus_stops = []
+
     # ── Generate hex grid ──
     hex_indices = generate_campus_hex_grid(
         campus_lat=uni.lat,
@@ -294,6 +313,8 @@ async def get_hex_grid(
         permits_5yr=permits_5yr,
         housing_units=housing_units,
         radius_miles=radius_miles,
+        bus_stops=bus_stops,
+        resolution=8,
     )
 
     geojson = to_geojson(features)
@@ -304,6 +325,7 @@ async def get_hex_grid(
         "radius_miles": radius_miles,
         "hex_count": len(features),
         "base_score": base_score,
+        "bus_stops_fetched": len(bus_stops),
     }
 
     return geojson

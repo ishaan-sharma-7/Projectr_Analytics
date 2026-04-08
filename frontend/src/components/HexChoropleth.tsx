@@ -10,6 +10,20 @@ function scoreToColor(score: number): string {
   return "#22c55e";
 }
 
+function transitBadgeStyle(label: HexFeatureProperties["transit_label"]): {
+  bg: string;
+  text: string;
+} {
+  switch (label) {
+    case "Transit Hub":
+      return { bg: "#dbeafe", text: "#1d4ed8" };
+    case "Walkable":
+      return { bg: "#dcfce7", text: "#15803d" };
+    default:
+      return { bg: "#f4f4f5", text: "#71717a" };
+  }
+}
+
 export function HexChoropleth({ hexData }: { hexData: HexGeoJSON }) {
   const [selectedHex, setSelectedHex] = useState<HexFeatureProperties | null>(null);
 
@@ -47,7 +61,7 @@ export function HexChoropleth({ hexData }: { hexData: HexGeoJSON }) {
             <div className="space-y-1 text-xs text-zinc-600">
               <p>
                 <span className="font-medium text-zinc-800">Distance:</span>{" "}
-                {selectedHex.distance_km.toFixed(2)} km from campus
+                {selectedHex.distance_to_campus_miles.toFixed(2)} mi from campus
               </p>
               <p>
                 <span className="font-medium text-zinc-800">Permit density:</span>{" "}
@@ -57,7 +71,22 @@ export function HexChoropleth({ hexData }: { hexData: HexGeoJSON }) {
                 <span className="font-medium text-zinc-800">Unit density:</span>{" "}
                 {selectedHex.unit_density.toFixed(1)} / km²
               </p>
-              <p className="capitalize font-medium" style={{ color: scoreToColor(selectedHex.pressure_score) }}>
+              <p>
+                <span className="font-medium text-zinc-800">Bus stops:</span>{" "}
+                {selectedHex.bus_stop_count}
+              </p>
+              {(() => {
+                const style = transitBadgeStyle(selectedHex.transit_label);
+                return (
+                  <span
+                    className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide"
+                    style={{ background: style.bg, color: style.text }}
+                  >
+                    {selectedHex.transit_label}
+                  </span>
+                );
+              })()}
+              <p className="capitalize font-medium pt-1" style={{ color: scoreToColor(selectedHex.pressure_score) }}>
                 {selectedHex.label} pressure
               </p>
             </div>
