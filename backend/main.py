@@ -23,7 +23,16 @@ from backend.models.schemas import (
     ScoreRequest,
     UniversityListItem,
 )
-from backend.adapters import scorecard, ipeds, census_bps, census_acs, rent
+from backend.adapters import (
+    scorecard,
+    ipeds,
+    ipeds_housing,
+    census_bps,
+    census_acs,
+    census_acs_extra,
+    rent,
+    fema_disasters,
+)
 from backend.scoring.pressure import compute_pressure_score
 from backend.scoring.h3_hex import (
     generate_campus_hex_grid,
@@ -156,6 +165,23 @@ async def score_university(req: ScoreRequest):
     fips = f"{state_fips}{county_fips}" if state_fips and county_fips else ""
     rent_history = await rent.load_rent_data(uni.city, uni.state, fips)
 
+    # ── Step 6b: Fetch ACS demographic context ──
+    demographics = None
+    if state_fips and county_fips:
+        demographics = await census_acs_extra.fetch_county_demographics(
+            state_fips, county_fips,
+        )
+
+    # ── Step 6c: Fetch on-campus housing capacity ──
+    housing_capacity = await ipeds_housing.fetch_housing_capacity(uni.unitid)
+
+    # ── Step 6d: Fetch federal disaster history ──
+    disaster_risk = None
+    if state_fips and county_fips:
+        disaster_risk = await fema_disasters.fetch_disaster_history(
+            state_fips, county_fips, years=10,
+        )
+
     # ── Step 7: Compute score ──
     result = compute_pressure_score(
         university=uni,
@@ -163,6 +189,9 @@ async def score_university(req: ScoreRequest):
         permit_history=permit_history,
         housing_units=housing_units,
         rent_history=rent_history,
+        demographics=demographics,
+        housing_capacity=housing_capacity,
+        disaster_risk=disaster_risk,
     )
 
     # ── Step 8: Gemini summary ──

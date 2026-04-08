@@ -1,4 +1,4 @@
-import { TrendingUp, Building2, DollarSign, MapPin, RefreshCw } from "lucide-react";
+import { TrendingUp, Building2, DollarSign, MapPin, RefreshCw, BedDouble, Home, CloudRain } from "lucide-react";
 import { ScoreGauge } from "../ui/ScoreGauge";
 import { EnrollmentChart } from "../charts/EnrollmentChart";
 import { RentChart } from "../charts/RentChart";
@@ -201,6 +201,75 @@ export function ScorePanel({ score, onRecompute }: { score: HousingPressureScore
               : "N/A"}
           </p>
           <p className="text-xs text-zinc-600 mt-0.5">county total (ACS)</p>
+        </div>
+
+        <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
+          <div className="flex items-center gap-1.5 mb-2">
+            <BedDouble className="w-3.5 h-3.5 text-emerald-400" />
+            <p className="text-xs text-zinc-500 font-medium">Beds / Student</p>
+          </div>
+          {score.housing_capacity?.beds_per_student != null ? (
+            <p
+              className={`text-lg font-bold tabular-nums ${
+                score.housing_capacity.beds_per_student < 0.25
+                  ? "text-red-400"
+                  : score.housing_capacity.beds_per_student > 0.75
+                  ? "text-emerald-400"
+                  : "text-zinc-50"
+              }`}
+            >
+              {score.housing_capacity.beds_per_student.toFixed(2)}
+            </p>
+          ) : (
+            <p className="text-lg font-bold text-zinc-600">N/A</p>
+          )}
+          <p className="text-xs text-zinc-600 mt-0.5">on-campus dorm ratio</p>
+        </div>
+
+        <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Home className="w-3.5 h-3.5 text-amber-400" />
+            <p className="text-xs text-zinc-500 font-medium">Vacancy Rate</p>
+          </div>
+          {score.demographics?.vacancy_rate_pct != null ? (
+            <p
+              className={`text-lg font-bold tabular-nums ${
+                score.demographics.vacancy_rate_pct < 3.0
+                  ? "text-red-400"
+                  : score.demographics.vacancy_rate_pct > 10.0
+                  ? "text-emerald-400"
+                  : "text-zinc-50"
+              }`}
+            >
+              {score.demographics.vacancy_rate_pct.toFixed(1)}%
+            </p>
+          ) : (
+            <p className="text-lg font-bold text-zinc-600">N/A</p>
+          )}
+          <p className="text-xs text-zinc-600 mt-0.5">renter market (ACS)</p>
+        </div>
+
+        <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50">
+          <div className="flex items-center gap-1.5 mb-2">
+            <CloudRain className="w-3.5 h-3.5 text-sky-400" />
+            <p className="text-xs text-zinc-500 font-medium">Weather Disasters</p>
+          </div>
+          {score.disaster_risk?.weather_disasters != null ? (
+            <p
+              className={`text-lg font-bold tabular-nums ${
+                score.disaster_risk.weather_disasters >= 10
+                  ? "text-red-400"
+                  : "text-zinc-50"
+              }`}
+            >
+              {score.disaster_risk.weather_disasters}
+            </p>
+          ) : (
+            <p className="text-lg font-bold text-zinc-600">N/A</p>
+          )}
+          <p className="text-xs text-zinc-600 mt-0.5">
+            FEMA, last {score.disaster_risk?.window_years ?? 10}yr
+          </p>
         </div>
       </div>
 

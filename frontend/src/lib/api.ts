@@ -29,6 +29,33 @@ export interface RentData {
   source: string;
 }
 
+export interface MarketDemographics {
+  median_household_income: number | null;
+  median_home_value: number | null;
+  median_gross_rent: number | null;
+  median_year_built: number | null;
+  vacancy_rate_pct: number | null;
+  pct_bachelors_or_higher: number | null;
+  pct_renter_occupied: number | null;
+  total_housing_units: number | null;
+}
+
+export interface HousingCapacity {
+  year: number;
+  dormitory_capacity: number;
+  typical_room_charge: number | null;
+  typical_board_charge: number | null;
+  beds_per_student: number | null;
+}
+
+export interface DisasterRisk {
+  window_years: number;
+  total_disasters: number;
+  weather_disasters: number;
+  by_type: Record<string, number>;
+  most_recent_year: number | null;
+}
+
 export interface ScoreComponents {
   enrollment_pressure: number;
   permit_gap: number;
@@ -43,6 +70,9 @@ export interface HousingPressureScore {
   permit_history: PermitData[];
   rent_history: RentData[];
   nearby_housing_units: number;
+  demographics: MarketDemographics | null;
+  housing_capacity: HousingCapacity | null;
+  disaster_risk: DisasterRisk | null;
   gemini_summary: string | null;
   scored_at: string;
 }

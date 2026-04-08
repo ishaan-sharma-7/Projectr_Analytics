@@ -23,8 +23,11 @@ Component calculations:
 from datetime import datetime, timezone
 
 from backend.models.schemas import (
+    DisasterRisk,
     EnrollmentTrend,
+    HousingCapacity,
     HousingPressureScore,
+    MarketDemographics,
     PermitData,
     RentData,
     ScoreComponents,
@@ -88,6 +91,9 @@ def compute_pressure_score(
     permit_history: list[PermitData],
     housing_units: int,
     rent_history: list[RentData],
+    demographics: MarketDemographics | None = None,
+    housing_capacity: HousingCapacity | None = None,
+    disaster_risk: DisasterRisk | None = None,
     gemini_summary: str | None = None,
 ) -> HousingPressureScore:
     """Compute the full Housing Pressure Score for a university market."""
@@ -110,7 +116,41 @@ def compute_pressure_score(
         + W_PERMIT * permit_gap
         + W_RENT * rent_pressure
     )
-    final_score = max(0.0, min(100.0, round(raw_score, 1)))
+    # ── Compute beds-per-student if both signals are available ──
+    if housing_capacity and university.enrollment and university.enrollment > 0:
+        housing_capacity = housing_capacity.model_copy(
+            update={
+                "beds_per_student": round(
+                    housing_capacity.dormitory_capacity / university.enrollment, 3
+                )
+            }
+        )
+
+    # ── V2 Multiplier System ──
+    multiplier = 1.0
+
+    # 1. Capacity Penalty/Boost
+    if housing_capacity and housing_capacity.beds_per_student is not None:
+        if housing_capacity.beds_per_student < 0.25:
+            multiplier *= 1.15
+        elif housing_capacity.beds_per_student > 0.75:
+            multiplier *= 0.80
+
+    # 2. Demographics (Vacancy) Penalty/Boost
+    if demographics and demographics.vacancy_rate_pct is not None:
+        if demographics.vacancy_rate_pct < 3.0:
+            multiplier *= 1.05
+        elif demographics.vacancy_rate_pct > 10.0:
+            multiplier *= 0.85
+
+    # 3. Disaster Risk Penalty
+    if disaster_risk:
+        if disaster_risk.weather_disasters >= 10:
+            multiplier *= 0.90
+        elif disaster_risk.weather_disasters >= 5:
+            multiplier *= 0.95
+
+    final_score = max(0.0, min(100.0, round(raw_score * multiplier, 1)))
 
     components = ScoreComponents(
         enrollment_pressure=enrollment_pressure,
@@ -126,6 +166,9 @@ def compute_pressure_score(
         permit_history=permit_history,
         rent_history=rent_history,
         nearby_housing_units=housing_units,
+        demographics=demographics,
+        housing_capacity=housing_capacity,
+        disaster_risk=disaster_risk,
         gemini_summary=gemini_summary,
         scored_at=datetime.now(timezone.utc).isoformat(),
     )

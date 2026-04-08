@@ -144,7 +144,16 @@ async def score_with_streaming(
         prescored: The _prescored dict from main.py (dict[int, HousingPressureScore]).
     """
     # Lazy imports to avoid circular deps at module load
-    from backend.adapters import scorecard, ipeds, census_bps, census_acs, rent
+    from backend.adapters import (
+        scorecard,
+        ipeds,
+        ipeds_housing,
+        census_bps,
+        census_acs,
+        census_acs_extra,
+        rent,
+        fema_disasters,
+    )
     from backend.scoring.pressure import compute_pressure_score
 
     try:
@@ -198,32 +207,77 @@ async def score_with_streaming(
         else:
             yield _log_event("County FIPS lookup failed — permit data may be unavailable")
 
-        # ── Step 4: Building permits ──
-        permit_history = []
+        # ── Steps 4–6d: Parallel data fetch ──
+        yield _log_event("Fetching market data (permits, housing, rent, demographics, IPEDS, FEMA)...")
+
+        fips = f"{state_fips}{county_fips}" if state_fips and county_fips else ""
+        tasks: dict[str, asyncio.Task] = {}
+
         if state_fips and county_fips:
-            yield _log_event(f"Pulling building permits from Census BPS (2019–2023)...")
-            permit_history = await census_bps.fetch_permits_by_county(uni.state, county_fips)
+            tasks["permits"] = asyncio.create_task(
+                census_bps.fetch_permits_by_county(uni.state, county_fips)
+            )
+            tasks["housing_units"] = asyncio.create_task(
+                census_acs.get_county_housing_total(state_fips, county_fips)
+            )
+            tasks["demographics"] = asyncio.create_task(
+                census_acs_extra.fetch_county_demographics(state_fips, county_fips)
+            )
+            tasks["disaster"] = asyncio.create_task(
+                fema_disasters.fetch_disaster_history(state_fips, county_fips, years=10)
+            )
+
+        tasks["rent"] = asyncio.create_task(
+            rent.load_rent_data(uni.city, uni.state, fips)
+        )
+        tasks["housing_cap"] = asyncio.create_task(
+            ipeds_housing.fetch_housing_capacity(uni.unitid)
+        )
+
+        # Await all concurrently
+        results = {}
+        for key, task in tasks.items():
+            try:
+                results[key] = await task
+            except Exception as exc:
+                yield _log_event(f"Warning: {key} fetch failed — {exc}")
+                results[key] = None
+
+        permit_history = results.get("permits") or []
+        housing_units = results.get("housing_units") or 0
+        rent_history = results.get("rent") or []
+        demographics = results.get("demographics")
+        housing_capacity = results.get("housing_cap")
+        disaster_risk = results.get("disaster")
+
+        # ── Log results ──
+        if permit_history:
             total_permits = sum(p.permits for p in permit_history)
             yield _log_event(f"Permits: {total_permits:,} residential units filed over {len(permit_history)} years")
-        else:
-            yield _log_event("Skipping permit fetch — county not resolved")
 
-        # ── Step 5: Housing units ──
-        housing_units = 0
-        if state_fips and county_fips:
-            yield _log_event(f"Fetching housing unit count from Census ACS 5-Year...")
-            housing_units = await census_acs.get_county_housing_total(state_fips, county_fips)
+        if housing_units:
             yield _log_event(f"Housing units in county: {housing_units:,}")
 
-        # ── Step 6: Rent ──
-        yield _log_event(f"Loading rent data for {uni.city}, {uni.state}...")
-        fips = f"{state_fips}{county_fips}" if state_fips and county_fips else ""
-        rent_history = await rent.load_rent_data(uni.city, uni.state, fips)
         if rent_history:
             latest_rent = rent_history[-1].median_rent
             yield _log_event(f"Median rent: ${latest_rent:,.0f}/mo ({rent_history[-1].source})")
         else:
             yield _log_event("Rent data unavailable for this market")
+
+        if demographics and demographics.vacancy_rate_pct is not None:
+            yield _log_event(
+                f"Vacancy rate: {demographics.vacancy_rate_pct:.1f}% — "
+                f"renter-occupied {demographics.pct_renter_occupied or 0:.0f}%"
+            )
+
+        if housing_capacity:
+            yield _log_event(f"Dorm capacity: {housing_capacity.dormitory_capacity:,} beds")
+
+        if disaster_risk:
+            yield _log_event(
+                f"Disasters: {disaster_risk.total_disasters} total, "
+                f"{disaster_risk.weather_disasters} weather-related"
+            )
 
         # ── Step 7: Compute score ──
         yield _log_event("Computing Housing Pressure Score...")
@@ -233,6 +287,9 @@ async def score_with_streaming(
             permit_history=permit_history,
             housing_units=housing_units,
             rent_history=rent_history,
+            demographics=demographics,
+            housing_capacity=housing_capacity,
+            disaster_risk=disaster_risk,
         )
         yield _log_event(
             f"Score: {result.score}/100 — "
