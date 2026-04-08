@@ -79,7 +79,7 @@ export function ComparePanel({ scoreA, scoreB, onClear }: ComparePanelProps) {
   const permitsB = scoreB.permit_history.reduce((s, p) => s + p.permits, 0);
 
   return (
-    <div className="p-5 space-y-5 overflow-y-auto h-full">
+    <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
