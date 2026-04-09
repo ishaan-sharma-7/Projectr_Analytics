@@ -35,6 +35,7 @@ from backend.models.schemas import (
     PermitData,
     RentData,
     ScoreComponents,
+    STRMarket,
     UniversityMeta,
 )
 from backend.adapters.ipeds import compute_enrollment_cagr
@@ -215,6 +216,7 @@ def compute_pressure_score(
     existing_housing: ExistingHousingStock | None = None,
     master_plan: MasterPlanData | None = None,
     occupancy_ordinance: OccupancyOrdinance | None = None,
+    str_market: STRMarket | None = None,
     gemini_summary: str | None = None,
 ) -> HousingPressureScore:
     """Compute the full Housing Pressure Score for a university market."""
@@ -297,6 +299,13 @@ def compute_pressure_score(
         elif existing_housing.saturation_label == "low":
             multiplier *= 1.03
 
+    # 8. STR shadow supply boost
+    # High Airbnb/VRBO concentration removes units from the long-term rental
+    # pool, reducing effective student housing supply and increasing PBSH demand
+    # durability. We apply the pre-computed score_multiplier from the adapter.
+    if str_market and str_market.pbsh_signal == "positive":
+        multiplier *= str_market.score_multiplier
+
     # 7. Occupancy ordinance boost
     # Cities with enforced unrelated-person caps restrict cheap house-packing.
     # Students can't easily form large shared households → off-campus supply is
@@ -348,6 +357,7 @@ def compute_pressure_score(
         existing_housing=existing_housing,
         master_plan=master_plan,
         occupancy_ordinance=occupancy_ordinance,
+        str_market=str_market,
         gemini_summary=gemini_summary,
         scored_at=datetime.now(timezone.utc).isoformat(),
     )

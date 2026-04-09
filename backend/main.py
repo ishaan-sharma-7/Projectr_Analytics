@@ -42,8 +42,9 @@ from backend.adapters import (
     national_constraints,
     master_plans,
     occupancy_ordinances,
+    str_markets,
 )
-from backend.models.schemas import MasterPlanData, OccupancyOrdinance
+from backend.models.schemas import MasterPlanData, OccupancyOrdinance, STRMarket
 from backend.scoring.pressure import compute_pressure_score
 from backend.scoring.h3_hex import (
     generate_campus_hex_grid,
@@ -55,7 +56,7 @@ from backend.agent.gemini_agent import generate_gemini_summary, score_with_strea
 # ── Pre-scored cache ──
 _prescored: dict[int, HousingPressureScore] = {}
 _hex_response_cache: dict[tuple, dict] = {}
-CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v1_5_2"
+CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v1_6_0"
 
 
 def _slugify_filename(value: str) -> str:
@@ -290,6 +291,12 @@ async def score_university(req: ScoreRequest):
     if occ_raw:
         occupancy_ordinance = OccupancyOrdinance(**occ_raw)
 
+    # ── Step 6h: Look up STR shadow supply market ──
+    str_market: STRMarket | None = None
+    str_raw = str_markets.get_str_market(uni.city, uni.state)
+    if str_raw:
+        str_market = STRMarket(**str_raw)
+
     # ── Step 7: Compute score ──
     result = compute_pressure_score(
         university=uni,
@@ -304,6 +311,7 @@ async def score_university(req: ScoreRequest):
         existing_housing=existing_housing,
         master_plan=master_plan,
         occupancy_ordinance=occupancy_ordinance,
+        str_market=str_market,
     )
 
     # ── Step 8: Gemini summary ──

@@ -114,6 +114,24 @@ class ExistingHousingStock(BaseModel):
     saturation_label: str = "low"  # "low" | "moderate" | "high"
 
 
+class STRMarket(BaseModel):
+    """Short-term rental (Airbnb/VRBO) market concentration for the university's city.
+
+    High STR density removes units from the long-term rental pool, compressing
+    effective supply available to students and boosting durable PBSH demand.
+    """
+
+    city: str
+    state: str
+    str_intensity: str = "low"  # "very_high" | "high" | "moderate" | "low"
+    estimated_str_pct: float | None = None  # % of housing units estimated on STR platforms
+    pbsh_signal: str = "neutral"  # "positive" | "neutral"
+    score_multiplier: float = 1.0
+    confidence: str = "low"  # "high" | "medium" | "low"
+    source: str = ""
+    notes: str | None = None
+
+
 class OccupancyOrdinance(BaseModel):
     """City-level occupancy ordinance data for the university's home city.
 
@@ -188,6 +206,7 @@ class HousingPressureScore(BaseModel):
     existing_housing: ExistingHousingStock | None = None
     master_plan: MasterPlanData | None = None
     occupancy_ordinance: OccupancyOrdinance | None = None
+    str_market: STRMarket | None = None
     gemini_summary: str | None = None
     scored_at: str = ""
 

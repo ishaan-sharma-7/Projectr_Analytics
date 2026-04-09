@@ -637,26 +637,8 @@ def compute_hex_features(
             (housing_units / max(len(hex_indices), 1)) / hex_area_km2, 2
         ) if housing_units > 0 else 0.0
 
-        # ── Hex pressure score (raw demand signal) ──
-        # Near-campus hexes inherit more of the base score.
-        # Formula: score scales linearly from base_score (at campus) to
-        # base_score * 0.4 (at radius edge), creating a visible gradient.
-        hex_pressure = base_score * (0.4 + 0.6 * proximity)
-
-        # ── Transit boost ──
-        # Hexes with concentrated transit get a pressure bump because students
-        # will rent there even at distance. Cap the boost so it can't overpower
-        # the geometric gradient entirely.
+        # ── Transit stop count (used in hex_pressure after land-use is known) ──
         stop_count = bus_stop_counts.get(hex_id, 0)
-        transit_boost = 0.0
-        if stop_count >= 3:
-            transit_boost = 10.0
-            hex_pressure += transit_boost   # transit hub
-        elif stop_count >= 1:
-            transit_boost = 4.0
-            hex_pressure += transit_boost    # at least one stop in this cell
-
-        raw_pressure = max(0.0, min(100.0, round(hex_pressure, 1)))
 
         # ── Per-hex evidence layer + classification ──
         campus_feature_count = campus_marker_counts.get(hex_id, 0)
@@ -741,6 +723,62 @@ def compute_hex_features(
             else 0.0
         )
         development_density = development_marker_count / max(hex_area_km2, 0.01)
+
+        # ── Buildability factor — smooth land-availability gate (Option B) ──
+        # Multiplies the demand signal by how available/developable this hex is.
+        # Three penalty signals derived from actual OSM coverage:
+        #
+        #   campus_penalty: spatial campus coverage + marker share signal.
+        #     Campus-dominated hexes collapse toward 0.08 (not buildable).
+        #
+        #   built_penalty: only penalizes heavy saturation (>15% baseline).
+        #     Light residential is expected near campus; we only discount when
+        #     the hex is already densely packed (redevelopment-only territory).
+        #
+        #   nb_penalty: water/wetland/open-recreation coverage. Stacks on top.
+        #
+        # Floor at 0.08 so even fully constrained hexes get a non-zero score
+        # (prevents complete visual dead-zones on the map).
+
+        campus_signal = max(
+            coverage_pct["campus"] * 4.0,
+            campus_share * 0.85,
+        )
+        campus_penalty = min(1.0, campus_signal)
+
+        built_coverage = (
+            coverage_pct["residential_built"]
+            + coverage_pct["commercial_built"]
+            + coverage_pct["parking_infrastructure"]
+        )
+        # Only penalize above 15% — light residential is normal near campus
+        built_penalty = min(1.0, max(0.0, built_coverage - 0.15) * 2.0)
+
+        nb_coverage = (
+            coverage_pct["water"] * 6.0
+            + coverage_pct["wetland"] * 5.0
+            + coverage_pct["open_recreation"] * 2.5
+        )
+        nb_penalty = min(1.0, nb_coverage)
+
+        buildability_factor = max(
+            0.08,
+            1.0 - campus_penalty * 0.92 - built_penalty * 0.70 - nb_penalty * 0.85,
+        )
+
+        # ── Hex pressure = demand × buildability + transit boost ──
+        # Demand: regional undersupply + local proximity signal
+        # Availability: smooth factor gates how much of that demand is actionable
+        demand = 0.5 * base_score + 50.0 * proximity
+        transit_boost = 0.0
+        if stop_count >= 3:
+            transit_boost = 10.0   # transit hub
+        elif stop_count >= 1:
+            transit_boost = 4.0    # at least one stop
+
+        hex_pressure = demand * buildability_factor + transit_boost
+        raw_pressure = max(0.0, min(100.0, round(hex_pressure, 1)))
+
         (
             development_status,
             buildable_for_housing,
