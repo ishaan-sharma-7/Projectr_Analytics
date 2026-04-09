@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { Search, X, MapPin, ArrowRight, GitCompareArrows, Trophy } from "lucide-react";
+import { Search, X, MapPin, ArrowRight, GitCompareArrows, Trophy, Loader2 } from "lucide-react";
 import { UNIVERSITIES } from "../../lib/universityList";
 import type { UniversitySuggestion } from "../../lib/universityList";
 
@@ -11,6 +11,7 @@ interface SearchBarProps {
   extraUniversities?: UniversitySuggestion[];
   disabled?: boolean;
   compareMode?: boolean;
+  compareLoading?: boolean;
   onToggleCompare?: () => void;
   compareGuide?: string;
   rankingMode?: boolean;
@@ -25,6 +26,7 @@ export function SearchBar({
   extraUniversities = [],
   disabled,
   compareMode,
+  compareLoading,
   onToggleCompare,
   compareGuide,
   rankingMode,
@@ -266,7 +268,10 @@ export function SearchBar({
                 : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:border-blue-500"
             }`}
           >
-            <GitCompareArrows className="w-3.5 h-3.5" />
+            {compareMode && compareLoading
+            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            : <GitCompareArrows className="w-3.5 h-3.5" />
+          }
             {compareMode ? "Comparing" : "Compare"}
           </button>
         )}

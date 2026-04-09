@@ -582,6 +582,7 @@ function App() {
         extraUniversities={Object.values(dynamicUnis)}
         disabled={false}
         compareMode={compareMode}
+        compareLoading={!!loadingName}
         onToggleCompare={handleToggleCompare}
         compareGuide={compareGuide}
         rankingMode={rankingMode}
@@ -627,6 +628,8 @@ function App() {
                   compareNames={compareNames}
                   scoreCache={scoreCache}
                   loadingName={loadingName}
+                  queuedNames={queuedJobs.map(j => j.name)}
+                  activeLogs={activeJob?.logs ?? []}
                 />
               </aside>
             ) : (
