@@ -537,7 +537,7 @@ export function MapView({
       {/* Legend */}
       <div className="absolute bottom-6 left-6 bg-zinc-950/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 text-xs pointer-events-none">
         {activeHexData ? (
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             {[
               ["Strong Opportunity", "#22c55e"],
               ["Emerging", "#f59e0b"],
@@ -551,6 +551,10 @@ export function MapView({
                 <span className="text-zinc-400">{label}</span>
               </div>
             ))}
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-sm border-2" style={{ borderColor: "#d97706", background: "transparent" }} />
+              <span className="text-zinc-400">Land available</span>
+            </div>
           </div>
         ) : (
           <p className="text-zinc-500">

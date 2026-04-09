@@ -34,13 +34,16 @@ function hexVerdict(hex: HexFeatureProperties, status: NormalizedStatus): string
   if (hex.zoning_pbsh_signal === "constrained") {
     return "University-zoned land. Effectively off-limits for private development without institutional partnership.";
   }
-  // Potentially buildable
+  // Potentially buildable — mention land availability if present
   const s = hex.pressure_score;
   const t = hex.transit_label;
-  if (s >= 70 && t === "Transit Hub") return "Prime site — strong demand pressure and transit access. Leading development target.";
-  if (s >= 70) return "Strong demand near campus with limited supply. High-priority development site.";
-  if (s >= 55 && t !== "Isolated") return "Emerging opportunity with solid transit connectivity. Good mid-tier target.";
-  if (s >= 55) return "Moderate demand pressure. Verify site-level buildability before committing.";
+  const lots = hex.vacant_parcel_count ?? 0;
+  const lotSuffix = lots > 0 ? ` ${lots} vacant lot${lots !== 1 ? "s" : ""} available.` : "";
+  if (s >= 70 && t === "Transit Hub") return `Prime site — strong demand pressure and transit access. Leading development target.${lotSuffix}`;
+  if (s >= 70) return `Strong demand near campus with limited supply. High-priority development site.${lotSuffix}`;
+  if (s >= 55 && t !== "Isolated") return `Emerging opportunity with solid transit connectivity. Good mid-tier target.${lotSuffix}`;
+  if (s >= 55) return `Moderate demand pressure. Verify site-level buildability before committing.${lotSuffix}`;
+  if (lots > 0) return `Below-average demand signal but ${lots} vacant lot${lots !== 1 ? "s" : ""} available — potential off-market land play.`;
   if (s >= 40) return "Below-average demand signal. May suit smaller-scale or value-add projects.";
   return "Low demand in this zone. Elevated market-entry risk.";
 }
@@ -155,19 +158,22 @@ export function HexChoropleth({
     <>
       {hexData.features
         .filter((f) => maxDistanceMiles == null || f.properties.distance_to_campus_miles <= maxDistanceMiles)
-        .map((f) => (
-        <Polygon
-          key={f.properties.h3_index}
-          // GeoJSON coordinates are [lng, lat] — swap to {lat, lng} for Maps API
-          paths={f.geometry.coordinates[0].map(([lng, lat]) => ({ lat, lng }))}
-          strokeColor="#09090b"
-          strokeOpacity={0.5}
-          strokeWeight={0.5}
-          fillColor={hexFillColor(f.properties)}
-          fillOpacity={0.42}
-          onClick={() => setSelectedHex(f.properties)}
-        />
-      ))}
+        .map((f) => {
+          const hasLand = (f.properties.vacant_parcel_count ?? 0) > 0;
+          return (
+            <Polygon
+              key={f.properties.h3_index}
+              // GeoJSON coordinates are [lng, lat] — swap to {lat, lng} for Maps API
+              paths={f.geometry.coordinates[0].map(([lng, lat]) => ({ lat, lng }))}
+              strokeColor={hasLand ? "#d97706" : "#09090b"}
+              strokeOpacity={hasLand ? 0.9 : 0.5}
+              strokeWeight={hasLand ? 2 : 0.5}
+              fillColor={hexFillColor(f.properties)}
+              fillOpacity={hasLand ? 0.55 : 0.42}
+              onClick={() => setSelectedHex(f.properties)}
+            />
+          );
+        })}
 
       {selectedHex && (
         <InfoWindow
@@ -211,9 +217,84 @@ export function HexChoropleth({
             )}
 
             {/* Verdict sentence */}
-            <p className="text-xs text-zinc-600 leading-snug mb-2.5 border-b border-zinc-100 pb-2.5">
+            <p className="text-xs text-zinc-600 leading-snug mb-2.5">
               {hexVerdict(selectedHex, normalizedStatus!)}
             </p>
+
+            {/* Land availability callout — shown above stats when present */}
+            {(selectedHex.vacant_parcel_count ?? 0) > 0 && selectedHex.land_parcels && (() => {
+              const parcels = selectedHex.land_parcels!;
+              const absenteeCount = parcels.filter(p => p.is_absentee).length;
+              const landValues = parcels.filter(p => p.land_value > 0).map(p => p.land_value);
+              const avgLandValue = landValues.length > 0
+                ? landValues.reduce((a, b) => a + b, 0) / landValues.length
+                : 0;
+              return (
+                <div
+                  className="mb-2.5 rounded-md p-2 border"
+                  style={{ background: "#fffbeb", borderColor: "#d97706" }}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-bold" style={{ color: "#92400e" }}>
+                      Land available nearby
+                    </span>
+                    <span
+                      className="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                      style={{ background: "#d97706", color: "#fff" }}
+                    >
+                      {selectedHex.vacant_parcel_count} lot{selectedHex.vacant_parcel_count !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  {avgLandValue > 0 && (
+                    <div className="text-[10px] mb-1" style={{ color: "#78350f" }}>
+                      Avg land value: <span className="font-semibold">${(avgLandValue / 1000).toFixed(0)}k</span>
+                    </div>
+                  )}
+                  {absenteeCount > 0 && (
+                    <div className="text-[10px] mb-1.5" style={{ color: "#78350f" }}>
+                      <span className="font-semibold">{absenteeCount}</span> absentee owner{absenteeCount !== 1 ? "s" : ""} — potential off-market leads
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    {parcels.slice(0, 2).map((parcel, i) => (
+                      <div key={i} className="bg-white rounded p-1.5 text-[10px]" style={{ borderLeft: "2px solid #d97706" }}>
+                        <div className="font-medium text-zinc-800 truncate">
+                          {parcel.address || "Address not listed"}
+                        </div>
+                        <div className="flex justify-between mt-0.5 text-zinc-500">
+                          <span>
+                            {parcel.lot_size_acres > 0 ? `${parcel.lot_size_acres.toFixed(2)} ac` : parcel.land_use}
+                          </span>
+                          <span className="font-medium text-zinc-700">
+                            {parcel.land_value > 0
+                              ? `$${(parcel.land_value / 1000).toFixed(0)}k`
+                              : parcel.market_value > 0
+                              ? `$${(parcel.market_value / 1000).toFixed(0)}k`
+                              : "—"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between mt-0.5">
+                          <span className="text-zinc-400 truncate max-w-[130px]">{parcel.owner_name}</span>
+                          {parcel.is_absentee && (
+                            <span
+                              className="px-1 rounded text-[9px] font-semibold uppercase"
+                              style={{ background: "#fce7f3", color: "#9d174d" }}
+                            >
+                              Absentee
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {parcels.length > 2 && (
+                      <div className="text-[10px] text-center" style={{ color: "#a16207" }}>
+                        +{parcels.length - 2} more lot{parcels.length - 2 !== 1 ? "s" : ""} in this hex
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Key stats */}
             <div className="space-y-1.5 text-xs text-zinc-600">
@@ -288,59 +369,6 @@ export function HexChoropleth({
                 </div>
               )}
 
-              {/* Land parcels section */}
-              {(selectedHex.vacant_parcel_count ?? 0) > 0 && selectedHex.land_parcels && (
-                <div className="pt-1.5 mt-1 border-t border-zinc-100">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-zinc-500">Available land</span>
-                    <span
-                      className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide"
-                      style={{ background: "#fef9c3", color: "#854d0e" }}
-                    >
-                      {selectedHex.vacant_parcel_count} parcel{selectedHex.vacant_parcel_count !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  <div className="space-y-1.5">
-                    {selectedHex.land_parcels.slice(0, 3).map((parcel, i) => (
-                      <div key={i} className="bg-zinc-50 rounded p-1.5 text-[10px] text-zinc-700">
-                        <div className="font-medium text-zinc-900 truncate">
-                          {parcel.address || "Address not available"}
-                        </div>
-                        <div className="flex justify-between mt-0.5">
-                          <span>
-                            {parcel.lot_size_acres > 0
-                              ? `${parcel.lot_size_acres.toFixed(2)} ac`
-                              : parcel.land_use}
-                          </span>
-                          <span className="font-medium">
-                            {parcel.land_value > 0
-                              ? `$${(parcel.land_value / 1000).toFixed(0)}k land value`
-                              : parcel.market_value > 0
-                              ? `$${(parcel.market_value / 1000).toFixed(0)}k assessed`
-                              : "Value unknown"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between mt-0.5 text-zinc-500">
-                          <span className="truncate max-w-[120px]">{parcel.owner_name}</span>
-                          {parcel.is_absentee && (
-                            <span
-                              className="px-1 py-0 rounded text-[9px] font-semibold uppercase"
-                              style={{ background: "#fce7f3", color: "#9d174d" }}
-                            >
-                              Absentee owner
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    {(selectedHex.vacant_parcel_count ?? 0) > 3 && (
-                      <div className="text-[10px] text-zinc-400 text-center">
-                        +{(selectedHex.vacant_parcel_count ?? 0) - 3} more parcel{(selectedHex.vacant_parcel_count ?? 0) - 3 !== 1 ? "s" : ""}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </InfoWindow>
