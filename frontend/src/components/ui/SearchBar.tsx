@@ -252,7 +252,6 @@ export function SearchBar({
             {compareMode ? "Comparing" : "Compare"}
           </button>
         )}
-        <span className="text-sm text-zinc-400 font-medium">vt-2026</span>
       </div>
     </header>
   );

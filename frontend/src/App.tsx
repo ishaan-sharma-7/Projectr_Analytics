@@ -12,6 +12,7 @@ import { ComparePanel } from "./components/panels/ComparePanel";
 import { CompareSetupPanel } from "./components/panels/CompareSetupPanel";
 import type { HousingPressureScore } from "./lib/api";
 import type { HexGeoJSON } from "./lib/hexApi";
+
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 const CACHE_VERSION = "v8";
 const SCORE_CACHE_KEY = `campuslens_scores_${CACHE_VERSION}`;
@@ -22,9 +23,19 @@ const MAX_HEX_RADIUS_MILES = 5.0;
 const DEFAULT_HEX_RADIUS_MILES = 2.5;
 const HEX_RESOLUTION = 9;
 
-interface LogEntry {
+export interface LogEntry {
   message: string;
   ts: Date;
+}
+
+export interface ReportJob {
+  id: string;
+  name: string;
+  resolvedName?: string; // backend-canonical name, set on completion
+  status: "queued" | "running" | "done" | "error";
+  logs: LogEntry[];
+  errorMsg?: string;
+  forceRefreshHex: boolean;
 }
 
 /** Extract a bare hostname from a Scorecard URL like "www.vt.edu" or "https://vt.edu/". */
@@ -144,6 +155,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null);
+
   // Persistent score + hex caches — survive page refresh for 24 h
   const [scoreCache, setScoreCache] = useState<Record<string, HousingPressureScore>>(
     () => readCache<HousingPressureScore>(SCORE_CACHE_KEY)
@@ -157,12 +169,16 @@ function App() {
     () => readCache<UniversitySuggestion>(DYNAMIC_UNIS_CACHE_KEY)
   );
 
-  const [loading, setLoading] = useState(false);
   const [mapZoom, setMapZoom] = useState<number>(14);
-  const [loadingName, setLoadingName] = useState<string | null>(null);
-  const [agentLogs, setAgentLogs] = useState<LogEntry[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [hexRadiusMiles, setHexRadiusMiles] = useState(DEFAULT_HEX_RADIUS_MILES);
+
+  // ── Report queue ────────────────────────────────────────────────────────────
+  const [reportQueue, setReportQueue] = useState<ReportJob[]>([]);
+  const isProcessingRef = useRef(false);
+  const inflightHexLoadsRef = useRef<Set<string>>(new Set());
+
+  // Derived — what CompareSetupPanel needs
+  const loadingName = reportQueue.find(j => j.status === "running")?.name ?? null;
 
   // One-time cache schema migration: clears old localhost cache buckets.
   useEffect(() => {
@@ -190,13 +206,9 @@ function App() {
     }
   }, []);
 
-  // ── Compare mode state ──────────────────────────────────────────────────
+  // ── Compare mode state ──────────────────────────────────────────────────────
   const [compareMode, setCompareMode] = useState(false);
   const [compareNames, setCompareNames] = useState<[string | null, string | null]>([null, null]);
-
-  // Queue: name to auto-run report for after current loading finishes
-  const pendingReportRef = useRef<string | null>(null);
-  const inflightHexLoadsRef = useRef<Set<string>>(new Set());
 
   // Derived — what the side panel shows right now
   const activeScore = selectedName ? (scoreCache[selectedName] ?? null) : null;
@@ -219,7 +231,7 @@ function App() {
   const compareScoreB = compareNames[1] ? (scoreCache[compareNames[1]] ?? null) : null;
   const showCompareResult = compareMode && compareScoreA && compareScoreB;
 
-  // ── Core computation ──────────────────────────────────────────────────────
+  // ── Hex loading ─────────────────────────────────────────────────────────────
 
   const loadHexStream = async (
     queryName: string,
@@ -248,11 +260,7 @@ function App() {
         });
       }
 
-      let partial: HexGeoJSON = {
-        type: "FeatureCollection",
-        features: [],
-        metadata: undefined,
-      };
+      let partial: HexGeoJSON = { type: "FeatureCollection", features: [], metadata: undefined };
 
       const applyPartial = (payload: HexGeoJSON) => {
         setHexCache((prev) => {
@@ -266,13 +274,7 @@ function App() {
 
       applyPartial(partial);
 
-      partial = await fetchHexGrid(
-        queryName,
-        radiusMiles,
-        resolution,
-        false,
-        debugHex
-      );
+      partial = await fetchHexGrid(queryName, radiusMiles, resolution, false, debugHex);
       applyPartial(partial);
       if (persistToStorage) {
         for (const n of names) {
@@ -280,138 +282,145 @@ function App() {
         }
       }
     } catch {
-      // keep side panel usable even if hex stream fails
+      // keep side panel usable even if hex fetch fails
     } finally {
       inflightHexLoadsRef.current.delete(requestKey);
     }
   };
 
-  const runReport = async (name: string, forceRefreshHex = false) => {
-    setLoading(true);
-    setLoadingName(name);
-    setError(null);
-    setAgentLogs([]);
-    if (forceRefreshHex) {
-      setHexCache((prev) => clearHexEntriesForName(prev, name));
-    }
-
-    try {
-      for await (const event of streamScore(name)) {
-        if (event.type === "log") {
-          setAgentLogs((prev) => [...prev, { message: event.message, ts: new Date() }]);
-        } else if (event.type === "result") {
-          const uni = event.data.university;
-          const actualName = uni.name;
-
-          // ── Score cache: store under query key AND actual university name ──
-          // This ensures pin clicks (which use actualName) also hit the cache.
-          setScoreCache((prev) => {
-            const next = { ...prev, [name]: event.data };
-            if (actualName !== name) next[actualName] = event.data;
-            return next;
-          });
-          writeEntry(SCORE_CACHE_KEY, name, event.data);
-          if (actualName !== name) writeEntry(SCORE_CACHE_KEY, actualName, event.data);
-
-          // ── Dynamic pin: add if not already in the static list ────────────
-          const inStatic =
-            UNIVERSITIES.some((u) => u.name === name) ||
-            UNIVERSITIES.some((u) => u.name === actualName);
-
-          if (!inStatic) {
-            const newPin: UniversitySuggestion = {
-              name: actualName,
-              city: uni.city,
-              state: uni.state,
-              lat: uni.lat,
-              lon: uni.lon,
-              domain: extractDomain(uni.url),
-            };
-            setDynamicUnis((prev) => ({ ...prev, [actualName]: newPin }));
-            writeEntry(DYNAMIC_UNIS_CACHE_KEY, actualName, newPin);
-          }
-
-          // ── Hex cache (single resolution stream) ────────────────────────
-          const debugHex = isVirginiaTechName(actualName) || isVirginiaTechName(name);
-          void loadHexStream(
-            actualName,
-            [name, actualName],
-            HEX_RESOLUTION,
-            MAX_HEX_RADIUS_MILES,
-            debugHex,
-            forceRefreshHex,
-            true
-          );
-
-          // Canonicalize to backend-resolved name so map targeting is stable.
-          setSelectedName(actualName);
-          setSearchQuery(actualName);
-          if (isValidLatLng(uni.lat, uni.lon)) {
-            setSelectedCoords({ lat: uni.lat, lng: uni.lon });
-          }
-          setLoading(false);
-          setLoadingName(null);
-        } else if (event.type === "error") {
-          setError(event.message);
-          setLoading(false);
-          setLoadingName(null);
-        }
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to fetch score");
-      setLoading(false);
-      setLoadingName(null);
-    }
-  };
-
-  // ── Auto-run queued compare reports ───────────────────────────────────────
-  // When loading finishes and there's a pending name, auto-run it
-  useEffect(() => {
-    if (!loading && pendingReportRef.current) {
-      const pending = pendingReportRef.current;
-      pendingReportRef.current = null;
-      runReport(pending);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
-
-  // Safety net: if a name is selected but coords are missing/stale, derive
-  // coords from known university lists/cache so camera can always target.
+  // Hex loading: ensure selected campus has a fetched grid.
   useEffect(() => {
     if (!selectedName) return;
-    if (
-      selectedCoords
-      && isValidLatLng(selectedCoords.lat, selectedCoords.lng)
-    ) {
-      return;
-    }
-    const known = findKnownCoords(selectedName, dynamicUnis, scoreCache);
-    if (known) {
-      setSelectedCoords(known);
-    }
-  }, [selectedName, selectedCoords, dynamicUnis, scoreCache]);
-
-  // Hex loading: ensure selected campus + radius has a fetched grid.
-  useEffect(() => {
-    if (!selectedName || loading) return;
     const debugHex = isVirginiaTechName(selectedName);
     const key = hexCacheKey(selectedName, HEX_RESOLUTION, debugHex, MAX_HEX_RADIUS_MILES);
     if (!hexCache[key]) {
-      void loadHexStream(
-        selectedName,
-        [selectedName],
-        HEX_RESOLUTION,
-        MAX_HEX_RADIUS_MILES,
-        debugHex,
-        false
-      );
+      void loadHexStream(selectedName, [selectedName], HEX_RESOLUTION, MAX_HEX_RADIUS_MILES, debugHex, false);
     }
-  }, [selectedName, hexCache, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedName, hexCache]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  // ── Report queue processing ─────────────────────────────────────────────────
 
-  /** Pin click or suggestion select — in compare mode fills slots and auto-runs
-   *  reports for uncached selections; in normal mode just shows preview. */
+  const enqueueReport = (name: string, forceRefreshHex = false) => {
+    setReportQueue(prev => {
+      // Already queued or running — skip
+      if (prev.some(j => j.name === name && (j.status === "queued" || j.status === "running"))) {
+        return prev;
+      }
+      // Remove any stale error/done entry for this name, then append
+      const filtered = prev.filter(j => !(j.name === name && (j.status === "error" || j.status === "done")));
+      const id = `${name}::${Date.now()}`;
+      return [...filtered, { id, name, status: "queued", logs: [], forceRefreshHex }];
+    });
+  };
+
+  const dismissJob = (id: string) => {
+    setReportQueue(prev => prev.filter(j => j.id !== id));
+  };
+
+  const handleViewReport = (job: ReportJob) => {
+    const name = job.resolvedName ?? job.name;
+    const known = findKnownCoords(name, dynamicUnis, scoreCache);
+    if (known) setSelectedCoords(known);
+    setSelectedName(name);
+    setSearchQuery(name);
+    dismissJob(job.id);
+  };
+
+  // Process the next queued job whenever the queue changes
+  useEffect(() => {
+    const nextQueued = reportQueue.find(j => j.status === "queued");
+    const hasRunning = reportQueue.some(j => j.status === "running");
+
+    if (!nextQueued || hasRunning || isProcessingRef.current) return;
+
+    isProcessingRef.current = true;
+    const job = nextQueued;
+
+    // Mark running synchronously, then execute
+    setReportQueue(prev => prev.map(j => j.id === job.id ? { ...j, status: "running" as const } : j));
+
+    const run = async () => {
+      const { id, name, forceRefreshHex } = job;
+
+      if (forceRefreshHex) {
+        setHexCache(prev => clearHexEntriesForName(prev, name));
+      }
+
+      try {
+        for await (const event of streamScore(name)) {
+          if (event.type === "log") {
+            setReportQueue(prev => prev.map(j =>
+              j.id === id
+                ? { ...j, logs: [...j.logs, { message: event.message, ts: new Date() }] }
+                : j
+            ));
+          } else if (event.type === "result") {
+            const uni = event.data.university;
+            const actualName = uni.name;
+
+            setScoreCache(prev => {
+              const next = { ...prev, [name]: event.data };
+              if (actualName !== name) next[actualName] = event.data;
+              return next;
+            });
+            writeEntry(SCORE_CACHE_KEY, name, event.data);
+            if (actualName !== name) writeEntry(SCORE_CACHE_KEY, actualName, event.data);
+
+            const inStatic =
+              UNIVERSITIES.some(u => u.name === name) ||
+              UNIVERSITIES.some(u => u.name === actualName);
+
+            if (!inStatic) {
+              const newPin: UniversitySuggestion = {
+                name: actualName,
+                city: uni.city,
+                state: uni.state,
+                lat: uni.lat,
+                lon: uni.lon,
+                domain: extractDomain(uni.url),
+              };
+              setDynamicUnis(prev => ({ ...prev, [actualName]: newPin }));
+              writeEntry(DYNAMIC_UNIS_CACHE_KEY, actualName, newPin);
+            }
+
+            const debugHex = isVirginiaTechName(actualName) || isVirginiaTechName(name);
+            void loadHexStream(actualName, [name, actualName], HEX_RESOLUTION, MAX_HEX_RADIUS_MILES, debugHex, forceRefreshHex, true);
+
+            // Mark done — let the user navigate themselves
+            setReportQueue(prev => prev.map(j =>
+              j.id === id ? { ...j, status: "done" as const, resolvedName: actualName } : j
+            ));
+          } else if (event.type === "error") {
+            setReportQueue(prev => prev.map(j =>
+              j.id === id ? { ...j, status: "error" as const, errorMsg: event.message } : j
+            ));
+          }
+        }
+      } catch (err: unknown) {
+        setReportQueue(prev => prev.map(j =>
+          j.id === id
+            ? { ...j, status: "error" as const, errorMsg: err instanceof Error ? err.message : "Failed to fetch score" }
+            : j
+        ));
+      } finally {
+        isProcessingRef.current = false;
+      }
+    };
+
+    run();
+  }, [reportQueue]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Safety net: if a name is selected but coords are missing/stale, derive coords.
+  useEffect(() => {
+    if (!selectedName) return;
+    if (selectedCoords && isValidLatLng(selectedCoords.lat, selectedCoords.lng)) return;
+    const known = findKnownCoords(selectedName, dynamicUnis, scoreCache);
+    if (known) setSelectedCoords(known);
+  }, [selectedName, selectedCoords, dynamicUnis, scoreCache]);
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
+  /** Pin click or suggestion select */
   const handleSelectUniversity = (name: string, coords?: { lat: number; lng: number }) => {
     if (coords && isValidLatLng(coords.lat, coords.lng)) {
       setSelectedCoords(coords);
@@ -428,29 +437,12 @@ function App() {
         } else if (prev[1] === null && prev[0] !== name) {
           next = [prev[0], name];
         } else {
-          // Both filled or same name — restart with this one
           next = [name, null];
         }
 
-        // Auto-trigger reports for any slot that isn't cached yet
         const needsReport = (n: string | null) => n && !scoreCache[n];
-
-        if (needsReport(next[0]) && needsReport(next[1])) {
-          // Both need reports — run first now, queue second
-          if (!loading) {
-            runReport(next[0]!);
-            pendingReportRef.current = next[1]!;
-          } else {
-            pendingReportRef.current = next[0]!;
-          }
-        } else if (needsReport(name)) {
-          // Only the newly selected one needs a report
-          if (!loading) {
-            runReport(name);
-          } else {
-            pendingReportRef.current = name;
-          }
-        }
+        if (needsReport(next[0])) enqueueReport(next[0]!);
+        if (needsReport(next[1])) enqueueReport(next[1]!);
 
         return next;
       });
@@ -459,13 +451,12 @@ function App() {
       return;
     }
 
-    // Normal mode — no auto-compute
     setSelectedName(name);
     setSearchQuery(name);
   };
 
-  /** Search bar Enter — in compare mode delegates to selection, else explicit compute. */
-  const handleSearch = async (e: React.FormEvent) => {
+  /** Search bar Enter */
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const name = searchQuery.trim();
     if (!name) return;
@@ -475,22 +466,22 @@ function App() {
       const known = findKnownCoords(name, dynamicUnis, scoreCache);
       if (known) setSelectedCoords(known);
       setSelectedName(name);
-      await runReport(name);
+      enqueueReport(name);
     }
   };
 
-  /** "Generate Report" button in PreviewPanel. */
-  const handleGenerateReport = async (name: string) => {
+  /** "Generate Report" button in PreviewPanel */
+  const handleGenerateReport = (name: string) => {
     const known = findKnownCoords(name, dynamicUnis, scoreCache);
     if (known) setSelectedCoords(known);
     setSelectedName(name);
-    await runReport(name);
+    enqueueReport(name);
   };
 
-  /** "Recompute" button in ScorePanel. */
-  const handleRecompute = async () => {
+  /** "Recompute" button in ScorePanel */
+  const handleRecompute = () => {
     if (!selectedName) return;
-    await runReport(selectedName, true);
+    enqueueReport(selectedName, true);
   };
 
   const handleHoverPrefetch = (name: string) => {
@@ -501,27 +492,19 @@ function App() {
     }
   };
 
-  // Toggle compare mode
   const handleToggleCompare = () => {
     setCompareMode((prev) => {
       if (!prev) {
-        if (selectedName) {
-          setCompareNames([selectedName, null]);
-        } else {
-          setCompareNames([null, null]);
-        }
+        setCompareNames(selectedName ? [selectedName, null] : [null, null]);
       } else {
         setCompareNames([null, null]);
-        pendingReportRef.current = null;
       }
       return !prev;
     });
   };
 
-  // Clear compare selections
   const handleClearCompare = () => {
     setCompareNames([null, null]);
-    pendingReportRef.current = null;
     setSelectedName(null);
     setSelectedCoords(null);
     setSearchQuery("");
@@ -532,7 +515,6 @@ function App() {
     setSelectedCoords(null);
   };
 
-  // Compare guide text for the search bar
   const compareGuide = compareMode
     ? compareNames[0] === null
       ? "Click a pin or search for first university…"
@@ -540,6 +522,12 @@ function App() {
       ? "Now click or search for the second…"
       : undefined
     : undefined;
+
+  // Derive queue slices for SidePanel
+  const activeJob = reportQueue.find(j => j.status === "running") ?? null;
+  const queuedJobs = reportQueue.filter(j => j.status === "queued");
+  const doneJobs = reportQueue.filter(j => j.status === "done");
+  const errorJobs = reportQueue.filter(j => j.status === "error");
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-zinc-950 text-zinc-50">
@@ -549,7 +537,7 @@ function App() {
         onSubmit={handleSearch}
         onSelectUniversity={handleSelectUniversity}
         extraUniversities={Object.values(dynamicUnis)}
-        disabled={loading && !compareMode}
+        disabled={false}
         compareMode={compareMode}
         onToggleCompare={handleToggleCompare}
         compareGuide={compareGuide}
@@ -590,13 +578,16 @@ function App() {
           </aside>
         ) : (
           <SidePanel
-            loading={loading}
-            error={error}
             selectedName={selectedName}
             activeScore={activeScore}
-            agentLogs={agentLogs}
+            activeJob={activeJob}
+            queuedJobs={queuedJobs}
+            doneJobs={doneJobs}
+            errorJobs={errorJobs}
             onRecompute={handleRecompute}
             onGenerateReport={handleGenerateReport}
+            onDismissJob={dismissJob}
+            onViewReport={handleViewReport}
             onSelectNearest={handleSelectUniversity}
             extraUniversities={Object.values(dynamicUnis)}
           />

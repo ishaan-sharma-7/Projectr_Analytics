@@ -402,7 +402,7 @@ export function MapView({
   }, [selectedName]);
 
   return (
-    <div className="flex-1 bg-zinc-900 relative">
+    <div className="flex-1 bg-zinc-900 relative text-zinc-900">
       <Map
         mapId="CampusLensMap"
         defaultCenter={NATIONAL_CENTER}
