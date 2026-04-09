@@ -1,6 +1,6 @@
 [
   {
-    "university_name": "Texas A&M University",
+    "university_name": "Texas A&M University-College Station",
     "planned_beds": 3668,
     "horizon_year": 2026,
     "p3_deal": false,
@@ -130,7 +130,7 @@
     "notes": "East Campus and Williams Village expansion; responding to Boulder housing cost pressure"
   },
   {
-    "university_name": "Virginia Tech",
+    "university_name": "Virginia Polytechnic Institute and State University",
     "planned_beds": 800,
     "horizon_year": 2027,
     "p3_deal": false,

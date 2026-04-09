@@ -53,15 +53,21 @@ def _time_discount(horizon_year: int | None) -> float:
     return 0.20
 
 
+def _normalize_name(name: str) -> str:
+    """Normalize university name for matching: lowercase, hyphens → spaces, collapse whitespace."""
+    return " ".join(name.strip().lower().replace("-", " ").split())
+
+
 def lookup(university_name: str) -> dict | None:
     """Return raw master plan entry for a university, or None if not in data.
 
-    Matching is case-insensitive exact name match. Names must correspond to
-    the university_name field in master_plans.json.
+    Matching is case-insensitive with hyphen/whitespace normalization so that
+    IPEDS names like "University of California-Los Angeles" match fixture entries
+    written as "University of California Los Angeles".
     """
-    target = university_name.strip().lower()
+    target = _normalize_name(university_name)
     for entry in _load():
-        if entry.get("university_name", "").strip().lower() == target:
+        if _normalize_name(entry.get("university_name", "")) == target:
             return entry
     return None
 
