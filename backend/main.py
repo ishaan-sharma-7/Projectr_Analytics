@@ -53,6 +53,7 @@ from backend.scoring.h3_hex import (
     to_geojson,
 )
 from backend.agent.gemini_agent import generate_gemini_summary, score_with_streaming, answer_chat_query
+from backend.db import firestore as db
 
 # ── Pre-scored cache ──
 _prescored: dict[int, HousingPressureScore] = {}
@@ -114,14 +115,33 @@ def _write_hex_disk_cache(cache_key: tuple, geojson: dict) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load pre-scored universities from cache on startup."""
-    cache_path = Path(config.cache_dir) / "prescored.json"
-    if cache_path.exists():
-        data = json.loads(cache_path.read_text())
-        for entry in data:
-            score = HousingPressureScore.model_validate(entry)
-            _prescored[score.university.unitid] = score
-        print(f"Loaded {len(_prescored)} pre-scored universities from cache.")
+    """Load pre-scored universities from Firestore (primary) or file cache (fallback)."""
+
+    # ── 1. Scores: Firestore → file fallback ──
+    if db.is_available():
+        fs_scores = await db.get_all_scores()
+        if fs_scores:
+            for uid, data in fs_scores.items():
+                _prescored[uid] = HousingPressureScore.model_validate(data)
+            print(f"Loaded {len(_prescored)} scores from Firestore.")
+        else:
+            print("[Firestore] scores collection empty — seeding from file cache.")
+
+    if not _prescored:
+        cache_path = Path(config.cache_dir) / "prescored.json"
+        if cache_path.exists():
+            data = json.loads(cache_path.read_text())
+            for entry in data:
+                score = HousingPressureScore.model_validate(entry)
+                _prescored[score.university.unitid] = score
+            print(f"Loaded {len(_prescored)} pre-scored universities from file cache.")
+
+        if _prescored and db.is_available():
+            dumped = {uid: json.loads(s.model_dump_json()) for uid, s in _prescored.items()}
+            synced = await db.bulk_set_scores(dumped)
+            print(f"Synced {synced} scores → Firestore.")
+
+    # ── 2. Hex grids: file cache warm-up (Firestore checked at request time) ──
     hex_cache_dir = Path(config.cache_dir) / "hex"
     if hex_cache_dir.exists():
         count = 0
@@ -137,6 +157,7 @@ async def lifespan(app: FastAPI):
                 pass
         if count:
             print(f"Warmed {count} hex grids from disk cache.")
+
     yield
 
 
@@ -158,12 +179,13 @@ app.add_middleware(
 
 @app.post("/chat")
 async def chat_with_agent(req: ChatRequest):
-    """Answers a chat query via Gemini 2.5 Flash."""
+    """Answers a chat query via Gemini 2.5 Flash with full DB access."""
     try:
         response_text = await answer_chat_query(
             messages=req.messages,
             uni_name=req.selectedName,
             active_score=req.activeScore,
+            all_scores=_prescored,
         )
         return {"response": response_text}
     except Exception as exc:
@@ -334,6 +356,9 @@ async def score_university(req: ScoreRequest):
     summary = await generate_gemini_summary(result)
     if summary:
         result = result.model_copy(update={"gemini_summary": summary})
+
+    # Persist to Firestore
+    await db.set_score(uni.unitid, json.loads(result.model_dump_json()))
 
     return result
 
@@ -551,9 +576,16 @@ async def get_hex_grid(
     )
     if cache_key in _hex_response_cache:
         return _hex_response_cache[cache_key]
+
+    fs_hit = await db.get_hex(cache_key)
+    if fs_hit:
+        _hex_response_cache[cache_key] = fs_hit
+        return fs_hit
+
     disk_hit = _load_hex_disk_cache(cache_key)
     if disk_hit:
         _hex_response_cache[cache_key] = disk_hit
+        await db.set_hex(cache_key, disk_hit)  # lazy-migrate to Firestore
         return disk_hit
 
     # ── Generate hex grid ──
@@ -636,6 +668,7 @@ async def get_hex_grid(
             print(f"[/hex] Debug snapshot written: {debug_path}")
     _hex_response_cache[cache_key] = geojson
     _write_hex_disk_cache(cache_key, geojson)
+    await db.set_hex(cache_key, geojson)
     return geojson
 
 

@@ -111,18 +111,93 @@ async def generate_gemini_summary(score: HousingPressureScore) -> str:
 
 _CHAT_SYSTEM_PROMPT = """You are an expert student housing market analyst embedded directly into the CampusLens intelligence platform.
 
-Your goal is to answer the user's questions about housing markets, development risk, and comparative metrics. 
+Your goal is to answer the user's questions about housing markets, development risk, and comparative metrics.
 The user (a real estate developer or institutional analyst) will ask you to interpret the market data currently shown on their dashboard.
 
+You have access to a database of scored universities. You can look up detailed data for ANY university in the database using the lookup_university tool. When the user asks about a university that isn't the currently selected one, use the tool to fetch its data before answering.
+
 RULES FOR REASONING:
-1. Base your answers ONLY on the injected market metrics provided below.
+1. Base your answers on injected market metrics and data retrieved via tool calls.
 2. Prioritize causal reasoning: explain *why* a score is high or low by contrasting demand-side pressure (enrollment growth, rent growth) against supply-side response (building permits, existing housing).
 3. Be concise and insightful. Use an authoritative, analytical tone. Avoid generic fluff.
 4. Highlight specific tradeoffs, constraints, or development risks based on the data.
-5. If the user asks a question that requires data not present in the injected context, clearly state that you don't have that specific data.
+5. When comparing universities, use the lookup_university tool to fetch data for each one.
 6. Provide light comparative context (e.g. "Rent growth of 8% outpaces typical national inflation...")."""
 
-async def answer_chat_query(messages: list[ChatMessage], uni_name: str | None, active_score: HousingPressureScore | None) -> str:
+
+def _build_score_snapshot(name: str, score: HousingPressureScore) -> str:
+    """Build a concise market snapshot string from a HousingPressureScore."""
+    from backend.adapters.ipeds import compute_enrollment_cagr
+    from backend.adapters.rent import compute_rent_growth
+
+    cagr = compute_enrollment_cagr(score.enrollment_trend, years=3)
+    rent_growth = compute_rent_growth(score.rent_history, years=2)
+    permits_2yr = sum(p.permits for p in score.permit_history[-2:]) if score.permit_history else 0
+
+    cagr_str = f"{cagr:+.1f}%" if cagr is not None else "N/A"
+    rent_str = f"{rent_growth:+.1f}%" if rent_growth is not None else "N/A"
+
+    enrollment = score.enrollment_trend[-1].total_enrollment if score.enrollment_trend else None
+    housing_units = score.nearby_housing_units or None
+
+    beds = None
+    if score.housing_capacity and score.housing_capacity.dormitory_capacity:
+        beds = score.housing_capacity.dormitory_capacity
+
+    beds_ratio = "N/A"
+    if beds is not None and enrollment is not None and enrollment > 0:
+        beds_ratio = f"{beds / enrollment:.2f}"
+
+    enrollment_str = f"{enrollment:,}" if enrollment is not None else "N/A"
+    housing_units_str = f"{housing_units:,}" if housing_units is not None else "N/A"
+    beds_str = f"{beds:,}" if beds is not None else "N/A"
+
+    raw_data_dump = score.model_dump_json(exclude={"gemini_summary"}, exclude_none=True, indent=2)
+
+    return f"""
+MARKET DATA FOR: {name}
+
+MARKET SNAPSHOT:
+• Housing Pressure Score: {score.score:.1f}/100
+• Enrollment: {enrollment_str} (3-year CAGR: {cagr_str})
+• Rent Growth (2-year average): {rent_str}
+• Permits Filed (last 2 years): {permits_2yr:,} residential units
+• Current Housing Units (County): {housing_units_str}
+• On-Campus Bed Capacity: {beds_str} (approx {beds_ratio} beds per student)
+
+COMPONENT BREAKDOWN:
+• Enrollment Pressure: {score.components.enrollment_pressure:.1f}/100
+• Rent Pressure: {score.components.rent_pressure:.1f}/100
+• Permit Gap: {score.components.permit_gap:.1f}/100
+
+RAW API DATA:
+```json
+{raw_data_dump}
+```"""
+
+
+def _lookup_university_data(
+    name: str,
+    all_scores: dict[int, "HousingPressureScore"] | None,
+) -> str:
+    """Search prescored cache by name and return a market snapshot."""
+    if not all_scores:
+        return json.dumps({"error": "No university data available in database"})
+
+    query = name.lower()
+    for _uid, score in all_scores.items():
+        if query in score.university.name.lower():
+            return _build_score_snapshot(score.university.name, score)
+
+    return json.dumps({"error": f"University '{name}' not found in database. Available universities may not have been scored yet."})
+
+
+async def answer_chat_query(
+    messages: list[ChatMessage],
+    uni_name: str | None,
+    active_score: HousingPressureScore | None,
+    all_scores: dict[int, "HousingPressureScore"] | None = None,
+) -> str:
     if not config.gemini_api_key:
         return "I'm sorry, my real AI capabilities aren't configured yet (missing Gemini API key)."
 
@@ -134,72 +209,91 @@ async def answer_chat_query(messages: list[ChatMessage], uni_name: str | None, a
 
     client = genai.Client(api_key=config.gemini_api_key)
 
+    # ── System prompt with available universities ──
     system_instruction = _CHAT_SYSTEM_PROMPT
+
+    if all_scores:
+        lines = []
+        for uid, s in all_scores.items():
+            label = "High" if s.score >= 70 else "Medium" if s.score >= 40 else "Low"
+            lines.append(f"  - {s.university.name} ({s.university.city}, {s.university.state}) — {s.score:.0f}/100 [{label}]")
+        uni_list = "\n".join(sorted(lines))
+        system_instruction += f"\n\nUNIVERSITIES IN DATABASE ({len(all_scores)} total):\n{uni_list}\n"
+
     if uni_name and active_score:
-        from backend.adapters.ipeds import compute_enrollment_cagr
-        from backend.adapters.rent import compute_rent_growth
+        system_instruction += f"\n[CURRENTLY SELECTED] {uni_name}\n"
+        system_instruction += _build_score_snapshot(uni_name, active_score)
 
-        cagr = compute_enrollment_cagr(active_score.enrollment_trend, years=3)
-        rent_growth = compute_rent_growth(active_score.rent_history, years=2)
-        permits_2yr = sum(p.permits for p in active_score.permit_history[-2:]) if active_score.permit_history else 0
-        
-        cagr_str = f"{cagr:+.1f}%" if cagr is not None else "N/A"
-        rent_str = f"{rent_growth:+.1f}%" if rent_growth is not None else "N/A"
-        
-        enrollment = active_score.enrollment_trend[-1].total_enrollment if active_score.enrollment_trend else None
-        housing_units = active_score.nearby_housing_units if active_score.nearby_housing_units else None
-        
-        beds = None
-        if active_score.housing_capacity and active_score.housing_capacity.dormitory_capacity:
-            beds = active_score.housing_capacity.dormitory_capacity
-            
-        beds_ratio = "N/A"
-        if beds is not None and enrollment is not None and enrollment > 0:
-            beds_ratio = f"{beds / enrollment:.2f}"
+    # ── Tool definition: lookup_university ──
+    lookup_tool = types.Tool(
+        function_declarations=[
+            types.FunctionDeclaration(
+                name="lookup_university",
+                description="Look up detailed housing market data for any university in the CampusLens database. Use this when the user asks about a university other than the currently selected one, or when comparing universities.",
+                parameters=types.Schema(
+                    type=types.Type.OBJECT,
+                    properties={
+                        "university_name": types.Schema(
+                            type=types.Type.STRING,
+                            description="Name of the university to look up (e.g. 'Ohio State University')",
+                        ),
+                    },
+                    required=["university_name"],
+                ),
+            ),
+        ],
+    )
 
-        enrollment_str = f"{enrollment:,}" if enrollment is not None else "N/A"
-        housing_units_str = f"{housing_units:,}" if housing_units is not None else "N/A"
-        beds_str = f"{beds:,}" if beds is not None else "N/A"
+    contents = []
+    for msg in messages:
+        gemini_role = "model" if msg.role == "assistant" else msg.role
+        contents.append(
+            types.Content(role=gemini_role, parts=[types.Part.from_text(text=msg.content)])
+        )
 
-        raw_data_dump = active_score.model_dump_json(exclude={"gemini_summary"}, exclude_none=True, indent=2)
-
-        system_instruction += f"""
-
-[SYSTEM INJECTION] The user is currently viewing the market for: {uni_name}.
-
-MARKET SNAPSHOT:
-• Housing Pressure Score: {active_score.score:.1f}/100
-• Enrollment: {enrollment_str} (3-year CAGR: {cagr_str})
-• Rent Growth (2-year average): {rent_str}
-• Permits Filed (last 2 years): {permits_2yr:,} residential units
-• Current Housing Units (County): {housing_units_str}
-• On-Campus Bed Capacity: {beds_str} (approx {beds_ratio} beds per student)
-
-COMPONENT BREAKDOWN:
-• Enrollment Pressure Component: {active_score.components.enrollment_pressure:.1f}/100
-• Rent Pressure Component: {active_score.components.rent_pressure:.1f}/100
-• Permit Gap Component: {active_score.components.permit_gap:.1f}/100
-
-RAW API DATA FOR DEEP ANALYSIS (includes all historical trend arrays, demographics, disaster risks, etc):
-```json
-{raw_data_dump}
-```
-"""
+    gen_config = types.GenerateContentConfig(
+        system_instruction=system_instruction,
+        tools=[lookup_tool],
+        temperature=0.4,
+    )
 
     try:
-        contents = []
-        for msg in messages:
-            gemini_role = "model" if msg.role == "assistant" else msg.role
-            contents.append(types.Content(role=gemini_role, parts=[types.Part.from_text(text=msg.content)]))
-
         response = await client.aio.models.generate_content(
             model="gemini-2.5-flash",
             contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.4,
-            ),
+            config=gen_config,
         )
+
+        # Handle function-calling loop (max 5 rounds)
+        for _ in range(5):
+            candidate = response.candidates[0]
+            fn_calls = [p for p in candidate.content.parts if p.function_call]
+            if not fn_calls:
+                break
+
+            contents.append(candidate.content)
+
+            fn_response_parts = []
+            for part in fn_calls:
+                fc = part.function_call
+                if fc.name == "lookup_university":
+                    result = _lookup_university_data(
+                        fc.args.get("university_name", ""), all_scores
+                    )
+                    fn_response_parts.append(
+                        types.Part.from_function_response(
+                            name=fc.name, response={"result": result}
+                        )
+                    )
+
+            contents.append(types.Content(parts=fn_response_parts))
+
+            response = await client.aio.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=contents,
+                config=gen_config,
+            )
+
         return response.text.strip()
     except Exception as exc:
         print(f"[Gemini] Chat exception: {exc}")

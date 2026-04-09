@@ -30,6 +30,9 @@ class Config:
     # Google AI / Gemini
     gemini_api_key: str = ""
 
+    # Google Cloud (Firestore)
+    gcp_project_id: str = ""
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
@@ -46,6 +49,7 @@ class Config:
             hud_api_key=os.getenv("HUD_API_KEY", ""),
             google_maps_key=os.getenv("GOOGLE_MAPS_API_KEY", ""),
             gemini_api_key=os.getenv("GEMINI_API_KEY", ""),
+            gcp_project_id=os.getenv("GCP_PROJECT_ID", ""),
             host=os.getenv("HOST", "0.0.0.0"),
             port=int(os.getenv("PORT", "8000")),
             debug=os.getenv("DEBUG", "false").lower() == "true",
