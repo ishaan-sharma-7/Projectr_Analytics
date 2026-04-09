@@ -6,7 +6,7 @@ import {
   ControlPosition,
   useMap,
 } from "@vis.gl/react-google-maps";
-import { Crosshair } from "lucide-react";
+import { Crosshair, Globe } from "lucide-react";
 import { HexChoropleth } from "./HexChoropleth";
 import { UNIVERSITIES } from "../lib/universityList";
 import type { UniversitySuggestion } from "../lib/universityList";
@@ -36,6 +36,81 @@ const US_BOUNDS = {
   west: -150.0,
   east: -45.0,
 };
+
+function isValidLatLng(lat: number, lng: number): boolean {
+  return (
+    Number.isFinite(lat)
+    && Number.isFinite(lng)
+    && lat >= -90
+    && lat <= 90
+    && lng >= -180
+    && lng <= 180
+  );
+}
+
+function normalizeSchoolName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function getTargetPosition(
+  name: string,
+  scoreCache: Record<string, HousingPressureScore>,
+  dynamicUnis: Record<string, UniversitySuggestion>
+): { lat: number; lng: number } | null {
+  // Prefer known pin coordinates first so stale score-cache entries cannot
+  // send camera moves to an incorrect fallback location.
+  const dynamic = dynamicUnis[name];
+  if (dynamic && isValidLatLng(dynamic.lat, dynamic.lon)) {
+    return { lat: dynamic.lat, lng: dynamic.lon };
+  }
+
+  const staticUni = UNIVERSITIES.find((u) => u.name === name);
+  if (staticUni && isValidLatLng(staticUni.lat, staticUni.lon)) {
+    return { lat: staticUni.lat, lng: staticUni.lon };
+  }
+
+  const computed = scoreCache[name];
+  if (computed && isValidLatLng(computed.university.lat, computed.university.lon)) {
+    return { lat: computed.university.lat, lng: computed.university.lon };
+  }
+
+  // Fuzzy fallback for minor naming differences ("Penn State" vs
+  // "Pennsylvania State University", punctuation, etc.).
+  const normalizedTarget = normalizeSchoolName(name);
+  for (const uni of Object.values(dynamicUnis)) {
+    if (
+      normalizeSchoolName(uni.name) === normalizedTarget
+      && isValidLatLng(uni.lat, uni.lon)
+    ) {
+      return { lat: uni.lat, lng: uni.lon };
+    }
+  }
+
+  for (const uni of UNIVERSITIES) {
+    if (
+      normalizeSchoolName(uni.name) === normalizedTarget
+      && isValidLatLng(uni.lat, uni.lon)
+    ) {
+      return { lat: uni.lat, lng: uni.lon };
+    }
+  }
+
+  for (const value of Object.values(scoreCache)) {
+    const uni = value.university;
+    if (
+      normalizeSchoolName(uni.name) === normalizedTarget
+      && isValidLatLng(uni.lat, uni.lon)
+    ) {
+      return { lat: uni.lat, lng: uni.lon };
+    }
+  }
+
+  return null;
+}
 
 // ── Logo Pin ──────────────────────────────────────────────────────────────────
 // Circle with school favicon, pointer triangle at bottom, colored ring.
@@ -164,36 +239,37 @@ function LogoPin({ uni, borderColor, scale }: LogoPinProps) {
 
 function CameraController({
   selectedName,
+  selectedCoords,
   scoreCache,
+  dynamicUnis,
+  forceNational,
 }: {
   selectedName: string | null;
+  selectedCoords?: { lat: number; lng: number } | null;
   scoreCache: Record<string, HousingPressureScore>;
+  dynamicUnis: Record<string, UniversitySuggestion>;
+  forceNational?: boolean;
 }) {
   const map = useMap();
 
   useEffect(() => {
     if (!map) return;
 
-    if (!selectedName) {
-      map.panTo(NATIONAL_CENTER);
-      const t = setTimeout(() => map.setZoom(NATIONAL_ZOOM), 250);
-      return () => clearTimeout(t);
+    if (forceNational || !selectedName) {
+      map.moveCamera({ center: NATIONAL_CENTER, zoom: NATIONAL_ZOOM });
+      return;
     }
 
-    const computed = scoreCache[selectedName];
-    const target = computed
-      ? { lat: computed.university.lat, lng: computed.university.lon }
-      : (() => {
-          const u = UNIVERSITIES.find((u) => u.name === selectedName);
-          return u ? { lat: u.lat, lng: u.lon } : null;
-        })();
+    const target = (
+      selectedCoords && isValidLatLng(selectedCoords.lat, selectedCoords.lng)
+    )
+      ? selectedCoords
+      : getTargetPosition(selectedName, scoreCache, dynamicUnis);
 
     if (target) {
-      map.panTo(target);
-      const t = setTimeout(() => map.setZoom(CAMPUS_ZOOM), 250);
-      return () => clearTimeout(t);
+      map.moveCamera({ center: target, zoom: CAMPUS_ZOOM });
     }
-  }, [map, selectedName, scoreCache]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [map, selectedName, selectedCoords, scoreCache, dynamicUnis, forceNational]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }
@@ -202,47 +278,71 @@ function CameraController({
 
 function RecenterButton({
   selectedName,
+  selectedCoords,
   scoreCache,
+  dynamicUnis,
+  onZoomOut,
+  onReturnToCampus,
+  onForceNational,
 }: {
   selectedName: string | null;
+  selectedCoords?: { lat: number; lng: number } | null;
   scoreCache: Record<string, HousingPressureScore>;
+  dynamicUnis: Record<string, UniversitySuggestion>;
+  onZoomOut?: () => void;
+  onReturnToCampus?: () => void;
+  onForceNational?: () => void;
 }) {
   const map = useMap();
 
   const handleClick = () => {
     if (!map) return;
     if (!selectedName) {
-      map.panTo(NATIONAL_CENTER);
-      setTimeout(() => map.setZoom(NATIONAL_ZOOM), 250);
+      map.moveCamera({ center: NATIONAL_CENTER, zoom: NATIONAL_ZOOM });
       return;
     }
-    const computed = scoreCache[selectedName];
-    const target = computed
-      ? { lat: computed.university.lat, lng: computed.university.lon }
-      : (() => {
-          const u = UNIVERSITIES.find((u) => u.name === selectedName);
-          return u ? { lat: u.lat, lng: u.lon } : null;
-        })();
+    const target = (
+      selectedCoords && isValidLatLng(selectedCoords.lat, selectedCoords.lng)
+    )
+      ? selectedCoords
+      : getTargetPosition(selectedName, scoreCache, dynamicUnis);
     if (target) {
-      map.panTo(target);
-      setTimeout(() => map.setZoom(CAMPUS_ZOOM), 250);
+      onReturnToCampus?.();
+      map.moveCamera({ center: target, zoom: CAMPUS_ZOOM });
     } else {
-      map.panTo(NATIONAL_CENTER);
-      setTimeout(() => map.setZoom(NATIONAL_ZOOM), 250);
+      map.moveCamera({ center: NATIONAL_CENTER, zoom: NATIONAL_ZOOM });
     }
+  };
+
+  const handleZoomOut = () => {
+    if (!map) return;
+    onForceNational?.();
+    map.moveCamera({ center: NATIONAL_CENTER, zoom: NATIONAL_ZOOM });
+    onZoomOut?.();
   };
 
   return (
     <MapControl position={ControlPosition.RIGHT_BOTTOM}>
-      <button
-        onClick={handleClick}
-        title={selectedName ? "Re-center on campus" : "Re-center national view"}
-        className="mb-3 mr-3 w-10 h-10 bg-zinc-900/90 border border-zinc-700
-                   hover:border-blue-500 rounded-xl flex items-center justify-center
-                   text-zinc-400 hover:text-white transition-all shadow-lg backdrop-blur-sm"
-      >
-        <Crosshair className="w-4 h-4" />
-      </button>
+      <div className="mb-3 mr-3 flex flex-col gap-2">
+        <button
+          onClick={handleZoomOut}
+          title="Zoom out to national view"
+          className="w-10 h-10 bg-zinc-900/90 border border-zinc-700
+                     hover:border-blue-500 rounded-xl flex items-center justify-center
+                     text-zinc-400 hover:text-white transition-all shadow-lg backdrop-blur-sm"
+        >
+          <Globe className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleClick}
+          title={selectedName ? "Re-center on campus" : "Re-center national view"}
+          className="w-10 h-10 bg-zinc-900/90 border border-zinc-700
+                     hover:border-blue-500 rounded-xl flex items-center justify-center
+                     text-zinc-400 hover:text-white transition-all shadow-lg backdrop-blur-sm"
+        >
+          <Crosshair className="w-4 h-4" />
+        </button>
+      </div>
     </MapControl>
   );
 }
@@ -251,15 +351,30 @@ function RecenterButton({
 
 interface MapViewProps {
   selectedName: string | null;
+  selectedCoords?: { lat: number; lng: number } | null;
   scoreCache: Record<string, HousingPressureScore>;
   dynamicUnis: Record<string, UniversitySuggestion>;
   activeHexData: HexGeoJSON | null;
-  onPinClick: (name: string) => void;
+  onPinClick: (name: string, coords?: { lat: number; lng: number }) => void;
+  onZoomOut?: () => void;
 }
 
-export function MapView({ selectedName, scoreCache, dynamicUnis, activeHexData, onPinClick }: MapViewProps) {
+export function MapView({
+  selectedName,
+  selectedCoords,
+  scoreCache,
+  dynamicUnis,
+  activeHexData,
+  onPinClick,
+  onZoomOut,
+}: MapViewProps) {
   const allUniversities = mergeUniversities(dynamicUnis);
   const [hoveredName, setHoveredName] = useState<string | null>(null);
+  const [forceNational, setForceNational] = useState(false);
+
+  useEffect(() => {
+    if (selectedName) setForceNational(false);
+  }, [selectedName]);
 
   return (
     <div className="flex-1 bg-zinc-900 relative">
@@ -276,8 +391,22 @@ export function MapView({ selectedName, scoreCache, dynamicUnis, activeHexData, 
         zoomControl={true}
         gestureHandling="greedy"
       >
-        <CameraController selectedName={selectedName} scoreCache={scoreCache} />
-        <RecenterButton selectedName={selectedName} scoreCache={scoreCache} />
+        <CameraController
+          selectedName={selectedName}
+          selectedCoords={selectedCoords}
+          scoreCache={scoreCache}
+          dynamicUnis={dynamicUnis}
+          forceNational={forceNational}
+        />
+        <RecenterButton
+          selectedName={selectedName}
+          selectedCoords={selectedCoords}
+          scoreCache={scoreCache}
+          dynamicUnis={dynamicUnis}
+          onZoomOut={onZoomOut}
+          onReturnToCampus={() => setForceNational(false)}
+          onForceNational={() => setForceNational(true)}
+        />
 
         {activeHexData && <HexChoropleth hexData={activeHexData} />}
 
@@ -298,7 +427,10 @@ export function MapView({ selectedName, scoreCache, dynamicUnis, activeHexData, 
             <AdvancedMarker
               key={uni.name}
               position={{ lat: uni.lat, lng: uni.lon }}
-              onClick={() => onPinClick(uni.name)}
+              onClick={() => {
+                setForceNational(false);
+                onPinClick(uni.name, { lat: uni.lat, lng: uni.lon });
+              }}
               onMouseEnter={() => setHoveredName(uni.name)}
               onMouseLeave={() => setHoveredName(null)}
               title={uni.name}
