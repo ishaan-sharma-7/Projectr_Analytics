@@ -1,7 +1,16 @@
 import { useLocation } from "../hooks/useLocation";
 
-export default function LocationButton() {
+export default function LocationButton({
+  onLocation,
+}: {
+  onLocation?: (coords: { lat: number; lng: number }) => void;
+}) {
   const { location, loading, error, getLocation } = useLocation();
+
+  // 👇 NEW: send location to parent (App.tsx)
+  if (location && onLocation) {
+    onLocation({ lat: location.lat, lng: location.lon });
+  }
 
   return (
     <div className="flex flex-col items-center gap-3 mt-6">
