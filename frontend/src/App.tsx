@@ -14,6 +14,13 @@ import type { HousingPressureScore } from "./lib/api";
 import type { HexGeoJSON } from "./lib/hexApi";
 
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+const CACHE_VERSION = "v8";
+const SCORE_CACHE_KEY = `campuslens_scores_${CACHE_VERSION}`;
+const HEX_CACHE_KEY = `campuslens_hex_${CACHE_VERSION}`;
+const DYNAMIC_UNIS_CACHE_KEY = `campuslens_dynamic_unis_${CACHE_VERSION}`;
+const CACHE_SCHEMA_KEY = "campuslens_cache_schema_version";
+const DEFAULT_HEX_RADIUS_MILES = 1.5;
+const HEX_RESOLUTION = 9;
 
 interface LogEntry {
   message: string;
@@ -31,21 +38,125 @@ function extractDomain(url: string | null): string {
   }
 }
 
+function isValidLatLng(lat: number, lng: number): boolean {
+  return (
+    Number.isFinite(lat)
+    && Number.isFinite(lng)
+    && lat >= -90
+    && lat <= 90
+    && lng >= -180
+    && lng <= 180
+  );
+}
+
+function normalizeSchoolName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function isVirginiaTechName(name: string): boolean {
+  const normalized = normalizeSchoolName(name);
+  return (
+    normalized.includes("virginia tech")
+    || normalized.includes("virginia polytechnic institute and state university")
+  );
+}
+
+function hexCacheKey(
+  name: string,
+  resolution: number,
+  debugHex: boolean,
+  radiusMiles: number
+): string {
+  const radiusToken = radiusMiles.toFixed(2);
+  return `${name}::hex_r${resolution}::rad${radiusToken}${debugHex ? "::dbg1" : ""}`;
+}
+
+function clearHexEntriesForName(
+  cache: Record<string, HexGeoJSON>,
+  name: string
+): Record<string, HexGeoJSON> {
+  const next = { ...cache };
+  for (const key of Object.keys(next)) {
+    if (key === name || key.startsWith(`${name}::hex_r`)) {
+      delete next[key];
+    }
+  }
+  return next;
+}
+
+function findKnownCoords(
+  name: string,
+  dynamicUnis: Record<string, UniversitySuggestion>,
+  scoreCache?: Record<string, HousingPressureScore>
+): { lat: number; lng: number } | null {
+  const dynamic = dynamicUnis[name];
+  if (dynamic && isValidLatLng(dynamic.lat, dynamic.lon)) {
+    return { lat: dynamic.lat, lng: dynamic.lon };
+  }
+  const staticUni = UNIVERSITIES.find((u) => u.name === name);
+  if (staticUni && isValidLatLng(staticUni.lat, staticUni.lon)) {
+    return { lat: staticUni.lat, lng: staticUni.lon };
+  }
+
+  const target = normalizeSchoolName(name);
+  for (const uni of Object.values(dynamicUnis)) {
+    if (
+      normalizeSchoolName(uni.name) === target
+      && isValidLatLng(uni.lat, uni.lon)
+    ) {
+      return { lat: uni.lat, lng: uni.lon };
+    }
+  }
+  for (const uni of UNIVERSITIES) {
+    if (
+      normalizeSchoolName(uni.name) === target
+      && isValidLatLng(uni.lat, uni.lon)
+    ) {
+      return { lat: uni.lat, lng: uni.lon };
+    }
+  }
+  if (scoreCache) {
+    const scored = scoreCache[name];
+    if (
+      scored
+      && isValidLatLng(scored.university.lat, scored.university.lon)
+    ) {
+      return { lat: scored.university.lat, lng: scored.university.lon };
+    }
+    for (const value of Object.values(scoreCache)) {
+      const uni = value.university;
+      if (
+        normalizeSchoolName(uni.name) === target
+        && isValidLatLng(uni.lat, uni.lon)
+      ) {
+        return { lat: uni.lat, lng: uni.lon };
+      }
+    }
+  }
+  return null;
+}
+
 function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedName, setSelectedName] = useState<string | null>(null);
+  const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [hexRadiusMiles, setHexRadiusMiles] = useState<number>(DEFAULT_HEX_RADIUS_MILES);
 
   // Persistent score + hex caches — survive page refresh for 24 h
   const [scoreCache, setScoreCache] = useState<Record<string, HousingPressureScore>>(
-    () => readCache<HousingPressureScore>("campuslens_scores")
+    () => readCache<HousingPressureScore>(SCORE_CACHE_KEY)
   );
   const [hexCache, setHexCache] = useState<Record<string, HexGeoJSON>>(
-    () => readCache<HexGeoJSON>("campuslens_hex")
+    () => readCache<HexGeoJSON>(HEX_CACHE_KEY)
   );
 
   // Dynamic universities discovered via search — appear as map pins and suggestions
   const [dynamicUnis, setDynamicUnis] = useState<Record<string, UniversitySuggestion>>(
-    () => readCache<UniversitySuggestion>("campuslens_dynamic_unis")
+    () => readCache<UniversitySuggestion>(DYNAMIC_UNIS_CACHE_KEY)
   );
 
   const [loading, setLoading] = useState(false);
@@ -53,16 +164,55 @@ function App() {
   const [agentLogs, setAgentLogs] = useState<LogEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // One-time cache schema migration: clears old localhost cache buckets.
+  useEffect(() => {
+    try {
+      const current = localStorage.getItem(CACHE_SCHEMA_KEY);
+      if (current === CACHE_VERSION) return;
+      localStorage.removeItem("campuslens_scores");
+      localStorage.removeItem("campuslens_hex");
+      localStorage.removeItem("campuslens_dynamic_unis");
+      localStorage.removeItem("campuslens_scores_v2");
+      localStorage.removeItem("campuslens_hex_v2");
+      localStorage.removeItem("campuslens_dynamic_unis_v2");
+      localStorage.removeItem("campuslens_scores_v3");
+      localStorage.removeItem("campuslens_hex_v3");
+      localStorage.removeItem("campuslens_dynamic_unis_v3");
+      localStorage.removeItem("campuslens_scores_v4");
+      localStorage.removeItem("campuslens_hex_v4");
+      localStorage.removeItem("campuslens_dynamic_unis_v4");
+      localStorage.removeItem("campuslens_scores_v5");
+      localStorage.removeItem("campuslens_hex_v5");
+      localStorage.removeItem("campuslens_dynamic_unis_v5");
+      localStorage.setItem(CACHE_SCHEMA_KEY, CACHE_VERSION);
+    } catch {
+      // Ignore storage failures in private mode.
+    }
+  }, []);
+
   // ── Compare mode state ──────────────────────────────────────────────────
   const [compareMode, setCompareMode] = useState(false);
   const [compareNames, setCompareNames] = useState<[string | null, string | null]>([null, null]);
 
   // Queue: name to auto-run report for after current loading finishes
   const pendingReportRef = useRef<string | null>(null);
+  const inflightHexLoadsRef = useRef<Set<string>>(new Set());
 
   // Derived — what the side panel shows right now
   const activeScore = selectedName ? (scoreCache[selectedName] ?? null) : null;
-  const activeHexData = selectedName ? (hexCache[selectedName] ?? null) : null;
+  const activeHexData = (() => {
+    if (!selectedName) return null;
+    const debugHex = isVirginiaTechName(selectedName);
+    const preferredKeys = [
+      hexCacheKey(selectedName, HEX_RESOLUTION, debugHex, hexRadiusMiles),
+      selectedName,
+    ];
+    for (const key of preferredKeys) {
+      const data = hexCache[key];
+      if (data) return data;
+    }
+    return null;
+  })();
 
   // Derived — compare panel data
   const compareScoreA = compareNames[0] ? (scoreCache[compareNames[0]] ?? null) : null;
@@ -71,11 +221,78 @@ function App() {
 
   // ── Core computation ──────────────────────────────────────────────────────
 
+  const loadHexStream = async (
+    queryName: string,
+    cacheNames: string[],
+    resolution: number,
+    radiusMiles: number,
+    debugHex: boolean,
+    clearTargetBeforeLoad = false
+  ) => {
+    const names = Array.from(new Set(cacheNames.filter(Boolean)));
+    if (names.length === 0) return;
+
+    const requestKey = `${queryName}::hex_r${resolution}::rad${radiusMiles.toFixed(2)}${debugHex ? "::dbg1" : ""}`;
+    if (inflightHexLoadsRef.current.has(requestKey)) return;
+    inflightHexLoadsRef.current.add(requestKey);
+
+    try {
+      if (clearTargetBeforeLoad) {
+        setHexCache((prev) => {
+          const next = { ...prev };
+          for (const n of names) {
+            delete next[hexCacheKey(n, resolution, debugHex, radiusMiles)];
+          }
+          return next;
+        });
+      }
+
+      let partial: HexGeoJSON = {
+        type: "FeatureCollection",
+        features: [],
+        metadata: undefined,
+      };
+
+      const applyPartial = (payload: HexGeoJSON) => {
+        setHexCache((prev) => {
+          const next = { ...prev };
+          for (const n of names) {
+            next[hexCacheKey(n, resolution, debugHex, radiusMiles)] = payload;
+          }
+          return next;
+        });
+      };
+
+      applyPartial(partial);
+
+      partial = await fetchHexGrid(
+        queryName,
+        radiusMiles,
+        resolution,
+        false,
+        debugHex
+      );
+      applyPartial(partial);
+      for (const n of names) {
+        writeEntry(HEX_CACHE_KEY, hexCacheKey(n, resolution, debugHex, radiusMiles), partial);
+      }
+    } catch {
+      // keep side panel usable even if hex stream fails
+    } finally {
+      inflightHexLoadsRef.current.delete(requestKey);
+    }
+  };
+
   const runReport = async (name: string) => {
     setLoading(true);
     setLoadingName(name);
     setError(null);
     setAgentLogs([]);
+    // Force fresh progressive paint for each recompute instead of showing a
+    // stale fully-loaded cache entry first.
+    setHexCache((prev) => {
+      return clearHexEntriesForName(prev, name);
+    });
 
     try {
       for await (const event of streamScore(name)) {
@@ -92,8 +309,8 @@ function App() {
             if (actualName !== name) next[actualName] = event.data;
             return next;
           });
-          writeEntry("campuslens_scores", name, event.data);
-          if (actualName !== name) writeEntry("campuslens_scores", actualName, event.data);
+          writeEntry(SCORE_CACHE_KEY, name, event.data);
+          if (actualName !== name) writeEntry(SCORE_CACHE_KEY, actualName, event.data);
 
           // ── Dynamic pin: add if not already in the static list ────────────
           const inStatic =
@@ -110,22 +327,26 @@ function App() {
               domain: extractDomain(uni.url),
             };
             setDynamicUnis((prev) => ({ ...prev, [actualName]: newPin }));
-            writeEntry("campuslens_dynamic_unis", actualName, newPin);
+            writeEntry(DYNAMIC_UNIS_CACHE_KEY, actualName, newPin);
           }
 
-          // ── Hex cache ─────────────────────────────────────────────────────
-          fetchHexGrid(actualName)
-            .then((hex) => {
-              setHexCache((prev) => {
-                const next = { ...prev, [name]: hex };
-                if (actualName !== name) next[actualName] = hex;
-                return next;
-              });
-              writeEntry("campuslens_hex", name, hex);
-              if (actualName !== name) writeEntry("campuslens_hex", actualName, hex);
-            })
-            .catch(() => {});
+          // ── Hex cache (single resolution stream) ────────────────────────
+          const debugHex = isVirginiaTechName(actualName) || isVirginiaTechName(name);
+          void loadHexStream(
+            actualName,
+            [name, actualName],
+            HEX_RESOLUTION,
+            hexRadiusMiles,
+            debugHex,
+            true
+          );
 
+          // Canonicalize to backend-resolved name so map targeting is stable.
+          setSelectedName(actualName);
+          setSearchQuery(actualName);
+          if (isValidLatLng(uni.lat, uni.lon)) {
+            setSelectedCoords({ lat: uni.lat, lng: uni.lon });
+          }
           setLoading(false);
           setLoadingName(null);
         } else if (event.type === "error") {
@@ -152,11 +373,51 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
+  // Safety net: if a name is selected but coords are missing/stale, derive
+  // coords from known university lists/cache so camera can always target.
+  useEffect(() => {
+    if (!selectedName) return;
+    if (
+      selectedCoords
+      && isValidLatLng(selectedCoords.lat, selectedCoords.lng)
+    ) {
+      return;
+    }
+    const known = findKnownCoords(selectedName, dynamicUnis, scoreCache);
+    if (known) {
+      setSelectedCoords(known);
+    }
+  }, [selectedName, selectedCoords, dynamicUnis, scoreCache]);
+
+  // Hex loading: ensure selected campus + radius has a fetched grid.
+  useEffect(() => {
+    if (!selectedName || loading) return;
+    const debugHex = isVirginiaTechName(selectedName);
+    const key = hexCacheKey(selectedName, HEX_RESOLUTION, debugHex, hexRadiusMiles);
+    if (!hexCache[key]) {
+      void loadHexStream(
+        selectedName,
+        [selectedName],
+        HEX_RESOLUTION,
+        hexRadiusMiles,
+        debugHex,
+        false
+      );
+    }
+  }, [selectedName, hexCache, loading, hexRadiusMiles]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   /** Pin click or suggestion select — in compare mode fills slots and auto-runs
    *  reports for uncached selections; in normal mode just shows preview. */
-  const handleSelectUniversity = (name: string) => {
+  const handleSelectUniversity = (name: string, coords?: { lat: number; lng: number }) => {
+    if (coords && isValidLatLng(coords.lat, coords.lng)) {
+      setSelectedCoords(coords);
+    } else {
+      const known = findKnownCoords(name, dynamicUnis, scoreCache);
+      if (known) setSelectedCoords(known);
+    }
+
     if (compareMode) {
       setCompareNames((prev) => {
         let next: [string | null, string | null];
@@ -209,6 +470,8 @@ function App() {
     if (compareMode) {
       handleSelectUniversity(name);
     } else {
+      const known = findKnownCoords(name, dynamicUnis, scoreCache);
+      if (known) setSelectedCoords(known);
       setSelectedName(name);
       await runReport(name);
     }
@@ -216,6 +479,8 @@ function App() {
 
   /** "Generate Report" button in PreviewPanel. */
   const handleGenerateReport = async (name: string) => {
+    const known = findKnownCoords(name, dynamicUnis, scoreCache);
+    if (known) setSelectedCoords(known);
     setSelectedName(name);
     await runReport(name);
   };
@@ -248,7 +513,29 @@ function App() {
     setCompareNames([null, null]);
     pendingReportRef.current = null;
     setSelectedName(null);
+    setSelectedCoords(null);
     setSearchQuery("");
+  };
+
+  const handleZoomOutMap = () => {
+    setSelectedName(null);
+    setSelectedCoords(null);
+  };
+
+  const handleHexRadiusChange = (radius: number) => {
+    setHexRadiusMiles(radius);
+    if (selectedName) {
+      setHexCache((prev) => clearHexEntriesForName(prev, selectedName));
+      const debugHex = isVirginiaTechName(selectedName);
+      void loadHexStream(
+        selectedName,
+        [selectedName],
+        HEX_RESOLUTION,
+        radius,
+        debugHex,
+        true
+      );
+    }
   };
 
   // Compare guide text for the search bar
@@ -277,10 +564,14 @@ function App() {
         <APIProvider apiKey={MAPS_API_KEY}>
           <MapView
             selectedName={selectedName}
+            selectedCoords={selectedCoords}
             scoreCache={scoreCache}
             dynamicUnis={dynamicUnis}
             activeHexData={activeHexData}
+            hexRadiusMiles={hexRadiusMiles}
             onPinClick={handleSelectUniversity}
+            onZoomOut={handleZoomOutMap}
+            onRadiusChange={handleHexRadiusChange}
           />
         </APIProvider>
 

@@ -7,7 +7,7 @@ interface SearchBarProps {
   query: string;
   onChange: (v: string) => void;
   onSubmit: (e: React.FormEvent) => void;
-  onSelectUniversity: (name: string) => void;
+  onSelectUniversity: (name: string, coords?: { lat: number; lng: number }) => void;
   extraUniversities?: UniversitySuggestion[];
   disabled?: boolean;
   compareMode?: boolean;
@@ -104,7 +104,7 @@ export function SearchBar({
       if (activeIdx < suggestions.length) {
         const uni = suggestions[activeIdx];
         onChange(uni.name);
-        onSelectUniversity(uni.name);
+        onSelectUniversity(uni.name, { lat: uni.lat, lng: uni.lon });
         setOpen(false);
         setActiveIdx(-1);
       } else {
@@ -114,9 +114,9 @@ export function SearchBar({
     }
   };
 
-  const handleSuggestionClick = (name: string) => {
-    onChange(name);
-    onSelectUniversity(name);
+  const handleSuggestionClick = (uni: UniversitySuggestion) => {
+    onChange(uni.name);
+    onSelectUniversity(uni.name, { lat: uni.lat, lng: uni.lon });
     setOpen(false);
     setActiveIdx(-1);
   };
@@ -186,7 +186,7 @@ export function SearchBar({
                   key={`${uni.name}-${uni.city}`}
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => handleSuggestionClick(uni.name)}
+                  onClick={() => handleSuggestionClick(uni)}
                   onMouseEnter={() => setActiveIdx(i)}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                     activeIdx === i ? "bg-zinc-800" : "hover:bg-zinc-800/60"
