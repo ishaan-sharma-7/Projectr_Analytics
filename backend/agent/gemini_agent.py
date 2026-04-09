@@ -166,6 +166,11 @@ async def score_with_streaming(
         if req.unitid and req.unitid in prescored:
             cached = prescored[req.unitid]
             yield _log_event(f"Found in cache: {cached.university.name}")
+            if cached.master_plan is None:
+                mp_raw = master_plans.get_planned_beds(cached.university.name)
+                if mp_raw:
+                    cached = cached.model_copy(update={"master_plan": MasterPlanData(**mp_raw)})
+                    prescored[req.unitid] = cached
             if not cached.gemini_summary:
                 yield _log_event("Generating Gemini market summary...")
                 summary = await generate_gemini_summary(cached)
@@ -195,6 +200,11 @@ async def score_with_streaming(
         if uni.unitid in prescored:
             cached = prescored[uni.unitid]
             yield _log_event(f"Loaded from pre-scored cache.")
+            if cached.master_plan is None:
+                mp_raw = master_plans.get_planned_beds(uni.name)
+                if mp_raw:
+                    cached = cached.model_copy(update={"master_plan": MasterPlanData(**mp_raw)})
+                    prescored[uni.unitid] = cached
             if not cached.gemini_summary:
                 yield _log_event("Generating Gemini market summary...")
                 summary = await generate_gemini_summary(cached)

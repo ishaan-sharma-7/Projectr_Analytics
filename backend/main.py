@@ -201,6 +201,11 @@ async def score_university(req: ScoreRequest):
             if summary:
                 cached = cached.model_copy(update={"gemini_summary": summary})
                 _prescored[req.unitid] = cached
+        if cached.master_plan is None:
+            mp_raw = master_plans.get_planned_beds(cached.university.name)
+            if mp_raw:
+                cached = cached.model_copy(update={"master_plan": MasterPlanData(**mp_raw)})
+                _prescored[req.unitid] = cached
         return cached
 
     # ── Step 1: Resolve university metadata + institutional strength ──
@@ -222,6 +227,11 @@ async def score_university(req: ScoreRequest):
             summary = await generate_gemini_summary(cached)
             if summary:
                 cached = cached.model_copy(update={"gemini_summary": summary})
+                _prescored[uni.unitid] = cached
+        if cached.master_plan is None:
+            mp_raw = master_plans.get_planned_beds(uni.name)
+            if mp_raw:
+                cached = cached.model_copy(update={"master_plan": MasterPlanData(**mp_raw)})
                 _prescored[uni.unitid] = cached
         return cached
 
