@@ -12,7 +12,10 @@ import asyncio
 import json
 from pathlib import Path
 
-from backend.adapters import scorecard, ipeds, census_bps, census_acs, rent
+from backend.adapters import (
+    scorecard, ipeds, ipeds_housing, census_bps, census_acs,
+    census_acs_extra, rent, fema_disasters, osm_buildings
+)
 from backend.scoring.pressure import compute_pressure_score
 from backend.agent.gemini_agent import generate_gemini_summary
 from backend.config import config
@@ -58,12 +61,13 @@ CACHE_PATH = Path(__file__).resolve().parent.parent / "cache" / "prescored.json"
 async def score_one(name: str) -> dict | None:
     print(f"\n[{name}] Resolving...")
     if name in UNIT_ID_OVERRIDES:
-        uni = await scorecard.get_university_by_id(UNIT_ID_OVERRIDES[name])
+        meta_pair = await scorecard.get_university_by_id_with_strength(UNIT_ID_OVERRIDES[name])
     else:
-        uni = await scorecard.search_university(name)
-    if not uni:
+        meta_pair = await scorecard.search_university_with_strength(name)
+    if not meta_pair:
         print(f"[{name}] NOT FOUND — skipping")
         return None
+    uni, institutional_strength = meta_pair
     print(f"[{name}] Found: {uni.name} ({uni.city}, {uni.state}), unitid={uni.unitid}")
 
     enrollment_trend = await ipeds.fetch_enrollment_trend(uni.unitid)
@@ -76,15 +80,23 @@ async def score_one(name: str) -> dict | None:
 
     permit_history = []
     housing_units = 0
+    demographics = None
+    disaster_risk = None
     if state_fips and county_fips:
-        permit_history, housing_units = await asyncio.gather(
+        permit_history, housing_units, demographics, disaster_risk = await asyncio.gather(
             census_bps.fetch_permits_by_county(uni.state, county_fips),
             census_acs.get_county_housing_total(state_fips, county_fips),
+            census_acs_extra.fetch_county_demographics(state_fips, county_fips),
+            fema_disasters.fetch_disaster_history(state_fips, county_fips, years=10),
         )
     print(f"[{name}] Permits: {sum(p.permits for p in permit_history)} units, Housing: {housing_units:,}")
 
     fips = f"{state_fips}{county_fips}" if state_fips and county_fips else ""
-    rent_history = await rent.load_rent_data(uni.city, uni.state, fips)
+    rent_history, housing_capacity, existing_housing = await asyncio.gather(
+        rent.load_rent_data(uni.city, uni.state, fips),
+        ipeds_housing.fetch_housing_capacity(uni.unitid),
+        osm_buildings.fetch_buildings(uni.lat, uni.lon, 1.5)
+    )
     print(f"[{name}] Rent: {len(rent_history)} data points")
 
     result = compute_pressure_score(
@@ -93,6 +105,11 @@ async def score_one(name: str) -> dict | None:
         permit_history=permit_history,
         housing_units=housing_units,
         rent_history=rent_history,
+        demographics=demographics,
+        housing_capacity=housing_capacity,
+        disaster_risk=disaster_risk,
+        institutional_strength=institutional_strength,
+        existing_housing=existing_housing,
     )
     print(f"[{name}] Score: {result.score}/100")
 

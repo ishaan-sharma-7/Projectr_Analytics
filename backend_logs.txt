@@ -1,0 +1,62 @@
+Loaded 19 pre-scored universities from cache.
+Warmed 144 hex grids from disk cache.
+INFO:     127.0.0.1:61471 - "POST /score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61471 - "POST /chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61479 - "POST /score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61479 - "POST /chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61521 - "POST /chat HTTP/1.1" 200 OK
+Loaded 19 pre-scored universities from cache.
+Warmed 144 hex grids from disk cache.
+[Gemini] Chat exception: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': "Role 'assistant' is not supported. Please use a valid role: MODEL, USER.", 'status': 'INVALID_ARGUMENT'}}
+INFO:     127.0.0.1:61531 - "POST /chat HTTP/1.1" 200 OK
+[Gemini] Chat exception: 400 INVALID_ARGUMENT. {'error': {'code': 400, 'message': "Role 'assistant' is not supported. Please use a valid role: MODEL, USER.", 'status': 'INVALID_ARGUMENT'}}
+INFO:     127.0.0.1:61547 - "POST /chat HTTP/1.1" 200 OK
+Loaded 19 pre-scored universities from cache.
+Warmed 144 hex grids from disk cache.
+INFO:     127.0.0.1:61558 - "OPTIONS /chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61558 - "POST /chat HTTP/1.1" 200 OK
+[NationalConstraints] wetland overlay failed: https://www.fws.gov/wetlands/arcgis/rest/services/Wetlands/MapServer/0/query HTTP 503
+[NationalConstraints] floodplain overlay failed: https://hazards.fema.gov/gis/nfhl/rest/services/public/NFHL/MapServer/28/query HTTP 404
+INFO:     127.0.0.1:61576 - "POST /chat HTTP/1.1" 200 OK
+[Overpass] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-residential] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-nonbuildable] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-parking] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-campus] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-commercial] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-development] https://overpass.kumi.systems/api/interpreter failed: 
+INFO:     127.0.0.1:61594 - "POST /chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61599 - "POST /chat HTTP/1.1" 200 OK
+[Overpass] https://overpass-api.de/api/interpreter failed: 
+[OSM-residential] https://overpass-api.de/api/interpreter failed: 
+[OSM-nonbuildable] https://overpass-api.de/api/interpreter failed: 
+[OSM-parking] https://overpass-api.de/api/interpreter failed: 
+[OSM-campus] https://overpass-api.de/api/interpreter failed: 
+[OSM-commercial] https://overpass-api.de/api/interpreter failed: 
+[OSM-development] https://overpass-api.de/api/interpreter failed: 
+INFO:     127.0.0.1:61560 - "GET /hex/University%20of%20Tennessee%20Knoxville?radius_miles=5&hex_resolution=9&auto_radius=false&debug_hex=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61605 - "POST /chat HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61609 - "POST /chat HTTP/1.1" 200 OK
+[NationalConstraints] wetland overlay failed: https://www.fws.gov/wetlands/arcgis/rest/services/Wetlands/MapServer/0/query HTTP 503
+[NationalConstraints] floodplain overlay failed: https://hazards.fema.gov/gis/nfhl/rest/services/public/NFHL/MapServer/28/query HTTP 404
+INFO:     127.0.0.1:61628 - "POST /chat HTTP/1.1" 200 OK
+[OSM-nonbuildable] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-campus] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-residential] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-parking] https://overpass.kumi.systems/api/interpreter failed: 
+[Overpass] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-development] https://overpass.kumi.systems/api/interpreter failed: 
+[OSM-commercial] https://overpass.kumi.systems/api/interpreter failed: 
+INFO:     127.0.0.1:61647 - "POST /chat HTTP/1.1" 200 OK
+[OSM-nonbuildable] https://overpass-api.de/api/interpreter failed: 
+[OSM-campus] https://overpass-api.de/api/interpreter failed: 
+[OSM-residential] https://overpass-api.de/api/interpreter failed: 
+[OSM-parking] https://overpass-api.de/api/interpreter failed: 
+[Overpass] https://overpass-api.de/api/interpreter failed: 
+[OSM-development] https://overpass-api.de/api/interpreter failed: 
+[OSM-commercial] https://overpass-api.de/api/interpreter failed: 
+INFO:     127.0.0.1:61613 - "GET /hex/University%20of%20Michigan?radius_miles=5&hex_resolution=9&auto_radius=false&debug_hex=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61692 - "GET /universities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61692 - "GET /universities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61692 - "GET /universities HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61692 - "GET /universities HTTP/1.1" 200 OK

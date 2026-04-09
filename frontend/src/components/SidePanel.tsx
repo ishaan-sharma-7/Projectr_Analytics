@@ -3,6 +3,7 @@ import { ChevronDown, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react
 import { EmptyState } from "./panels/EmptyState";
 import { PreviewPanel } from "./panels/PreviewPanel";
 import { ScorePanel } from "./panels/ScorePanel";
+import { ChatbotWidget } from "./ui/ChatbotWidget";
 import type { HousingPressureScore } from "../lib/api";
 import type { UniversitySuggestion } from "../lib/universityList";
 import type { LogEntry, ReportJob } from "../App";
@@ -201,41 +202,64 @@ export function SidePanel({
   onSelectNearest,
   extraUniversities,
 }: SidePanelProps) {
+  const [activeTab, setActiveTab] = useState<"data" | "chat">("data");
+
   const showEmpty = !selectedName;
   const showPreview = !!selectedName && !activeScore;
   const showScore = !!activeScore;
 
   return (
     <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
+      
+      {/* Tab Header */}
+      {selectedName && (
+        <div className="flex bg-zinc-900 border-b border-zinc-800 p-2 gap-2 z-30 shrink-0">
+          <button 
+            onClick={() => setActiveTab("data")}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${activeTab === "data" ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
+          >
+            Data Report
+          </button>
+          <button 
+            onClick={() => setActiveTab("chat")}
+            className={`flex-1 flex justify-center items-center gap-2 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${activeTab === "chat" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
+          >
+            AI Assistant
+          </button>
+        </div>
+      )}
+
       {/* Queue status bar — always on top, shows only when work is pending */}
-      <QueueStatusBar activeJob={activeJob} queuedJobs={queuedJobs} />
+      <div className={`transition-opacity duration-300 ${(activeTab === "data" || !selectedName) ? "opacity-100" : "opacity-0 pointer-events-none absolute"}`}>
+        <QueueStatusBar activeJob={activeJob} queuedJobs={queuedJobs} />
 
-      {/* Done banners */}
-      {doneJobs.map(job => (
-        <DoneBanner
-          key={job.id}
-          job={job}
-          onView={onViewReport}
-          onDismiss={onDismissJob}
-        />
-      ))}
+        {/* Done banners */}
+        {doneJobs.map(job => (
+          <DoneBanner
+            key={job.id}
+            job={job}
+            onView={onViewReport}
+            onDismiss={onDismissJob}
+          />
+        ))}
 
-      {/* Error banners */}
-      {errorJobs.map(job => (
-        <ErrorBanner
-          key={job.id}
-          job={job}
-          onDismiss={onDismissJob}
-          onRetry={onGenerateReport}
-        />
-      ))}
+        {/* Error banners */}
+        {errorJobs.map(job => (
+          <ErrorBanner
+            key={job.id}
+            job={job}
+            onDismiss={onDismissJob}
+            onRetry={onGenerateReport}
+          />
+        ))}
+      </div>
 
-      {/* Content panels — always navigable */}
-      <div className="flex-1 overflow-hidden relative">
+      {/* Content panels */}
+      <div className="flex-1 overflow-hidden relative flex flex-col">
         {/* Empty — nothing selected */}
         <div
           className={`absolute inset-0 flex flex-col transition-opacity duration-300 ${
-            showEmpty ? "opacity-100" : "opacity-0 pointer-events-none"
+            (activeTab === "data" || !selectedName) && showEmpty ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
           <EmptyState
@@ -247,7 +271,7 @@ export function SidePanel({
         {/* Preview — university selected but not yet computed */}
         <div
           className={`absolute inset-0 transition-opacity duration-300 ${
-            showPreview ? "opacity-100" : "opacity-0 pointer-events-none"
+            (activeTab === "data" || !selectedName) && showPreview ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
           {selectedName && (
@@ -258,10 +282,15 @@ export function SidePanel({
         {/* Score — computed result */}
         <div
           className={`absolute inset-0 overflow-y-auto transition-opacity duration-300 ${
-            showScore ? "opacity-100" : "opacity-0 pointer-events-none"
+            (activeTab === "data" || !selectedName) && showScore ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
           {activeScore && <ScorePanel score={activeScore} onRecompute={onRecompute} />}
+        </div>
+        
+        {/* Chatbot Panel - rendered always, but visibility depends on tab */}
+        <div className={`absolute inset-0 flex flex-col transition-opacity duration-300 ${activeTab === "chat" && !!selectedName ? "opacity-100 z-10" : "opacity-0 pointer-events-none"}`}>
+          <ChatbotWidget selectedName={selectedName} activeScore={activeScore} />
         </div>
       </div>
     </aside>

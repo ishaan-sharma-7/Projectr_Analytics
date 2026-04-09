@@ -3,7 +3,7 @@ import { ScoreGauge } from "../ui/ScoreGauge";
 import { EnrollmentChart } from "../charts/EnrollmentChart";
 import { RentChart } from "../charts/RentChart";
 import { PermitChart } from "../charts/PermitChart";
-import type { HousingPressureScore, MasterPlanData } from "../../lib/api";
+import type { HousingPressureScore } from "../../lib/api";
 
 // "high" pressure score = good developer opportunity (undersupplied market).
 // We keep the internal label keys (high/medium/low) so cached scores still

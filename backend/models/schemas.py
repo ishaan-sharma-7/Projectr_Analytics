@@ -218,6 +218,17 @@ class ScoreRequest(BaseModel):
     unitid: int | None = None
 
 
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessage]
+    selectedName: str | None = None
+    activeScore: HousingPressureScore | None = None
+
+
 class UniversityListItem(BaseModel):
     """Abbreviated university for the national map."""
 

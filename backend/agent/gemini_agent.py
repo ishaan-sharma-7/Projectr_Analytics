@@ -17,7 +17,7 @@ import json
 from typing import AsyncGenerator
 
 from backend.config import config
-from backend.models.schemas import HousingPressureScore, ScoreRequest
+from backend.models.schemas import HousingPressureScore, ScoreRequest, ChatMessage
 
 # ── System prompt for Gemini market summaries ──
 _SUMMARY_SYSTEM_PROMPT = """You are a student housing market analyst writing investment briefs for real estate developers.
@@ -107,6 +107,103 @@ async def generate_gemini_summary(score: HousingPressureScore) -> str:
     except Exception as exc:
         print(f"[Gemini] Summary generation failed: {exc}")
         return ""
+
+
+_CHAT_SYSTEM_PROMPT = """You are an expert student housing market analyst embedded directly into the CampusLens intelligence platform.
+
+Your goal is to answer the user's questions about housing markets, development risk, and comparative metrics. 
+The user (a real estate developer or institutional analyst) will ask you to interpret the market data currently shown on their dashboard.
+
+RULES FOR REASONING:
+1. Base your answers ONLY on the injected market metrics provided below.
+2. Prioritize causal reasoning: explain *why* a score is high or low by contrasting demand-side pressure (enrollment growth, rent growth) against supply-side response (building permits, existing housing).
+3. Be concise and insightful. Use an authoritative, analytical tone. Avoid generic fluff.
+4. Highlight specific tradeoffs, constraints, or development risks based on the data.
+5. If the user asks a question that requires data not present in the injected context, clearly state that you don't have that specific data.
+6. Provide light comparative context (e.g. "Rent growth of 8% outpaces typical national inflation...")."""
+
+async def answer_chat_query(messages: list[ChatMessage], uni_name: str | None, active_score: HousingPressureScore | None) -> str:
+    if not config.gemini_api_key:
+        return "I'm sorry, my real AI capabilities aren't configured yet (missing Gemini API key)."
+
+    try:
+        from google import genai
+        from google.genai import types
+    except ImportError:
+        return "The google-genai package is not installed on the server."
+
+    client = genai.Client(api_key=config.gemini_api_key)
+
+    system_instruction = _CHAT_SYSTEM_PROMPT
+    if uni_name and active_score:
+        from backend.adapters.ipeds import compute_enrollment_cagr
+        from backend.adapters.rent import compute_rent_growth
+
+        cagr = compute_enrollment_cagr(active_score.enrollment_trend, years=3)
+        rent_growth = compute_rent_growth(active_score.rent_history, years=2)
+        permits_2yr = sum(p.permits for p in active_score.permit_history[-2:]) if active_score.permit_history else 0
+        
+        cagr_str = f"{cagr:+.1f}%" if cagr is not None else "N/A"
+        rent_str = f"{rent_growth:+.1f}%" if rent_growth is not None else "N/A"
+        
+        enrollment = active_score.enrollment_trend[-1].total_enrollment if active_score.enrollment_trend else None
+        housing_units = active_score.nearby_housing_units if active_score.nearby_housing_units else None
+        
+        beds = None
+        if active_score.housing_capacity and active_score.housing_capacity.dormitory_capacity:
+            beds = active_score.housing_capacity.dormitory_capacity
+            
+        beds_ratio = "N/A"
+        if beds is not None and enrollment is not None and enrollment > 0:
+            beds_ratio = f"{beds / enrollment:.2f}"
+
+        enrollment_str = f"{enrollment:,}" if enrollment is not None else "N/A"
+        housing_units_str = f"{housing_units:,}" if housing_units is not None else "N/A"
+        beds_str = f"{beds:,}" if beds is not None else "N/A"
+
+        raw_data_dump = active_score.model_dump_json(exclude={"gemini_summary"}, exclude_none=True, indent=2)
+
+        system_instruction += f"""
+
+[SYSTEM INJECTION] The user is currently viewing the market for: {uni_name}.
+
+MARKET SNAPSHOT:
+• Housing Pressure Score: {active_score.score:.1f}/100
+• Enrollment: {enrollment_str} (3-year CAGR: {cagr_str})
+• Rent Growth (2-year average): {rent_str}
+• Permits Filed (last 2 years): {permits_2yr:,} residential units
+• Current Housing Units (County): {housing_units_str}
+• On-Campus Bed Capacity: {beds_str} (approx {beds_ratio} beds per student)
+
+COMPONENT BREAKDOWN:
+• Enrollment Pressure Component: {active_score.components.enrollment_pressure:.1f}/100
+• Rent Pressure Component: {active_score.components.rent_pressure:.1f}/100
+• Permit Gap Component: {active_score.components.permit_gap:.1f}/100
+
+RAW API DATA FOR DEEP ANALYSIS (includes all historical trend arrays, demographics, disaster risks, etc):
+```json
+{raw_data_dump}
+```
+"""
+
+    try:
+        contents = []
+        for msg in messages:
+            gemini_role = "model" if msg.role == "assistant" else msg.role
+            contents.append(types.Content(role=gemini_role, parts=[types.Part.from_text(text=msg.content)]))
+
+        response = await client.aio.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=contents,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.4,
+            ),
+        )
+        return response.text.strip()
+    except Exception as exc:
+        print(f"[Gemini] Chat exception: {exc}")
+        return "I hit a snag processing that. Could you try asking again?"
 
 
 # ── SSE event helpers ──

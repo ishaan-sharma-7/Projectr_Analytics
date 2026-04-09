@@ -1,0 +1,2967 @@
+[
+  {
+    "university": {
+      "unitid": 233921,
+      "name": "Virginia Polytechnic Institute and State University",
+      "city": "Blacksburg",
+      "state": "VA",
+      "lat": 37.229012,
+      "lon": -80.423675,
+      "enrollment": 30923,
+      "url": "www.vt.edu/"
+    },
+    "score": 63.5,
+    "components": {
+      "enrollment_pressure": 71.3,
+      "permit_gap": 92.4,
+      "rent_pressure": 71.3
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 31636
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 31841
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 33041
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 33517
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 34809
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 35796
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 37128
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 37974
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 37878
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 533,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2020,
+        "permits": 1625,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2021,
+        "permits": 297,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2022,
+        "permits": 370,
+        "fips_place": "51121"
+      },
+      {
+        "year": 2023,
+        "permits": 374,
+        "fips_place": "51121"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Montgomery County",
+        "state": "VA",
+        "year": 2022,
+        "month": null,
+        "median_rent": 935.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Montgomery County",
+        "state": "VA",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1051.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Montgomery County",
+        "state": "VA",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1261.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Montgomery County",
+        "state": "VA",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1231.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Montgomery County",
+        "state": "VA",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1271.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 42229,
+    "demographics": {
+      "median_household_income": 70769,
+      "median_home_value": 283600,
+      "median_gross_rent": 1206,
+      "median_year_built": 1986,
+      "vacancy_rate_pct": 13.02,
+      "pct_bachelors_or_higher": 22.6,
+      "pct_renter_occupied": 44.7,
+      "total_housing_units": 42229
+    },
+    "housing_capacity": {
+      "year": 2023,
+      "dormitory_capacity": 10213,
+      "typical_room_charge": 6520,
+      "typical_board_charge": 5998,
+      "beds_per_student": 0.33
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 8,
+      "weather_disasters": 6,
+      "by_type": {
+        "Winter Storm": 1,
+        "Severe Storm": 1,
+        "Tropical Storm": 2,
+        "Biological": 2,
+        "Hurricane": 2
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 1939700000,
+      "endowment_per_student": 62727,
+      "pell_grant_rate": 0.1529,
+      "admission_rate": 0.5478,
+      "retention_rate": 0.9308,
+      "strength_score": 70.3,
+      "strength_label": "stable"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 364,
+      "dormitory_buildings": 17,
+      "residential_buildings": 63,
+      "house_buildings": 593,
+      "total_buildings": 1037,
+      "apartment_density_per_km2": 20.81,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "Virginia Tech's student housing market is experiencing significant demand growth, with consistent enrollment increases outpacing the pace of new supply. The most compelling signal is the robust +8.0% average annual rent growth over the last three years, indicating a persistent housing shortage. Developers should target new purpose-built student housing projects to capitalize on the high unmet demand and strong rental rate appreciation.",
+    "scored_at": "2026-04-09T19:37:40.670858+00:00"
+  },
+  {
+    "university": {
+      "unitid": 234076,
+      "name": "University of Virginia-Main Campus",
+      "city": "Charlottesville",
+      "state": "VA",
+      "lat": 38.035665,
+      "lon": -78.503428,
+      "enrollment": 17597,
+      "url": "https://www.virginia.edu/"
+    },
+    "score": 70.2,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 90.6,
+      "rent_pressure": 82.9
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 948,
+        "fips_place": "51003"
+      },
+      {
+        "year": 2020,
+        "permits": 982,
+        "fips_place": "51003"
+      },
+      {
+        "year": 2021,
+        "permits": 862,
+        "fips_place": "51003"
+      },
+      {
+        "year": 2022,
+        "permits": 927,
+        "fips_place": "51003"
+      },
+      {
+        "year": 2023,
+        "permits": 820,
+        "fips_place": "51003"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Albemarle County",
+        "state": "VA",
+        "year": 2022,
+        "month": null,
+        "median_rent": 1264.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Albemarle County",
+        "state": "VA",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1401.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Albemarle County",
+        "state": "VA",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1678.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Albemarle County",
+        "state": "VA",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1729.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Albemarle County",
+        "state": "VA",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1824.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 48360,
+    "demographics": {
+      "median_household_income": 102617,
+      "median_home_value": 471000,
+      "median_gross_rent": 1623,
+      "median_year_built": 1991,
+      "vacancy_rate_pct": 6.82,
+      "pct_bachelors_or_higher": 29.86,
+      "pct_renter_occupied": 29.88,
+      "total_housing_units": 48360
+    },
+    "housing_capacity": {
+      "year": 2020,
+      "dormitory_capacity": 7607,
+      "typical_room_charge": 6960,
+      "typical_board_charge": 5390,
+      "beds_per_student": 0.432
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 7,
+      "weather_disasters": 5,
+      "by_type": {
+        "Winter Storm": 1,
+        "Tropical Storm": 1,
+        "Severe Storm": 1,
+        "Biological": 2,
+        "Hurricane": 1,
+        "Snowstorm": 1
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 10055403543,
+      "endowment_per_student": 571427,
+      "pell_grant_rate": 0.1555,
+      "admission_rate": 0.1681,
+      "retention_rate": 0.9755,
+      "strength_score": 95.9,
+      "strength_label": "strong"
+    },
+    "existing_housing": null,
+    "gemini_summary": "The University of Virginia market is experiencing substantial housing pressure, with student demand consistently outpacing the delivery of new residential units. The most compelling signal for this imbalance is the remarkable 3-year average annual rent growth of +9.6%, indicating severe undersupply. Developers should target new purpose-built student housing projects to capitalize on the market's high rent pressure and significant permit gap, particularly given the strong underlying demand.",
+    "scored_at": "2026-04-09T19:39:14.797147+00:00"
+  },
+  {
+    "university": {
+      "unitid": 221759,
+      "name": "The University of Tennessee-Knoxville",
+      "city": "Knoxville",
+      "state": "TN",
+      "lat": 35.952082,
+      "lon": -83.925852,
+      "enrollment": 30418,
+      "url": "www.utk.edu/"
+    },
+    "score": 73.7,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 93.2,
+      "rent_pressure": 90.6
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 2028,
+        "fips_place": "47093"
+      },
+      {
+        "year": 2020,
+        "permits": 2978,
+        "fips_place": "47093"
+      },
+      {
+        "year": 2021,
+        "permits": 2831,
+        "fips_place": "47093"
+      },
+      {
+        "year": 2022,
+        "permits": 2503,
+        "fips_place": "47093"
+      },
+      {
+        "year": 2023,
+        "permits": 4293,
+        "fips_place": "47093"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Knox County",
+        "state": "TN",
+        "year": 2022,
+        "month": null,
+        "median_rent": 980.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Knox County",
+        "state": "TN",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1156.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Knox County",
+        "state": "TN",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1221.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Knox County",
+        "state": "TN",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1548.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Knox County",
+        "state": "TN",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1471.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 214606,
+    "demographics": {
+      "median_household_income": 71662,
+      "median_home_value": 279700,
+      "median_gross_rent": 1180,
+      "median_year_built": 1985,
+      "vacancy_rate_pct": 8.07,
+      "pct_bachelors_or_higher": 24.43,
+      "pct_renter_occupied": 31.29,
+      "total_housing_units": 214606
+    },
+    "housing_capacity": null,
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 9,
+      "weather_disasters": 7,
+      "by_type": {
+        "Winter Storm": 3,
+        "Severe Storm": 3,
+        "Biological": 2,
+        "Flood": 1
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 1187949666,
+      "endowment_per_student": 39054,
+      "pell_grant_rate": 0.1889,
+      "admission_rate": 0.416,
+      "retention_rate": 0.919,
+      "strength_score": 67.2,
+      "strength_label": "stable"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 143,
+      "dormitory_buildings": 7,
+      "residential_buildings": 57,
+      "house_buildings": 55,
+      "total_buildings": 262,
+      "apartment_density_per_km2": 8.19,
+      "saturation_label": "low"
+    },
+    "gemini_summary": "The University of Tennessee-Knoxville market exhibits significant housing pressure, driven by strong student demand that consistently outpaces new purpose-built supply. The most critical signal for this market is the robust +10.7% average annual rent growth over the past three years, indicating severe undersupply and high demand elasticity. Developers should capitalize on this persistent supply-demand imbalance by pursuing new purpose-built student housing projects to meet the demonstrated need for modern accommodations.",
+    "scored_at": "2026-04-09T19:40:51.444556+00:00"
+  },
+  {
+    "university": {
+      "unitid": 199120,
+      "name": "University of North Carolina at Chapel Hill",
+      "city": "Chapel Hill",
+      "state": "NC",
+      "lat": 35.911769,
+      "lon": -79.050969,
+      "enrollment": 20752,
+      "url": "https://www.unc.edu/"
+    },
+    "score": 67.3,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 94.6,
+      "rent_pressure": 80.7
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 495,
+        "fips_place": "37135"
+      },
+      {
+        "year": 2020,
+        "permits": 465,
+        "fips_place": "37135"
+      },
+      {
+        "year": 2021,
+        "permits": 912,
+        "fips_place": "37135"
+      },
+      {
+        "year": 2022,
+        "permits": 485,
+        "fips_place": "37135"
+      },
+      {
+        "year": 2023,
+        "permits": 1011,
+        "fips_place": "37135"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Orange County",
+        "state": "NC",
+        "year": 2022,
+        "month": null,
+        "median_rent": 1199.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Orange County",
+        "state": "NC",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1315.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Orange County",
+        "state": "NC",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1631.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Orange County",
+        "state": "NC",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1872.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Orange County",
+        "state": "NC",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1711.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 62127,
+    "demographics": {
+      "median_household_income": 88553,
+      "median_home_value": 428500,
+      "median_gross_rent": 1387,
+      "median_year_built": 1989,
+      "vacancy_rate_pct": 9.13,
+      "pct_bachelors_or_higher": 27.53,
+      "pct_renter_occupied": 30.22,
+      "total_housing_units": 62127
+    },
+    "housing_capacity": null,
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 13,
+      "weather_disasters": 10,
+      "by_type": {
+        "Winter Storm": 1,
+        "Tropical Depression": 1,
+        "Tropical Storm": 2,
+        "Hurricane": 7,
+        "Biological": 2
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 5728314165,
+      "endowment_per_student": 276037,
+      "pell_grant_rate": 0.2004,
+      "admission_rate": 0.1534,
+      "retention_rate": 0.9661,
+      "strength_score": 90.0,
+      "strength_label": "strong"
+    },
+    "existing_housing": null,
+    "gemini_summary": "The Chapel Hill student housing market is experiencing significant demand pressure that is outstripping new supply, driven by a substantial permit gap and strong rent growth. The most critical data signal for this market is the robust 3-year average annual rent growth of +9.3%, indicating severe undersupply. Developers should capitalize on this persistent demand by pursuing new purpose-built student housing projects, particularly those that can navigate local permitting challenges to deliver units.",
+    "scored_at": "2026-04-09T19:42:28.697198+00:00"
+  },
+  {
+    "university": {
+      "unitid": 134130,
+      "name": "University of Florida",
+      "city": "Gainesville",
+      "state": "FL",
+      "lat": 29.64629,
+      "lon": -82.347911,
+      "enrollment": 35629,
+      "url": "https://www.ufl.edu/"
+    },
+    "score": 56.6,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 91.5,
+      "rent_pressure": 82.2
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 2320,
+        "fips_place": "12001"
+      },
+      {
+        "year": 2020,
+        "permits": 1767,
+        "fips_place": "12001"
+      },
+      {
+        "year": 2021,
+        "permits": 2179,
+        "fips_place": "12001"
+      },
+      {
+        "year": 2022,
+        "permits": 2827,
+        "fips_place": "12001"
+      },
+      {
+        "year": 2023,
+        "permits": 1556,
+        "fips_place": "12001"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Alachua County",
+        "state": "FL",
+        "year": 2022,
+        "month": null,
+        "median_rent": 1038.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Alachua County",
+        "state": "FL",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1134.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Alachua County",
+        "state": "FL",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1397.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Alachua County",
+        "state": "FL",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1583.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Alachua County",
+        "state": "FL",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1493.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 125702,
+    "demographics": {
+      "median_household_income": 59659,
+      "median_home_value": 266800,
+      "median_gross_rent": 1255,
+      "median_year_built": 1987,
+      "vacancy_rate_pct": 10.28,
+      "pct_bachelors_or_higher": 22.92,
+      "pct_renter_occupied": 42.36,
+      "total_housing_units": 125702
+    },
+    "housing_capacity": {
+      "year": 2023,
+      "dormitory_capacity": 11668,
+      "typical_room_charge": 6900,
+      "typical_board_charge": 4600,
+      "beds_per_student": 0.327
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 21,
+      "weather_disasters": 19,
+      "by_type": {
+        "Hurricane": 13,
+        "Tropical Storm": 5,
+        "Severe Storm": 1,
+        "Biological": 2
+      },
+      "most_recent_year": 2024
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 2448293000,
+      "endowment_per_student": 68716,
+      "pell_grant_rate": 0.2166,
+      "admission_rate": 0.242,
+      "retention_rate": 0.9771,
+      "strength_score": 79.2,
+      "strength_label": "strong"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 175,
+      "dormitory_buildings": 52,
+      "residential_buildings": 117,
+      "house_buildings": 87,
+      "total_buildings": 431,
+      "apartment_density_per_km2": 12.4,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "The University of Florida market is experiencing an emerging supply deficit, with strong demand consistently outpacing new housing deliveries despite significant permitting activity. The most critical signal is the impressive 9.5% average annual rent growth over the last three years, indicating persistent undersupply. Developers should target new purpose-built student housing projects to capitalize on the sustained rent appreciation and high permit gap component.",
+    "scored_at": "2026-04-09T19:43:22.378186+00:00"
+  },
+  {
+    "university": {
+      "unitid": 104151,
+      "name": "Arizona State University Campus Immersion",
+      "city": "Tempe",
+      "state": "AZ",
+      "lat": 33.417721,
+      "lon": -111.934383,
+      "enrollment": 64674,
+      "url": "www.asu.edu/"
+    },
+    "score": 67.1,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 89.5,
+      "rent_pressure": 77.4
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 30779,
+        "fips_place": "04013"
+      },
+      {
+        "year": 2020,
+        "permits": 41895,
+        "fips_place": "04013"
+      },
+      {
+        "year": 2021,
+        "permits": 42123,
+        "fips_place": "04013"
+      },
+      {
+        "year": 2022,
+        "permits": 40550,
+        "fips_place": "04013"
+      },
+      {
+        "year": 2023,
+        "permits": 38292,
+        "fips_place": "04013"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Maricopa County",
+        "state": "AZ",
+        "year": 2022,
+        "month": null,
+        "median_rent": 1311.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Maricopa County",
+        "state": "AZ",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1740.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Maricopa County",
+        "state": "AZ",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1877.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Maricopa County",
+        "state": "AZ",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1950.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Maricopa County",
+        "state": "AZ",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1839.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 1850862,
+    "demographics": {
+      "median_household_income": 85518,
+      "median_home_value": 414700,
+      "median_gross_rent": 1587,
+      "median_year_built": 1992,
+      "vacancy_rate_pct": 8.29,
+      "pct_bachelors_or_higher": 22.32,
+      "pct_renter_occupied": 32.88,
+      "total_housing_units": 1850862
+    },
+    "housing_capacity": {
+      "year": 2020,
+      "dormitory_capacity": 17878,
+      "typical_room_charge": 8174,
+      "typical_board_charge": 5336,
+      "beds_per_student": 0.276
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 10,
+      "weather_disasters": 8,
+      "by_type": {
+        "Fire": 8,
+        "Biological": 2
+      },
+      "most_recent_year": 2024
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 1321499440,
+      "endowment_per_student": 20433,
+      "pell_grant_rate": 0.2899,
+      "admission_rate": 0.8989,
+      "retention_rate": 0.8664,
+      "strength_score": 52.8,
+      "strength_label": "stable"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 292,
+      "dormitory_buildings": 12,
+      "residential_buildings": 102,
+      "house_buildings": 141,
+      "total_buildings": 547,
+      "apartment_density_per_km2": 16.61,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "Arizona State University's Tempe campus is experiencing significant housing pressure, with a substantial permit gap indicating that student-specific supply is not keeping pace with demand, driving up rental rates. The most compelling data signal is the robust 3-year average annual rent growth of +8.8%, underscoring the severe undersupply. Developers should target new purpose-built student housing projects to capitalize on the strong rent growth and address the critical supply deficit in this emerging market.",
+    "scored_at": "2026-04-09T19:44:53.634469+00:00"
+  },
+  {
+    "university": {
+      "unitid": 139959,
+      "name": "University of Georgia",
+      "city": "Athens",
+      "state": "GA",
+      "lat": 33.956262,
+      "lon": -83.374039,
+      "enrollment": 32137,
+      "url": "www.uga.edu/"
+    },
+    "score": 70.0,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 90.7,
+      "rent_pressure": 87.9
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 1283,
+        "fips_place": "13059"
+      },
+      {
+        "year": 2020,
+        "permits": 635,
+        "fips_place": "13059"
+      },
+      {
+        "year": 2021,
+        "permits": 1166,
+        "fips_place": "13059"
+      },
+      {
+        "year": 2022,
+        "permits": 1775,
+        "fips_place": "13059"
+      },
+      {
+        "year": 2023,
+        "permits": 406,
+        "fips_place": "13059"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Clarke County",
+        "state": "GA",
+        "year": 2022,
+        "month": null,
+        "median_rent": 899.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Clarke County",
+        "state": "GA",
+        "year": 2023,
+        "month": null,
+        "median_rent": 995.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Clarke County",
+        "state": "GA",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1169.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Clarke County",
+        "state": "GA",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1225.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Clarke County",
+        "state": "GA",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1331.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 56913,
+    "demographics": {
+      "median_household_income": 52267,
+      "median_home_value": 271900,
+      "median_gross_rent": 1162,
+      "median_year_built": 1987,
+      "vacancy_rate_pct": 4.84,
+      "pct_bachelors_or_higher": 24.25,
+      "pct_renter_occupied": 56.1,
+      "total_housing_units": 56913
+    },
+    "housing_capacity": null,
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 7,
+      "weather_disasters": 5,
+      "by_type": {
+        "Winter Storm": 1,
+        "Tropical Storm": 1,
+        "Biological": 2,
+        "Hurricane": 3
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 2055796714,
+      "endowment_per_student": 63970,
+      "pell_grant_rate": 0.1675,
+      "admission_rate": 0.377,
+      "retention_rate": 0.9404,
+      "strength_score": 74.3,
+      "strength_label": "stable"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 234,
+      "dormitory_buildings": 22,
+      "residential_buildings": 674,
+      "house_buildings": 712,
+      "total_buildings": 1642,
+      "apartment_density_per_km2": 13.98,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "The University of Georgia market exhibits significant undersupply, with robust student demand consistently outpacing new housing deliveries. The most critical data signal is the exceptional 3-year average annual rent growth of +10.3%, indicating severe housing scarcity and strong pricing power. Developers have a clear opportunity to capitalize on this constrained market by delivering new purpose-built student housing to meet unmet demand and achieve premium rents.",
+    "scored_at": "2026-04-09T19:46:30.135215+00:00"
+  },
+  {
+    "university": {
+      "unitid": 217882,
+      "name": "Clemson University",
+      "city": "Clemson",
+      "state": "SC",
+      "lat": 34.679381,
+      "lon": -82.835114,
+      "enrollment": 23300,
+      "url": "www.clemson.edu/"
+    },
+    "score": 61.1,
+    "components": {
+      "enrollment_pressure": 76.5,
+      "permit_gap": 90.8,
+      "rent_pressure": 69.9
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 21314
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 21356
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 22199
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 21774
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 23773
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 24208
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 24960
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 25620
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 26400
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 654,
+        "fips_place": "45077"
+      },
+      {
+        "year": 2020,
+        "permits": 857,
+        "fips_place": "45077"
+      },
+      {
+        "year": 2021,
+        "permits": 1030,
+        "fips_place": "45077"
+      },
+      {
+        "year": 2022,
+        "permits": 1658,
+        "fips_place": "45077"
+      },
+      {
+        "year": 2023,
+        "permits": 1087,
+        "fips_place": "45077"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Pickens County",
+        "state": "SC",
+        "year": 2022,
+        "month": null,
+        "median_rent": 992.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Pickens County",
+        "state": "SC",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1051.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Pickens County",
+        "state": "SC",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1206.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Pickens County",
+        "state": "SC",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1306.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Pickens County",
+        "state": "SC",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1339.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 57695,
+    "demographics": {
+      "median_household_income": 59411,
+      "median_home_value": 216000,
+      "median_gross_rent": 936,
+      "median_year_built": 1989,
+      "vacancy_rate_pct": 10.9,
+      "pct_bachelors_or_higher": 15.25,
+      "pct_renter_occupied": 27.55,
+      "total_housing_units": 57695
+    },
+    "housing_capacity": {
+      "year": 2023,
+      "dormitory_capacity": 7500,
+      "typical_room_charge": 8026,
+      "typical_board_charge": 4846,
+      "beds_per_student": 0.322
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 19,
+      "weather_disasters": 17,
+      "by_type": {
+        "Winter Storm": 1,
+        "Fire": 3,
+        "Hurricane": 9,
+        "Tropical Storm": 2,
+        "Severe Storm": 2,
+        "Biological": 2
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 1124156325,
+      "endowment_per_student": 48247,
+      "pell_grant_rate": 0.1475,
+      "admission_rate": 0.3834,
+      "retention_rate": 0.9347,
+      "strength_score": 71.2,
+      "strength_label": "stable"
+    },
+    "existing_housing": null,
+    "gemini_summary": "Clemson University exhibits a strong demand-supply imbalance, driven by consistent enrollment growth that outpaces new housing development, creating significant market pressure. The most compelling data signal is the 3-year average annual rent growth of +7.8%, indicating severe undersupply and strong pricing power for landlords. Developers face a clear opportunity to capitalize on this persistent housing deficit by delivering purpose-built student housing to meet unmet demand and capture premium rents.",
+    "scored_at": "2026-04-09T19:47:11.595940+00:00"
+  },
+  {
+    "university": {
+      "unitid": 199193,
+      "name": "North Carolina State University at Raleigh",
+      "city": "Raleigh",
+      "state": "NC",
+      "lat": 35.785111,
+      "lon": -78.674517,
+      "enrollment": 27371,
+      "url": "www.ncsu.edu/"
+    },
+    "score": 69.7,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 84.4,
+      "rent_pressure": 81.2
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 9751,
+        "fips_place": "37183"
+      },
+      {
+        "year": 2020,
+        "permits": 12598,
+        "fips_place": "37183"
+      },
+      {
+        "year": 2021,
+        "permits": 16988,
+        "fips_place": "37183"
+      },
+      {
+        "year": 2022,
+        "permits": 18471,
+        "fips_place": "37183"
+      },
+      {
+        "year": 2023,
+        "permits": 17389,
+        "fips_place": "37183"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Wake County",
+        "state": "NC",
+        "year": 2022,
+        "month": null,
+        "median_rent": 1223.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Wake County",
+        "state": "NC",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1412.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Wake County",
+        "state": "NC",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1646.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Wake County",
+        "state": "NC",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1763.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Wake County",
+        "state": "NC",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1750.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 481999,
+    "demographics": {
+      "median_household_income": 101763,
+      "median_home_value": 422800,
+      "median_gross_rent": 1508,
+      "median_year_built": 1999,
+      "vacancy_rate_pct": 7.54,
+      "pct_bachelors_or_higher": 33.79,
+      "pct_renter_occupied": 31.24,
+      "total_housing_units": 481999
+    },
+    "housing_capacity": {
+      "year": 2021,
+      "dormitory_capacity": 10024,
+      "typical_room_charge": 6768,
+      "typical_board_charge": 4833,
+      "beds_per_student": 0.366
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 11,
+      "weather_disasters": 9,
+      "by_type": {
+        "Winter Storm": 1,
+        "Tropical Storm": 2,
+        "Hurricane": 6,
+        "Biological": 2
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 2219515999,
+      "endowment_per_student": 81090,
+      "pell_grant_rate": 0.1958,
+      "admission_rate": 0.4174,
+      "retention_rate": 0.9447,
+      "strength_score": 76.4,
+      "strength_label": "strong"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 131,
+      "dormitory_buildings": 15,
+      "residential_buildings": 26,
+      "house_buildings": 294,
+      "total_buildings": 466,
+      "apartment_density_per_km2": 7.97,
+      "saturation_label": "low"
+    },
+    "gemini_summary": "The Raleigh market surrounding NC State University exhibits strong underlying demand, as evidenced by consistent rent growth and a significant housing supply gap despite robust overall residential permitting. The most compelling data signal is the impressive +9.4% annual rent growth over the past three years, indicating persistent undersupply relative to student demand. Developers have a clear opportunity to capitalize on this unmet demand by delivering purpose-built student housing that can command premium rents in a rapidly expanding university environment.",
+    "scored_at": "2026-04-09T19:48:21.838137+00:00"
+  },
+  {
+    "university": {
+      "unitid": 142115,
+      "name": "Boise State University",
+      "city": "Boise",
+      "state": "ID",
+      "lat": 43.604284,
+      "lon": -116.203301,
+      "enrollment": 17674,
+      "url": "https://www.boisestate.edu/"
+    },
+    "score": 74.4,
+    "components": {
+      "enrollment_pressure": 71.7,
+      "permit_gap": 83.8,
+      "rent_pressure": 87.9
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 16311
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 16173
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 16203
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 16638
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 17010
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 17618
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 18409
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 18297
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 18535
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 7048,
+        "fips_place": "16001"
+      },
+      {
+        "year": 2020,
+        "permits": 6060,
+        "fips_place": "16001"
+      },
+      {
+        "year": 2021,
+        "permits": 7487,
+        "fips_place": "16001"
+      },
+      {
+        "year": 2022,
+        "permits": 6530,
+        "fips_place": "16001"
+      },
+      {
+        "year": 2023,
+        "permits": 6089,
+        "fips_place": "16001"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Ada County",
+        "state": "ID",
+        "year": 2022,
+        "month": null,
+        "median_rent": 1118.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Ada County",
+        "state": "ID",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1310.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Ada County",
+        "state": "ID",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1388.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Ada County",
+        "state": "ID",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1838.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Ada County",
+        "state": "ID",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1655.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 205068,
+    "demographics": {
+      "median_household_income": 88907,
+      "median_home_value": 476000,
+      "median_gross_rent": 1465,
+      "median_year_built": 1996,
+      "vacancy_rate_pct": 4.08,
+      "pct_bachelors_or_higher": 28.55,
+      "pct_renter_occupied": 25.94,
+      "total_housing_units": 205068
+    },
+    "housing_capacity": null,
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 3,
+      "weather_disasters": 1,
+      "by_type": {
+        "Biological": 2,
+        "Flood": 1
+      },
+      "most_recent_year": 2020
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 165407637,
+      "endowment_per_student": 9359,
+      "pell_grant_rate": 0.1808,
+      "admission_rate": 0.8721,
+      "retention_rate": 0.7885,
+      "strength_score": 46.8,
+      "strength_label": "watch"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 336,
+      "dormitory_buildings": 17,
+      "residential_buildings": 0,
+      "house_buildings": 129,
+      "total_buildings": 482,
+      "apartment_density_per_km2": 19.28,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "Boise State University exhibits a high-pressure student housing market driven by consistent enrollment growth and a severe supply deficit. The most compelling signal of this imbalance is the remarkable 3-year average annual rent growth of +10.3%, significantly outpacing new supply. Developers have a clear opportunity to capitalize on this unmet demand by delivering purpose-built student housing, which would likely command premium rents and high occupancy rates.",
+    "scored_at": "2026-04-09T19:49:45.913607+00:00"
+  },
+  {
+    "university": {
+      "unitid": 100751,
+      "name": "The University of Alabama",
+      "city": "Tuscaloosa",
+      "state": "AL",
+      "lat": 33.211875,
+      "lon": -87.545978,
+      "enrollment": 33227,
+      "url": "www.ua.edu/"
+    },
+    "score": 50.0,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 94.6,
+      "rent_pressure": 56.9
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 1436,
+        "fips_place": "01125"
+      },
+      {
+        "year": 2020,
+        "permits": 1223,
+        "fips_place": "01125"
+      },
+      {
+        "year": 2021,
+        "permits": 1361,
+        "fips_place": "01125"
+      },
+      {
+        "year": 2022,
+        "permits": 923,
+        "fips_place": "01125"
+      },
+      {
+        "year": 2023,
+        "permits": 656,
+        "fips_place": "01125"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Tuscaloosa County",
+        "state": "AL",
+        "year": 2022,
+        "month": null,
+        "median_rent": 927.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Tuscaloosa County",
+        "state": "AL",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1018.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Tuscaloosa County",
+        "state": "AL",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1125.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Tuscaloosa County",
+        "state": "AL",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1138.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Tuscaloosa County",
+        "state": "AL",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1169.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 102935,
+    "demographics": {
+      "median_household_income": 63947,
+      "median_home_value": 233700,
+      "median_gross_rent": 997,
+      "median_year_built": 1992,
+      "vacancy_rate_pct": 15.2,
+      "pct_bachelors_or_higher": 18.33,
+      "pct_renter_occupied": 33.54,
+      "total_housing_units": 102935
+    },
+    "housing_capacity": {
+      "year": 2022,
+      "dormitory_capacity": 8989,
+      "typical_room_charge": 6100,
+      "typical_board_charge": 4426,
+      "beds_per_student": 0.271
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 7,
+      "weather_disasters": 5,
+      "by_type": {
+        "Hurricane": 4,
+        "Severe Storm": 1,
+        "Biological": 2
+      },
+      "most_recent_year": 2024
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 1565891763,
+      "endowment_per_student": 47127,
+      "pell_grant_rate": 0.184,
+      "admission_rate": 0.7665,
+      "retention_rate": 0.8949,
+      "strength_score": 63.3,
+      "strength_label": "stable"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 555,
+      "dormitory_buildings": 33,
+      "residential_buildings": 16,
+      "house_buildings": 2763,
+      "total_buildings": 3367,
+      "apartment_density_per_km2": 32.12,
+      "saturation_label": "high"
+    },
+    "gemini_summary": "The University of Alabama market exhibits a clear undersupply dynamic, with robust annual rent growth indicating demand significantly outpacing current housing availability. The most critical data signal is the exceptionally high 95/100 permit gap component, highlighting a severe lack of new supply relative to market needs. Developers should capitalize on this significant supply deficit by pursuing new purpose-built student housing projects to meet sustained demand and capture strong rental upside.",
+    "scored_at": "2026-04-09T19:50:43.233905+00:00"
+  },
+  {
+    "university": {
+      "unitid": 218663,
+      "name": "University of South Carolina-Columbia",
+      "city": "Columbia",
+      "state": "SC",
+      "lat": 33.996788,
+      "lon": -81.026935,
+      "enrollment": 29820,
+      "url": "www.sc.edu/"
+    },
+    "score": 54.0,
+    "components": {
+      "enrollment_pressure": 56.9,
+      "permit_gap": 93.0,
+      "rent_pressure": 61.1
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 32655
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 33290
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 33218
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 33902
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 35288
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 35526
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 36210
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 36581
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 36275
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 1687,
+        "fips_place": "45079"
+      },
+      {
+        "year": 2020,
+        "permits": 1781,
+        "fips_place": "45079"
+      },
+      {
+        "year": 2021,
+        "permits": 3263,
+        "fips_place": "45079"
+      },
+      {
+        "year": 2022,
+        "permits": 3439,
+        "fips_place": "45079"
+      },
+      {
+        "year": 2023,
+        "permits": 2843,
+        "fips_place": "45079"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Richland County",
+        "state": "SC",
+        "year": 2022,
+        "month": null,
+        "median_rent": 990.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Richland County",
+        "state": "SC",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1125.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Richland County",
+        "state": "SC",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1246.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Richland County",
+        "state": "SC",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1298.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Richland County",
+        "state": "SC",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1276.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 185196,
+    "demographics": {
+      "median_household_income": 61699,
+      "median_home_value": 224200,
+      "median_gross_rent": 1185,
+      "median_year_built": 1989,
+      "vacancy_rate_pct": 10.74,
+      "pct_bachelors_or_higher": 23.59,
+      "pct_renter_occupied": 36.76,
+      "total_housing_units": 185196
+    },
+    "housing_capacity": {
+      "year": 2023,
+      "dormitory_capacity": 9956,
+      "typical_room_charge": 7750,
+      "typical_board_charge": 4808,
+      "beds_per_student": 0.334
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 15,
+      "weather_disasters": 13,
+      "by_type": {
+        "Winter Storm": 1,
+        "Hurricane": 10,
+        "Tropical Storm": 2,
+        "Biological": 2
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 776513396,
+      "endowment_per_student": 26040,
+      "pell_grant_rate": 0.1911,
+      "admission_rate": 0.6015,
+      "retention_rate": 0.922,
+      "strength_score": 59.7,
+      "strength_label": "stable"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 181,
+      "dormitory_buildings": 50,
+      "residential_buildings": 65,
+      "house_buildings": 762,
+      "total_buildings": 1058,
+      "apartment_density_per_km2": 12.62,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "Despite modest enrollment growth, the University of South Carolina-Columbia market exhibits an emerging supply deficit, evidenced by robust rent appreciation and a significant permit gap. The most critical signal for this market is the impressive +6.5% average annual rent growth over the past three years, indicating strong demand outstripping available supply. Developers should target new purpose-built student housing projects to capitalize on the sustained rent growth and address the substantial permit gap, particularly for premium product near campus.",
+    "scored_at": "2026-04-09T19:51:20.173234+00:00"
+  },
+  {
+    "university": {
+      "unitid": 204796,
+      "name": "Ohio State University-Main Campus",
+      "city": "Columbus",
+      "state": "OH",
+      "lat": 39.999803,
+      "lon": -83.007525,
+      "enrollment": 45638,
+      "url": "www.osu.edu/"
+    },
+    "score": 73.2,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 94.2,
+      "rent_pressure": 75.0
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 4335,
+        "fips_place": "39049"
+      },
+      {
+        "year": 2020,
+        "permits": 8108,
+        "fips_place": "39049"
+      },
+      {
+        "year": 2021,
+        "permits": 6652,
+        "fips_place": "39049"
+      },
+      {
+        "year": 2022,
+        "permits": 8042,
+        "fips_place": "39049"
+      },
+      {
+        "year": 2023,
+        "permits": 7252,
+        "fips_place": "39049"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Franklin County",
+        "state": "OH",
+        "year": 2022,
+        "month": null,
+        "median_rent": 1032.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Franklin County",
+        "state": "OH",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1163.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Franklin County",
+        "state": "OH",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1302.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Franklin County",
+        "state": "OH",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1445.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Franklin County",
+        "state": "OH",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1430.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 588892,
+    "demographics": {
+      "median_household_income": 73795,
+      "median_home_value": 265700,
+      "median_gross_rent": 1233,
+      "median_year_built": 1979,
+      "vacancy_rate_pct": 6.96,
+      "pct_bachelors_or_higher": 25.66,
+      "pct_renter_occupied": 43.59,
+      "total_housing_units": 588892
+    },
+    "housing_capacity": {
+      "year": 2020,
+      "dormitory_capacity": 13085,
+      "typical_room_charge": null,
+      "typical_board_charge": null,
+      "beds_per_student": 0.287
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 2,
+      "weather_disasters": 0,
+      "by_type": {
+        "Biological": 2
+      },
+      "most_recent_year": 2020
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 7903034629,
+      "endowment_per_student": 173168,
+      "pell_grant_rate": 0.2016,
+      "admission_rate": 0.6057,
+      "retention_rate": 0.9423,
+      "strength_score": 77.5,
+      "strength_label": "strong"
+    },
+    "existing_housing": null,
+    "gemini_summary": "Ohio State University's student housing market is under high pressure, characterized by robust demand consistently outpacing available supply and driving significant market tightness. The most critical signal is the impressive 3-year average annual rent growth of +8.5%, indicating strong unmet demand and limited vacancy. Developers should target new purpose-built student housing projects near campus to capitalize on the high rent growth and substantial permit gap component, mitigating the risk of insufficient supply.",
+    "scored_at": "2026-04-09T19:52:45.906229+00:00"
+  },
+  {
+    "university": {
+      "unitid": 171100,
+      "name": "Michigan State University",
+      "city": "East Lansing",
+      "state": "MI",
+      "lat": 42.73212,
+      "lon": -84.476111,
+      "enrollment": 40922,
+      "url": "https://www.msu.edu/"
+    },
+    "score": 74.0,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 97.6,
+      "rent_pressure": 70.6
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 557,
+        "fips_place": "26065"
+      },
+      {
+        "year": 2020,
+        "permits": 571,
+        "fips_place": "26065"
+      },
+      {
+        "year": 2021,
+        "permits": 665,
+        "fips_place": "26065"
+      },
+      {
+        "year": 2022,
+        "permits": 568,
+        "fips_place": "26065"
+      },
+      {
+        "year": 2023,
+        "permits": 632,
+        "fips_place": "26065"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Ingham County",
+        "state": "MI",
+        "year": 2022,
+        "month": null,
+        "median_rent": 936.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Ingham County",
+        "state": "MI",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1063.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Ingham County",
+        "state": "MI",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1092.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Ingham County",
+        "state": "MI",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1127.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Ingham County",
+        "state": "MI",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1268.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 125812,
+    "demographics": {
+      "median_household_income": 64354,
+      "median_home_value": 187500,
+      "median_gross_rent": 1058,
+      "median_year_built": 1971,
+      "vacancy_rate_pct": 7.35,
+      "pct_bachelors_or_higher": 22.57,
+      "pct_renter_occupied": 34.91,
+      "total_housing_units": 125812
+    },
+    "housing_capacity": {
+      "year": 2020,
+      "dormitory_capacity": 17445,
+      "typical_room_charge": 4374,
+      "typical_board_charge": 6148,
+      "beds_per_student": 0.426
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 3,
+      "weather_disasters": 1,
+      "by_type": {
+        "Flood": 1,
+        "Biological": 2
+      },
+      "most_recent_year": 2024
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 4986233000,
+      "endowment_per_student": 121847,
+      "pell_grant_rate": 0.2009,
+      "admission_rate": 0.848,
+      "retention_rate": 0.9005,
+      "strength_score": 72.1,
+      "strength_label": "stable"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 169,
+      "dormitory_buildings": 23,
+      "residential_buildings": 275,
+      "house_buildings": 505,
+      "total_buildings": 972,
+      "apartment_density_per_km2": 10.49,
+      "saturation_label": "low"
+    },
+    "gemini_summary": "Michigan State University exhibits a severe housing undersupply, driven by a substantial permit gap and strong underlying student demand, despite moderate enrollment growth. The most critical data signal is the robust 3-year average annual rent growth of +7.9%, indicating significant unmet demand. Developers should capitalize on this acute supply deficit by pursuing new purpose-built student housing projects to meet the demonstrated need and capture premium rents.",
+    "scored_at": "2026-04-09T19:54:18.519888+00:00"
+  },
+  {
+    "university": {
+      "unitid": 228723,
+      "name": "Texas A&M University-College Station",
+      "city": "College Station",
+      "state": "TX",
+      "lat": 30.618726,
+      "lon": -96.336475,
+      "enrollment": 59615,
+      "url": "https://www.tamu.edu/"
+    },
+    "score": 61.1,
+    "components": {
+      "enrollment_pressure": 65.0,
+      "permit_gap": 91.4,
+      "rent_pressure": 50.1
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 52223
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 55621
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 57634
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 59121
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 60674
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 60977
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 61150
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 63929
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 64408
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 1326,
+        "fips_place": "48041"
+      },
+      {
+        "year": 2020,
+        "permits": 1937,
+        "fips_place": "48041"
+      },
+      {
+        "year": 2021,
+        "permits": 2212,
+        "fips_place": "48041"
+      },
+      {
+        "year": 2022,
+        "permits": 1691,
+        "fips_place": "48041"
+      },
+      {
+        "year": 2023,
+        "permits": 1366,
+        "fips_place": "48041"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Brazos County",
+        "state": "TX",
+        "year": 2022,
+        "month": null,
+        "median_rent": 975.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Brazos County",
+        "state": "TX",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1024.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Brazos County",
+        "state": "TX",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1140.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Brazos County",
+        "state": "TX",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1206.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Brazos County",
+        "state": "TX",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1186.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 99118,
+    "demographics": {
+      "median_household_income": 58388,
+      "median_home_value": 279700,
+      "median_gross_rent": 1160,
+      "median_year_built": 1996,
+      "vacancy_rate_pct": 10.8,
+      "pct_bachelors_or_higher": 23.6,
+      "pct_renter_occupied": 48.71,
+      "total_housing_units": 99118
+    },
+    "housing_capacity": null,
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 6,
+      "weather_disasters": 4,
+      "by_type": {
+        "Hurricane": 1,
+        "Severe Ice Storm": 2,
+        "Biological": 2,
+        "Flood": 1
+      },
+      "most_recent_year": 2024
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 19114830674,
+      "endowment_per_student": 320638,
+      "pell_grant_rate": 0.1964,
+      "admission_rate": 0.5743,
+      "retention_rate": 0.9431,
+      "strength_score": 81.7,
+      "strength_label": "strong"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 414,
+      "dormitory_buildings": 28,
+      "residential_buildings": 53,
+      "house_buildings": 77,
+      "total_buildings": 572,
+      "apartment_density_per_km2": 24.14,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "Texas A&M University-College Station exhibits a persistent demand-supply imbalance, driven by steady enrollment growth and a significant lag in new housing permits. The most compelling data signal is the robust 3-year average annual rent growth of +5.0%, indicating strong market absorption and pricing power. Developers should target new purpose-built student housing projects to capitalize on the acute permit gap and capture premium rents in this undersupplied market.",
+    "scored_at": "2026-04-09T19:55:33.891534+00:00"
+  },
+  {
+    "university": {
+      "unitid": 214777,
+      "name": "Pennsylvania State University-Main Campus",
+      "city": "University Park",
+      "state": "PA",
+      "lat": 40.7965,
+      "lon": -77.862848,
+      "enrollment": 42284,
+      "url": "https://www.psu.edu/"
+    },
+    "score": 55.6,
+    "components": {
+      "enrollment_pressure": 53.4,
+      "permit_gap": 96.3,
+      "rent_pressure": 41.3
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 49498
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 49044
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 49325
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 50014
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 47478
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 47230
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 50332
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 441,
+        "fips_place": "42027"
+      },
+      {
+        "year": 2020,
+        "permits": 380,
+        "fips_place": "42027"
+      },
+      {
+        "year": 2021,
+        "permits": 654,
+        "fips_place": "42027"
+      },
+      {
+        "year": 2022,
+        "permits": 654,
+        "fips_place": "42027"
+      },
+      {
+        "year": 2023,
+        "permits": 344,
+        "fips_place": "42027"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Centre County",
+        "state": "PA",
+        "year": 2022,
+        "month": null,
+        "median_rent": 1212.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Centre County",
+        "state": "PA",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1285.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Centre County",
+        "state": "PA",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1317.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Centre County",
+        "state": "PA",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1431.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Centre County",
+        "state": "PA",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1406.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 66023,
+    "demographics": {
+      "median_household_income": 72748,
+      "median_home_value": 308100,
+      "median_gross_rent": 1181,
+      "median_year_built": 1980,
+      "vacancy_rate_pct": 10.63,
+      "pct_bachelors_or_higher": 22.37,
+      "pct_renter_occupied": 34.22,
+      "total_housing_units": 66023
+    },
+    "housing_capacity": {
+      "year": 2023,
+      "dormitory_capacity": 14238,
+      "typical_room_charge": 7614,
+      "typical_board_charge": 5416,
+      "beds_per_student": 0.337
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 3,
+      "weather_disasters": 1,
+      "by_type": {
+        "Biological": 2,
+        "Flood": 1
+      },
+      "most_recent_year": 2020
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 4190478239,
+      "endowment_per_student": 99103,
+      "pell_grant_rate": 0.1388,
+      "admission_rate": 0.6056,
+      "retention_rate": 0.9264,
+      "strength_score": 74.8,
+      "strength_label": "stable"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 306,
+      "dormitory_buildings": 60,
+      "residential_buildings": 32,
+      "house_buildings": 4020,
+      "total_buildings": 4418,
+      "apartment_density_per_km2": 19.99,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "Despite minimal enrollment growth, Penn State-Main Campus exhibits an emerging housing pressure driven by a significant undersupply of new residential units relative to demand. The most critical signal is the 96/100 permit gap component, indicating a substantial deficit in new supply over the past five years. Developers have an opportunity to address this persistent supply shortage, particularly given the consistent 3.8% annual rent growth, by bringing purpose-built student housing to market.",
+    "scored_at": "2026-04-09T19:56:28.003878+00:00"
+  },
+  {
+    "university": {
+      "unitid": 151351,
+      "name": "Indiana University-Bloomington",
+      "city": "Bloomington",
+      "state": "IN",
+      "lat": 39.16609,
+      "lon": -86.526559,
+      "enrollment": 37806,
+      "url": "https://bloomington.iu.edu/"
+    },
+    "score": 56.4,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 93.3,
+      "rent_pressure": 54.7
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 732,
+        "fips_place": "18105"
+      },
+      {
+        "year": 2020,
+        "permits": 619,
+        "fips_place": "18105"
+      },
+      {
+        "year": 2021,
+        "permits": 2053,
+        "fips_place": "18105"
+      },
+      {
+        "year": 2022,
+        "permits": 462,
+        "fips_place": "18105"
+      },
+      {
+        "year": 2023,
+        "permits": 479,
+        "fips_place": "18105"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Monroe County",
+        "state": "IN",
+        "year": 2022,
+        "month": null,
+        "median_rent": 971.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Monroe County",
+        "state": "IN",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1124.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Monroe County",
+        "state": "IN",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1126.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Monroe County",
+        "state": "IN",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1223.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Monroe County",
+        "state": "IN",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1210.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 64850,
+    "demographics": {
+      "median_household_income": 63372,
+      "median_home_value": 261700,
+      "median_gross_rent": 1151,
+      "median_year_built": 1986,
+      "vacancy_rate_pct": 10.16,
+      "pct_bachelors_or_higher": 23.63,
+      "pct_renter_occupied": 39.18,
+      "total_housing_units": 64850
+    },
+    "housing_capacity": {
+      "year": 2020,
+      "dormitory_capacity": 12461,
+      "typical_room_charge": 7505,
+      "typical_board_charge": 3700,
+      "beds_per_student": 0.33
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 4,
+      "weather_disasters": 2,
+      "by_type": {
+        "Winter Storm": 1,
+        "Severe Storm": 1,
+        "Biological": 2
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 2087993958,
+      "endowment_per_student": 55229,
+      "pell_grant_rate": 0.1676,
+      "admission_rate": 0.7821,
+      "retention_rate": 0.9106,
+      "strength_score": 65.5,
+      "strength_label": "stable"
+    },
+    "existing_housing": null,
+    "gemini_summary": "Indiana University-Bloomington exhibits emerging housing pressure, as strong demand is consistently outpacing new supply additions. The most critical signal is the 3-year average annual rent growth of +5.7%, indicating significant market tightness despite substantial recent permitting activity. Developers should target new purpose-built student housing to capitalize on the sustained rent growth and address the persistent supply-demand imbalance.",
+    "scored_at": "2026-04-09T19:57:58.640391+00:00"
+  },
+  {
+    "university": {
+      "unitid": 157085,
+      "name": "University of Kentucky",
+      "city": "Lexington",
+      "state": "KY",
+      "lat": 38.038911,
+      "lon": -84.504747,
+      "enrollment": 24763,
+      "url": "www.uky.edu/"
+    },
+    "score": 68.7,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 94.9,
+      "rent_pressure": 76.2
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 1383,
+        "fips_place": "21067"
+      },
+      {
+        "year": 2020,
+        "permits": 1437,
+        "fips_place": "21067"
+      },
+      {
+        "year": 2021,
+        "permits": 1655,
+        "fips_place": "21067"
+      },
+      {
+        "year": 2022,
+        "permits": 1731,
+        "fips_place": "21067"
+      },
+      {
+        "year": 2023,
+        "permits": 1398,
+        "fips_place": "21067"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Fayette County",
+        "state": "KY",
+        "year": 2022,
+        "month": null,
+        "median_rent": 912.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Fayette County",
+        "state": "KY",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1025.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Fayette County",
+        "state": "KY",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1177.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Fayette County",
+        "state": "KY",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1165.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Fayette County",
+        "state": "KY",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1272.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 147720,
+    "demographics": {
+      "median_household_income": 67631,
+      "median_home_value": 272100,
+      "median_gross_rent": 1101,
+      "median_year_built": 1983,
+      "vacancy_rate_pct": 6.71,
+      "pct_bachelors_or_higher": 26.49,
+      "pct_renter_occupied": 43.0,
+      "total_housing_units": 147720
+    },
+    "housing_capacity": {
+      "year": 2021,
+      "dormitory_capacity": 7294,
+      "typical_room_charge": 9650,
+      "typical_board_charge": 4536,
+      "beds_per_student": 0.295
+    },
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 8,
+      "weather_disasters": 6,
+      "by_type": {
+        "Winter Storm": 1,
+        "Severe Storm": 4,
+        "Flood": 1,
+        "Biological": 2
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 2038771493,
+      "endowment_per_student": 82331,
+      "pell_grant_rate": 0.2252,
+      "admission_rate": 0.9294,
+      "retention_rate": 0.8684,
+      "strength_score": 66.6,
+      "strength_label": "stable"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 309,
+      "dormitory_buildings": 13,
+      "residential_buildings": 65,
+      "house_buildings": 980,
+      "total_buildings": 1367,
+      "apartment_density_per_km2": 17.59,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "The University of Kentucky market exhibits a growing imbalance where demand is significantly outpacing new supply, driven by strong rental price appreciation despite moderate enrollment pressure. The most compelling data signal is the 3-year average annual rent growth of +8.7%, indicating substantial unmet housing demand. Developers should capitalize on this undersupplied market by pursuing new purpose-built student housing projects to meet the demonstrated need and capture premium rents.",
+    "scored_at": "2026-04-09T19:59:19.540403+00:00"
+  },
+  {
+    "university": {
+      "unitid": 176080,
+      "name": "Mississippi State University",
+      "city": "Mississippi State",
+      "state": "MS",
+      "lat": 33.454852,
+      "lon": -88.790139,
+      "enrollment": 18397,
+      "url": "https://www.msstate.edu/"
+    },
+    "score": 52.4,
+    "components": {
+      "enrollment_pressure": 50.0,
+      "permit_gap": 98.5,
+      "rent_pressure": 41.7
+    },
+    "enrollment_trend": [],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 109,
+        "fips_place": "28105"
+      },
+      {
+        "year": 2020,
+        "permits": 52,
+        "fips_place": "28105"
+      },
+      {
+        "year": 2021,
+        "permits": 77,
+        "fips_place": "28105"
+      },
+      {
+        "year": 2022,
+        "permits": 55,
+        "fips_place": "28105"
+      },
+      {
+        "year": 2023,
+        "permits": 90,
+        "fips_place": "28105"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Oktibbeha County",
+        "state": "MS",
+        "year": 2022,
+        "month": null,
+        "median_rent": 823.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Oktibbeha County",
+        "state": "MS",
+        "year": 2023,
+        "month": null,
+        "median_rent": 887.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Oktibbeha County",
+        "state": "MS",
+        "year": 2024,
+        "month": null,
+        "median_rent": 998.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Oktibbeha County",
+        "state": "MS",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1061.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Oktibbeha County",
+        "state": "MS",
+        "year": 2026,
+        "month": null,
+        "median_rent": 957.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 25426,
+    "demographics": {
+      "median_household_income": 43482,
+      "median_home_value": 219500,
+      "median_gross_rent": 873,
+      "median_year_built": 1992,
+      "vacancy_rate_pct": 16.23,
+      "pct_bachelors_or_higher": 23.15,
+      "pct_renter_occupied": 47.38,
+      "total_housing_units": 25426
+    },
+    "housing_capacity": null,
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 9,
+      "weather_disasters": 7,
+      "by_type": {
+        "Winter Storm": 2,
+        "Hurricane": 2,
+        "Biological": 2,
+        "Severe Storm": 3
+      },
+      "most_recent_year": 2026
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 894682468,
+      "endowment_per_student": 48632,
+      "pell_grant_rate": 0.2933,
+      "admission_rate": 0.7764,
+      "retention_rate": 0.825,
+      "strength_score": 60.8,
+      "strength_label": "stable"
+    },
+    "existing_housing": null,
+    "gemini_summary": "Mississippi State University presents an emerging market where new supply has significantly lagged demand, creating a growing deficit in available housing. The most critical signal is the 98/100 Permit Gap Component, indicating very few new units have been permitted relative to market needs over the last five years. Developers have a clear opportunity to address this undersupply and capitalize on consistent 3.8% annual rent growth by introducing purpose-built student housing.",
+    "scored_at": "2026-04-09T20:00:55.980826+00:00"
+  },
+  {
+    "university": {
+      "unitid": 182281,
+      "name": "University of Nevada-Las Vegas",
+      "city": "Las Vegas",
+      "state": "NV",
+      "lat": 36.106047,
+      "lon": -115.138462,
+      "enrollment": 24622,
+      "url": "www.unlv.edu/"
+    },
+    "score": 67.6,
+    "components": {
+      "enrollment_pressure": 50.4,
+      "permit_gap": 92.5,
+      "rent_pressure": 80.6
+    },
+    "enrollment_trend": [
+      {
+        "year": 2013,
+        "total_enrollment": 24551
+      },
+      {
+        "year": 2014,
+        "total_enrollment": 25824
+      },
+      {
+        "year": 2015,
+        "total_enrollment": 26389
+      },
+      {
+        "year": 2016,
+        "total_enrollment": 27055
+      },
+      {
+        "year": 2017,
+        "total_enrollment": 27856
+      },
+      {
+        "year": 2018,
+        "total_enrollment": 28278
+      },
+      {
+        "year": 2019,
+        "total_enrollment": 29280
+      },
+      {
+        "year": 2020,
+        "total_enrollment": 29601
+      },
+      {
+        "year": 2021,
+        "total_enrollment": 27903
+      }
+    ],
+    "permit_history": [
+      {
+        "year": 2019,
+        "permits": 13903,
+        "fips_place": "32003"
+      },
+      {
+        "year": 2020,
+        "permits": 14100,
+        "fips_place": "32003"
+      },
+      {
+        "year": 2021,
+        "permits": 16307,
+        "fips_place": "32003"
+      },
+      {
+        "year": 2022,
+        "permits": 13066,
+        "fips_place": "32003"
+      },
+      {
+        "year": 2023,
+        "permits": 13073,
+        "fips_place": "32003"
+      }
+    ],
+    "rent_history": [
+      {
+        "city": "Clark County",
+        "state": "NV",
+        "year": 2022,
+        "month": null,
+        "median_rent": 1216.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Clark County",
+        "state": "NV",
+        "year": 2023,
+        "month": null,
+        "median_rent": 1457.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Clark County",
+        "state": "NV",
+        "year": 2024,
+        "month": null,
+        "median_rent": 1643.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Clark County",
+        "state": "NV",
+        "year": 2025,
+        "month": null,
+        "median_rent": 1750.0,
+        "source": "hud_fmr"
+      },
+      {
+        "city": "Clark County",
+        "state": "NV",
+        "year": 2026,
+        "month": null,
+        "median_rent": 1735.0,
+        "source": "hud_fmr"
+      }
+    ],
+    "nearby_housing_units": 935960,
+    "demographics": {
+      "median_household_income": 73845,
+      "median_home_value": 400800,
+      "median_gross_rent": 1518,
+      "median_year_built": 1997,
+      "vacancy_rate_pct": 9.46,
+      "pct_bachelors_or_higher": 17.98,
+      "pct_renter_occupied": 41.3,
+      "total_housing_units": 935960
+    },
+    "housing_capacity": null,
+    "disaster_risk": {
+      "window_years": 10,
+      "total_disasters": 2,
+      "weather_disasters": 0,
+      "by_type": {
+        "Biological": 2
+      },
+      "most_recent_year": 2020
+    },
+    "institutional_strength": {
+      "ownership": 1,
+      "ownership_label": "public",
+      "endowment_end": 418236000,
+      "endowment_per_student": 16986,
+      "pell_grant_rate": 0.401,
+      "admission_rate": 0.9617,
+      "retention_rate": 0.7922,
+      "strength_score": 43.2,
+      "strength_label": "watch"
+    },
+    "existing_housing": {
+      "radius_miles": 1.5,
+      "apartment_buildings": 286,
+      "dormitory_buildings": 10,
+      "residential_buildings": 185,
+      "house_buildings": 71,
+      "total_buildings": 552,
+      "apartment_density_per_km2": 16.17,
+      "saturation_label": "moderate"
+    },
+    "gemini_summary": "Despite stagnant enrollment growth, UNLV's market shows significant rent pressure and a high permit gap, indicating an acute undersupply of purpose-built student housing amidst a broader, active residential development landscape. The most critical signal is the +9.3% average annual rent growth over three years, underscoring persistent demand for available units. Developers face the opportunity to capture premium rents by delivering modern, purpose-built student housing that directly addresses the current supply deficit for students, rather than competing with the abundant general market housing.",
+    "scored_at": "2026-04-09T20:02:31.328218+00:00"
+  }
+]

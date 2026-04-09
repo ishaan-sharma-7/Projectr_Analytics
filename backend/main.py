@@ -27,6 +27,7 @@ from backend.models.schemas import (
     HousingPressureScore,
     ScoreRequest,
     UniversityListItem,
+    ChatRequest,
 )
 from backend.adapters import (
     scorecard,
@@ -51,7 +52,7 @@ from backend.scoring.h3_hex import (
     compute_hex_features,
     to_geojson,
 )
-from backend.agent.gemini_agent import generate_gemini_summary, score_with_streaming
+from backend.agent.gemini_agent import generate_gemini_summary, score_with_streaming, answer_chat_query
 
 # ── Pre-scored cache ──
 _prescored: dict[int, HousingPressureScore] = {}
@@ -153,6 +154,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.post("/chat")
+async def chat_with_agent(req: ChatRequest):
+    """Answers a chat query via Gemini 2.5 Flash."""
+    try:
+        response_text = await answer_chat_query(
+            messages=req.messages,
+            uni_name=req.selectedName,
+            active_score=req.activeScore,
+        )
+        return {"response": response_text}
+    except Exception as exc:
+        print(f"[/chat] Error: {exc}")
+        raise HTTPException(status_code=500, detail="Internal chat error")
 
 
 # ── Endpoints ──
