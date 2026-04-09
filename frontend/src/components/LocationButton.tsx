@@ -7,7 +7,6 @@ export default function LocationButton({
 }) {
   const { location, loading, error, getLocation } = useLocation();
 
-  // 👇 NEW: send location to parent (App.tsx)
   if (location && onLocation) {
     onLocation({ lat: location.lat, lng: location.lon });
   }
