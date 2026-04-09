@@ -1,4 +1,4 @@
-import { TrendingUp, Building2, DollarSign, MapPin, RefreshCw, BedDouble, Home, CloudRain, GraduationCap, Warehouse, Construction } from "lucide-react";
+import { TrendingUp, Building2, DollarSign, MapPin, RefreshCw, BedDouble, Home, CloudRain, GraduationCap, Warehouse, Scale } from "lucide-react";
 import { ScoreGauge } from "../ui/ScoreGauge";
 import { EnrollmentChart } from "../charts/EnrollmentChart";
 import { RentChart } from "../charts/RentChart";
@@ -449,6 +449,35 @@ export function ScorePanel({ score, onRecompute }: { score: HousingPressureScore
             <p className="text-lg font-bold text-zinc-600">N/A</p>
           )}
         </div>
+
+        {/* Occupancy Ordinance */}
+        {score.occupancy_ordinance && score.occupancy_ordinance.ordinance_type !== "none" && (
+          <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50 col-span-2">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <Scale className="w-3.5 h-3.5 text-violet-400" />
+                <p className="text-xs text-zinc-500 font-medium">Occupancy Ordinance</p>
+              </div>
+              {score.occupancy_ordinance.pbsh_signal === "positive" && score.occupancy_ordinance.enforced && (
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border text-emerald-400 bg-emerald-500/10 border-emerald-500/20">
+                  PBSH Positive
+                </span>
+              )}
+            </div>
+            <p className="text-lg font-bold tabular-nums">
+              {score.occupancy_ordinance.max_unrelated_occupants != null
+                ? `≤${score.occupancy_ordinance.max_unrelated_occupants} unrelated`
+                : "No cap"}
+            </p>
+            <p className={`text-xs mt-0.5 ${score.occupancy_ordinance.enforced ? "text-amber-400" : "text-zinc-600"}`}>
+              {score.occupancy_ordinance.enforced ? "Actively enforced" : "On books, unenforced"}
+              {" · "}{score.occupancy_ordinance.confidence} confidence
+            </p>
+            {score.occupancy_ordinance.notes && (
+              <p className="text-xs text-zinc-600 mt-1 leading-relaxed">{score.occupancy_ordinance.notes}</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Trend charts */}

@@ -114,6 +114,25 @@ class ExistingHousingStock(BaseModel):
     saturation_label: str = "low"  # "low" | "moderate" | "high"
 
 
+class OccupancyOrdinance(BaseModel):
+    """City-level occupancy ordinance data for the university's home city.
+
+    Captures whether the city caps the number of unrelated persons per rental
+    unit — a structural constraint on the off-campus shared-house market that
+    boosts PBSH demand durability when enforced.
+    """
+
+    city: str
+    state: str
+    max_unrelated_occupants: int | None = None  # None = no cap
+    ordinance_type: str = "none"  # "unrelated-persons" | "nuisance-based" | "none"
+    enforced: bool = False
+    pbsh_signal: str = "neutral"  # "positive" | "neutral"
+    confidence: str = "low"  # "high" | "medium" | "low"
+    source: str = ""
+    notes: str | None = None
+
+
 class MasterPlanData(BaseModel):
     """Planned on-campus residential bed pipeline from university master plans.
 
@@ -168,6 +187,7 @@ class HousingPressureScore(BaseModel):
     institutional_strength: InstitutionalStrength | None = None
     existing_housing: ExistingHousingStock | None = None
     master_plan: MasterPlanData | None = None
+    occupancy_ordinance: OccupancyOrdinance | None = None
     gemini_summary: str | None = None
     scored_at: str = ""
 

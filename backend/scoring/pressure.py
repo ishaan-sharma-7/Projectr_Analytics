@@ -31,6 +31,7 @@ from backend.models.schemas import (
     InstitutionalStrength,
     MarketDemographics,
     MasterPlanData,
+    OccupancyOrdinance,
     PermitData,
     RentData,
     ScoreComponents,
@@ -213,6 +214,7 @@ def compute_pressure_score(
     institutional_strength: InstitutionalStrength | None = None,
     existing_housing: ExistingHousingStock | None = None,
     master_plan: MasterPlanData | None = None,
+    occupancy_ordinance: OccupancyOrdinance | None = None,
     gemini_summary: str | None = None,
 ) -> HousingPressureScore:
     """Compute the full Housing Pressure Score for a university market."""
@@ -295,6 +297,18 @@ def compute_pressure_score(
         elif existing_housing.saturation_label == "low":
             multiplier *= 1.03
 
+    # 7. Occupancy ordinance boost
+    # Cities with enforced unrelated-person caps restrict cheap house-packing.
+    # Students can't easily form large shared households → off-campus supply is
+    # structurally tighter → PBSH demand is more durable and price-stable.
+    # We only apply the boost when the ordinance is actually enforced.
+    if occupancy_ordinance and occupancy_ordinance.pbsh_signal == "positive" and occupancy_ordinance.enforced:
+        if occupancy_ordinance.max_unrelated_occupants is not None:
+            if occupancy_ordinance.max_unrelated_occupants <= 3:
+                multiplier *= 1.08  # tight cap (≤3) — meaningful demand lift
+            else:
+                multiplier *= 1.04  # moderate cap (4) — incremental benefit
+
     # 6. Planned on-campus bed pipeline
     # A large planned supply of on-campus beds will absorb students who would
     # otherwise need off-campus housing — direct negative for PBSH demand.
@@ -333,6 +347,7 @@ def compute_pressure_score(
         institutional_strength=institutional_strength,
         existing_housing=existing_housing,
         master_plan=master_plan,
+        occupancy_ordinance=occupancy_ordinance,
         gemini_summary=gemini_summary,
         scored_at=datetime.now(timezone.utc).isoformat(),
     )

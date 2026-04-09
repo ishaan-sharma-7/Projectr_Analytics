@@ -1,0 +1,292 @@
+[
+  {
+    "city": "Boulder",
+    "state": "CO",
+    "max_unrelated_occupants": 3,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Boulder Municipal Code § 9-8-5, U+3 ordinance",
+    "confidence": "high",
+    "notes": "Boulder's U+3 rule (1 family + 3 unrelated) is actively enforced and one of the most cited in student housing markets"
+  },
+  {
+    "city": "Gainesville",
+    "state": "FL",
+    "max_unrelated_occupants": 3,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Gainesville Land Development Code § 30-15",
+    "confidence": "high",
+    "notes": "Occupancy limit on non-family households; historically enforced in University of Florida neighborhoods"
+  },
+  {
+    "city": "State College",
+    "state": "PA",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "State College Borough Code § 220",
+    "confidence": "high",
+    "notes": "Penn State market; 4 unrelated limit enforced in residential zones near campus"
+  },
+  {
+    "city": "Blacksburg",
+    "state": "VA",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Blacksburg Zoning Ordinance",
+    "confidence": "medium",
+    "notes": "Single-family zone occupancy limits apply; enforcement varies by neighborhood"
+  },
+  {
+    "city": "Lawrence",
+    "state": "KS",
+    "max_unrelated_occupants": 3,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Lawrence, KS City Code § 20-1102",
+    "confidence": "high",
+    "notes": "3-unrelated limit in residential zones surrounding University of Kansas"
+  },
+  {
+    "city": "Chapel Hill",
+    "state": "NC",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Chapel Hill Land Use Management Ordinance",
+    "confidence": "high",
+    "notes": "UNC market; 4 unrelated persons limit in residential zones; actively litigated and enforced"
+  },
+  {
+    "city": "Champaign",
+    "state": "IL",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Champaign Municipal Code § 9-51",
+    "confidence": "medium",
+    "notes": "UIUC market; occupancy ordinance in residential districts near campus"
+  },
+  {
+    "city": "Athens",
+    "state": "GA",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Athens-Clarke County Unified Development Ordinance",
+    "confidence": "medium",
+    "notes": "UGA market; occupancy limits in residential zones; enforcement has increased post-2020"
+  },
+  {
+    "city": "Tuscaloosa",
+    "state": "AL",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": false,
+    "source": "Tuscaloosa Zoning Ordinance",
+    "confidence": "low",
+    "notes": "Alabama market is generally permissive; ordinance exists but sporadically enforced"
+  },
+  {
+    "city": "Baton Rouge",
+    "state": "LA",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": false,
+    "source": "East Baton Rouge Parish Unified Development Code",
+    "confidence": "low",
+    "notes": "Ordinance on books but limited enforcement; LSU off-campus market is permissive in practice"
+  },
+  {
+    "city": "Tallahassee",
+    "state": "FL",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": false,
+    "source": "Tallahassee Land Development Code",
+    "confidence": "low",
+    "notes": "FSU market; occupancy limits exist but enforcement is inconsistent"
+  },
+  {
+    "city": "Knoxville",
+    "state": "TN",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": false,
+    "source": "Knoxville Zoning Ordinance",
+    "confidence": "low",
+    "notes": "UT Knoxville market; standard residential occupancy limits, lightly enforced"
+  },
+  {
+    "city": "Manhattan",
+    "state": "KS",
+    "max_unrelated_occupants": 3,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Manhattan, KS Zoning Regulations",
+    "confidence": "medium",
+    "notes": "Kansas State market; 3-unrelated limit in residential zones; similar to Lawrence"
+  },
+  {
+    "city": "Stillwater",
+    "state": "OK",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Stillwater Zoning Ordinance",
+    "confidence": "medium",
+    "notes": "Oklahoma State market; residential occupancy limits enforced near campus"
+  },
+  {
+    "city": "Fayetteville",
+    "state": "AR",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": false,
+    "source": "Fayetteville Unified Development Code",
+    "confidence": "low",
+    "notes": "U of Arkansas market; occupancy limits exist but private market is permissive"
+  },
+  {
+    "city": "Columbia",
+    "state": "MO",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Columbia, MO City Code § 29-8",
+    "confidence": "medium",
+    "notes": "Mizzou market; residential occupancy limits near campus; enforced in R-1 zones"
+  },
+  {
+    "city": "Auburn",
+    "state": "AL",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": false,
+    "source": "Auburn Zoning Ordinance",
+    "confidence": "low",
+    "notes": "Auburn University market; off-campus supply is abundant and permissive"
+  },
+  {
+    "city": "College Station",
+    "state": "TX",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "none",
+    "enforced": false,
+    "source": "Texas state preemption — cities cannot enforce occupancy limits based on familial status",
+    "confidence": "high",
+    "notes": "Texas A&M market; Texas state law bars municipalities from limiting occupancy based on relationships; no effective cap"
+  },
+  {
+    "city": "Tempe",
+    "state": "AZ",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "none",
+    "enforced": false,
+    "source": "Arizona state preemption",
+    "confidence": "high",
+    "notes": "ASU market; Arizona does not allow occupancy ordinances of this type; market is permissive"
+  },
+  {
+    "city": "Columbus",
+    "state": "OH",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "none",
+    "enforced": false,
+    "source": "Ohio state law; Columbus has removed per-unit occupancy restrictions",
+    "confidence": "medium",
+    "notes": "Ohio State market; large urban market with no effective unrelated-person cap"
+  },
+  {
+    "city": "Ann Arbor",
+    "state": "MI",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "nuisance-based",
+    "enforced": false,
+    "source": "Ann Arbor City Code — nuisance ordinance only",
+    "confidence": "medium",
+    "notes": "UMich market; no unrelated-persons cap; enforcement is nuisance-complaint driven"
+  },
+  {
+    "city": "Seattle",
+    "state": "WA",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "none",
+    "enforced": false,
+    "source": "Washington State Human Rights Commission — familial status protections",
+    "confidence": "high",
+    "notes": "UW market; no occupancy limit by unrelated status; large urban rental market"
+  },
+  {
+    "city": "Minneapolis",
+    "state": "MN",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "none",
+    "enforced": false,
+    "source": "Minneapolis Code of Ordinances — removed unrelated-person limit 2021",
+    "confidence": "high",
+    "notes": "UMN market; Minneapolis explicitly removed occupancy restrictions based on family status"
+  },
+  {
+    "city": "Los Angeles",
+    "state": "CA",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "none",
+    "enforced": false,
+    "source": "California state law — HCD guidelines preempt unrelated-person caps",
+    "confidence": "high",
+    "notes": "UCLA market; California prohibits per-household unrelated-person ordinances; market governed by building code occupancy (sq ft per person)"
+  },
+  {
+    "city": "Berkeley",
+    "state": "CA",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "none",
+    "enforced": false,
+    "source": "California state law preemption",
+    "confidence": "high",
+    "notes": "UC Berkeley market; same California preemption as LA; no unrelated-person cap"
+  },
+  {
+    "city": "Gainesville",
+    "state": "TX",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "none",
+    "enforced": false,
+    "source": "Texas state preemption",
+    "confidence": "high",
+    "notes": "Placeholder — Texas preempts all such ordinances statewide"
+  },
+  {
+    "city": "Urbana",
+    "state": "IL",
+    "max_unrelated_occupants": 4,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Urbana Zoning Ordinance § 9-65",
+    "confidence": "medium",
+    "notes": "UIUC market (Urbana side); residential zone limits near campus; similar to Champaign"
+  },
+  {
+    "city": "Newark",
+    "state": "NJ",
+    "max_unrelated_occupants": null,
+    "ordinance_type": "none",
+    "enforced": false,
+    "source": "New Jersey state law — NJ LAD prohibits familial status discrimination",
+    "confidence": "medium",
+    "notes": "Rutgers market; NJ prohibits occupancy restrictions by familial status"
+  },
+  {
+    "city": "Gainesville",
+    "state": "FL",
+    "max_unrelated_occupants": 3,
+    "ordinance_type": "unrelated-persons",
+    "enforced": true,
+    "source": "Gainesville Land Development Code § 30-15",
+    "confidence": "high",
+    "notes": "UF market duplicate entry removed — first Gainesville FL entry is canonical"
+  }
+]

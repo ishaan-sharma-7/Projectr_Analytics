@@ -85,6 +85,18 @@ export interface ScoreComponents {
   rent_pressure: number;
 }
 
+export interface OccupancyOrdinance {
+  city: string;
+  state: string;
+  max_unrelated_occupants: number | null;
+  ordinance_type: string;
+  enforced: boolean;
+  pbsh_signal: "positive" | "neutral";
+  confidence: "high" | "medium" | "low";
+  source: string;
+  notes: string | null;
+}
+
 export interface MasterPlanData {
   planned_beds: number;
   planned_beds_weighted: number;
@@ -110,6 +122,7 @@ export interface HousingPressureScore {
   institutional_strength: InstitutionalStrength | null;
   existing_housing: ExistingHousingStock | null;
   master_plan: MasterPlanData | null;
+  occupancy_ordinance: OccupancyOrdinance | null;
   gemini_summary: string | null;
   scored_at: string;
 }

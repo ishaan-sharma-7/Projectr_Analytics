@@ -41,8 +41,9 @@ from backend.adapters import (
     osm_buildings,
     national_constraints,
     master_plans,
+    occupancy_ordinances,
 )
-from backend.models.schemas import MasterPlanData
+from backend.models.schemas import MasterPlanData, OccupancyOrdinance
 from backend.scoring.pressure import compute_pressure_score
 from backend.scoring.h3_hex import (
     generate_campus_hex_grid,
@@ -283,6 +284,12 @@ async def score_university(req: ScoreRequest):
     if mp_raw:
         master_plan = MasterPlanData(**mp_raw)
 
+    # ── Step 6g: Look up occupancy ordinance for this city ──
+    occupancy_ordinance: OccupancyOrdinance | None = None
+    occ_raw = occupancy_ordinances.get_ordinance(uni.city, uni.state)
+    if occ_raw:
+        occupancy_ordinance = OccupancyOrdinance(**occ_raw)
+
     # ── Step 7: Compute score ──
     result = compute_pressure_score(
         university=uni,
@@ -296,6 +303,7 @@ async def score_university(req: ScoreRequest):
         institutional_strength=institutional_strength,
         existing_housing=existing_housing,
         master_plan=master_plan,
+        occupancy_ordinance=occupancy_ordinance,
     )
 
     # ── Step 8: Gemini summary ──

@@ -155,8 +155,9 @@ async def score_with_streaming(
         fema_disasters,
         osm_buildings,
         master_plans,
+        occupancy_ordinances,
     )
-    from backend.models.schemas import MasterPlanData
+    from backend.models.schemas import MasterPlanData, OccupancyOrdinance
     from backend.scoring.pressure import compute_pressure_score
 
     try:
@@ -322,6 +323,23 @@ async def score_with_streaming(
                 f"(weighted {master_plan.planned_beds_weighted:,}, horizon {master_plan.horizon_year})"
             )
 
+        # ── Step 6g: Occupancy ordinance lookup ──
+        occupancy_ordinance: OccupancyOrdinance | None = None
+        occ_raw = occupancy_ordinances.get_ordinance(uni.city, uni.state)
+        if occ_raw:
+            occupancy_ordinance = OccupancyOrdinance(**occ_raw)
+            if occupancy_ordinance.ordinance_type != "none":
+                cap_str = (
+                    f"≤{occupancy_ordinance.max_unrelated_occupants} unrelated"
+                    if occupancy_ordinance.max_unrelated_occupants
+                    else "no cap"
+                )
+                enforced_str = "enforced" if occupancy_ordinance.enforced else "unenforced"
+                yield _log_event(
+                    f"Occupancy ordinance: {cap_str} ({enforced_str}) — "
+                    f"{occupancy_ordinance.pbsh_signal} PBSH signal"
+                )
+
         # ── Step 7: Compute score ──
         yield _log_event("Computing Housing Pressure Score...")
         result = compute_pressure_score(
@@ -336,6 +354,7 @@ async def score_with_streaming(
             institutional_strength=institutional_strength,
             existing_housing=existing_housing,
             master_plan=master_plan,
+            occupancy_ordinance=occupancy_ordinance,
         )
         yield _log_event(
             f"Score: {result.score}/100 — "
