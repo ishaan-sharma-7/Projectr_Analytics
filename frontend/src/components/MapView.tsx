@@ -348,46 +348,6 @@ function RecenterButton({
   );
 }
 
-function RadiusControl({
-  selectedName,
-  hexRadiusMiles,
-  onRadiusChange,
-}: {
-  selectedName: string | null;
-  hexRadiusMiles: number;
-  onRadiusChange?: (radius: number) => void;
-}) {
-  if (!selectedName || !onRadiusChange) return null;
-
-  return (
-    <MapControl position={ControlPosition.RIGHT_TOP}>
-      <div className="mt-3 mr-3 w-44 bg-zinc-900/92 border border-zinc-700 rounded-xl px-3 py-2 shadow-lg backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-1">
-          <label className="block text-[10px] uppercase tracking-wide text-zinc-400">
-            Hex Radius
-          </label>
-          <span className="text-[11px] text-zinc-200 tabular-nums">
-            {hexRadiusMiles.toFixed(2)} mi
-          </span>
-        </div>
-        <input
-          type="range"
-          min={1}
-          max={5}
-          step={0.25}
-          value={hexRadiusMiles}
-          onChange={(e) => onRadiusChange(Number(e.target.value))}
-          className="w-full accent-blue-500 cursor-pointer"
-        />
-        <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
-          <span>1.0</span>
-          <span>5.0</span>
-        </div>
-      </div>
-    </MapControl>
-  );
-}
-
 // ── MapView ───────────────────────────────────────────────────────────────────
 
 interface MapViewProps {
@@ -396,10 +356,8 @@ interface MapViewProps {
   scoreCache: Record<string, HousingPressureScore>;
   dynamicUnis: Record<string, UniversitySuggestion>;
   activeHexData: HexGeoJSON | null;
-  hexRadiusMiles: number;
   onPinClick: (name: string, coords?: { lat: number; lng: number }) => void;
   onZoomOut?: () => void;
-  onRadiusChange?: (radius: number) => void;
 }
 
 export function MapView({
@@ -408,10 +366,8 @@ export function MapView({
   scoreCache,
   dynamicUnis,
   activeHexData,
-  hexRadiusMiles,
   onPinClick,
   onZoomOut,
-  onRadiusChange,
 }: MapViewProps) {
   const allUniversities = mergeUniversities(dynamicUnis);
   const [hoveredName, setHoveredName] = useState<string | null>(null);
@@ -452,12 +408,6 @@ export function MapView({
           onReturnToCampus={() => setForceNational(false)}
           onForceNational={() => setForceNational(true)}
         />
-        <RadiusControl
-          selectedName={selectedName}
-          hexRadiusMiles={hexRadiusMiles}
-          onRadiusChange={onRadiusChange}
-        />
-
         {activeHexData && <HexChoropleth hexData={activeHexData} />}
 
         {allUniversities.map((uni, i) => {

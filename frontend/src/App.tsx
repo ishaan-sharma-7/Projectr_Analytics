@@ -144,8 +144,6 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const [selectedCoords, setSelectedCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [hexRadiusMiles, setHexRadiusMiles] = useState<number>(DEFAULT_HEX_RADIUS_MILES);
-
   // Persistent score + hex caches — survive page refresh for 24 h
   const [scoreCache, setScoreCache] = useState<Record<string, HousingPressureScore>>(
     () => readCache<HousingPressureScore>(SCORE_CACHE_KEY)
@@ -204,7 +202,7 @@ function App() {
     if (!selectedName) return null;
     const debugHex = isVirginiaTechName(selectedName);
     const preferredKeys = [
-      hexCacheKey(selectedName, HEX_RESOLUTION, debugHex, hexRadiusMiles),
+      hexCacheKey(selectedName, HEX_RESOLUTION, debugHex, DEFAULT_HEX_RADIUS_MILES),
       selectedName,
     ];
     for (const key of preferredKeys) {
@@ -336,7 +334,7 @@ function App() {
             actualName,
             [name, actualName],
             HEX_RESOLUTION,
-            hexRadiusMiles,
+            DEFAULT_HEX_RADIUS_MILES,
             debugHex,
             true
           );
@@ -393,18 +391,18 @@ function App() {
   useEffect(() => {
     if (!selectedName || loading) return;
     const debugHex = isVirginiaTechName(selectedName);
-    const key = hexCacheKey(selectedName, HEX_RESOLUTION, debugHex, hexRadiusMiles);
+    const key = hexCacheKey(selectedName, HEX_RESOLUTION, debugHex, DEFAULT_HEX_RADIUS_MILES);
     if (!hexCache[key]) {
       void loadHexStream(
         selectedName,
         [selectedName],
         HEX_RESOLUTION,
-        hexRadiusMiles,
+        DEFAULT_HEX_RADIUS_MILES,
         debugHex,
         false
       );
     }
-  }, [selectedName, hexCache, loading, hexRadiusMiles]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedName, hexCache, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -522,22 +520,6 @@ function App() {
     setSelectedCoords(null);
   };
 
-  const handleHexRadiusChange = (radius: number) => {
-    setHexRadiusMiles(radius);
-    if (selectedName) {
-      setHexCache((prev) => clearHexEntriesForName(prev, selectedName));
-      const debugHex = isVirginiaTechName(selectedName);
-      void loadHexStream(
-        selectedName,
-        [selectedName],
-        HEX_RESOLUTION,
-        radius,
-        debugHex,
-        true
-      );
-    }
-  };
-
   // Compare guide text for the search bar
   const compareGuide = compareMode
     ? compareNames[0] === null
@@ -568,10 +550,8 @@ function App() {
             scoreCache={scoreCache}
             dynamicUnis={dynamicUnis}
             activeHexData={activeHexData}
-            hexRadiusMiles={hexRadiusMiles}
             onPinClick={handleSelectUniversity}
             onZoomOut={handleZoomOutMap}
-            onRadiusChange={handleHexRadiusChange}
           />
         </APIProvider>
 
