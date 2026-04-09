@@ -68,6 +68,17 @@ export interface InstitutionalStrength {
   strength_label: "strong" | "stable" | "watch" | null;
 }
 
+export interface ExistingHousingStock {
+  radius_miles: number;
+  apartment_buildings: number;
+  dormitory_buildings: number;
+  residential_buildings: number;
+  house_buildings: number;
+  total_buildings: number;
+  apartment_density_per_km2: number;
+  saturation_label: "low" | "moderate" | "high";
+}
+
 export interface ScoreComponents {
   enrollment_pressure: number;
   permit_gap: number;
@@ -86,6 +97,7 @@ export interface HousingPressureScore {
   housing_capacity: HousingCapacity | null;
   disaster_risk: DisasterRisk | null;
   institutional_strength: InstitutionalStrength | null;
+  existing_housing: ExistingHousingStock | null;
   gemini_summary: string | null;
   scored_at: string;
 }

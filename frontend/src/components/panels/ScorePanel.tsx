@@ -1,17 +1,25 @@
-import { TrendingUp, Building2, DollarSign, MapPin, RefreshCw, BedDouble, Home, CloudRain, GraduationCap } from "lucide-react";
+import { TrendingUp, Building2, DollarSign, MapPin, RefreshCw, BedDouble, Home, CloudRain, GraduationCap, Warehouse } from "lucide-react";
 import { ScoreGauge } from "../ui/ScoreGauge";
 import { EnrollmentChart } from "../charts/EnrollmentChart";
 import { RentChart } from "../charts/RentChart";
 import { PermitChart } from "../charts/PermitChart";
 import type { HousingPressureScore } from "../../lib/api";
 
+// "high" pressure score = good developer opportunity (undersupplied market).
+// We keep the internal label keys (high/medium/low) so cached scores still
+// resolve, but flip the colors and copy so the UI reads as opportunity rather
+// than pressure.
 const LABEL_COLORS = {
-  high: "text-red-400 bg-red-500/10 border-red-500/20",
-  medium: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
-  low: "text-green-400 bg-green-500/10 border-green-500/20",
+  high: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+  medium: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+  low: "text-red-400 bg-red-500/10 border-red-500/20",
 } as const;
 
-const LABEL_TEXT = { high: "High Pressure", medium: "Emerging", low: "Balanced" } as const;
+const LABEL_TEXT = {
+  high: "Strong Opportunity",
+  medium: "Emerging Market",
+  low: "Saturated Market",
+} as const;
 
 function getLabel(score: number): "high" | "medium" | "low" {
   return score >= 70 ? "high" : score >= 40 ? "medium" : "low";
@@ -96,29 +104,8 @@ export function ScorePanel({ score, onRecompute }: { score: HousingPressureScore
           </span>
         </div>
 
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center">
           <ScoreGauge score={score.score} label={label} />
-        </div>
-
-        <div className="space-y-3.5">
-          {[
-            { label: "Enrollment Growth", value: score.components.enrollment_pressure, color: "bg-blue-500" },
-            { label: "Permit Gap", value: score.components.permit_gap, color: "bg-purple-500" },
-            { label: "Rent Inflation", value: score.components.rent_pressure, color: "bg-rose-500" },
-          ].map(({ label: l, value, color }) => (
-            <div key={l} className="space-y-1">
-              <div className="flex justify-between text-xs font-medium">
-                <span className="text-zinc-400">{l}</span>
-                <span className="text-zinc-200 tabular-nums">{value.toFixed(1)}</span>
-              </div>
-              <div className="h-1.5 w-full bg-zinc-950 rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${color} rounded-full transition-all duration-700`}
-                  style={{ width: `${value}%` }}
-                />
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 
@@ -335,6 +322,60 @@ export function ScorePanel({ score, onRecompute }: { score: HousingPressureScore
                   {score.institutional_strength.ownership_label}
                 </p>
               )}
+            </>
+          ) : (
+            <p className="text-lg font-bold text-zinc-600">N/A</p>
+          )}
+        </div>
+
+        {/* Existing Housing Stock — OSM building footprint within 1.5mi */}
+        <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50 col-span-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <Warehouse className="w-3.5 h-3.5 text-orange-400" />
+              <p className="text-xs text-zinc-500 font-medium">Existing Housing Stock</p>
+            </div>
+            {score.existing_housing?.saturation_label && (
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                  score.existing_housing.saturation_label === "low"
+                    ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                    : score.existing_housing.saturation_label === "high"
+                    ? "text-red-400 bg-red-500/10 border-red-500/20"
+                    : "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                }`}
+              >
+                {score.existing_housing.saturation_label} saturation
+              </span>
+            )}
+          </div>
+
+          {score.existing_housing ? (
+            <>
+              <div className="grid grid-cols-3 gap-2 mt-1 text-xs">
+                <div>
+                  <p className="text-zinc-600">Apartments</p>
+                  <p className="text-zinc-100 font-bold tabular-nums text-base">
+                    {score.existing_housing.apartment_buildings.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-600">Dormitories</p>
+                  <p className="text-zinc-100 font-bold tabular-nums text-base">
+                    {score.existing_housing.dormitory_buildings.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-600">Houses</p>
+                  <p className="text-zinc-100 font-bold tabular-nums text-base">
+                    {score.existing_housing.house_buildings.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-zinc-600 mt-2">
+                {score.existing_housing.apartment_density_per_km2.toFixed(1)} multifamily / km²
+                · {score.existing_housing.radius_miles}mi radius
+              </p>
             </>
           ) : (
             <p className="text-lg font-bold text-zinc-600">N/A</p>

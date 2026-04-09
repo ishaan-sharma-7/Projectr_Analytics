@@ -13,16 +13,17 @@ function getLabel(score: number): "high" | "medium" | "low" {
   return score >= 70 ? "high" : score >= 40 ? "medium" : "low";
 }
 
+// Opportunity-framed labels — high pressure score = strong opportunity.
 const LABEL_COLORS = {
-  high: "text-red-400",
-  medium: "text-yellow-400",
-  low: "text-green-400",
+  high: "text-emerald-400",
+  medium: "text-amber-400",
+  low: "text-red-400",
 } as const;
 
 const LABEL_TEXT = {
-  high: "High Pressure",
-  medium: "Emerging",
-  low: "Balanced",
+  high: "Strong Opportunity",
+  medium: "Emerging Market",
+  low: "Saturated",
 } as const;
 
 interface ComparePanelProps {

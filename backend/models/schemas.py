@@ -91,6 +91,29 @@ class DisasterRisk(BaseModel):
     most_recent_year: int | None = None
 
 
+class ExistingHousingStock(BaseModel):
+    """Existing residential building footprint near campus from OSM Overpass.
+
+    Counts buildings tagged ``building=apartments|dormitory|residential|house``
+    within ``radius_miles`` of campus. Powers the "buildable land" check in
+    the score panel: a market saturated with apartment buildings has less
+    headroom for new PBSH, even if the underlying enrollment pressure is high.
+
+    The raw counts are deliberate — we do NOT impute unit counts because
+    average units-per-building varies wildly by region and we'd be making
+    numbers up. Density (buildings per km²) is the most defensible signal.
+    """
+
+    radius_miles: float
+    apartment_buildings: int = 0
+    dormitory_buildings: int = 0
+    residential_buildings: int = 0
+    house_buildings: int = 0
+    total_buildings: int = 0
+    apartment_density_per_km2: float = 0.0  # buildings/km² over the search disk
+    saturation_label: str = "low"  # "low" | "moderate" | "high"
+
+
 class InstitutionalStrength(BaseModel):
     """University financial / institutional health from College Scorecard.
 
@@ -126,6 +149,7 @@ class HousingPressureScore(BaseModel):
     housing_capacity: HousingCapacity | None = None
     disaster_risk: DisasterRisk | None = None
     institutional_strength: InstitutionalStrength | None = None
+    existing_housing: ExistingHousingStock | None = None
     gemini_summary: str | None = None
     scored_at: str = ""
 

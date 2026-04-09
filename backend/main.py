@@ -33,6 +33,7 @@ from backend.adapters import (
     rent,
     fema_disasters,
     osm_transit,
+    osm_buildings,
 )
 from backend.scoring.pressure import compute_pressure_score
 from backend.scoring.h3_hex import (
@@ -186,6 +187,9 @@ async def score_university(req: ScoreRequest):
             state_fips, county_fips, years=10,
         )
 
+    # ── Step 6e: Fetch existing residential building footprint ──
+    existing_housing = await osm_buildings.fetch_buildings(uni.lat, uni.lon, 1.5)
+
     # ── Step 7: Compute score ──
     result = compute_pressure_score(
         university=uni,
@@ -197,6 +201,7 @@ async def score_university(req: ScoreRequest):
         housing_capacity=housing_capacity,
         disaster_risk=disaster_risk,
         institutional_strength=institutional_strength,
+        existing_housing=existing_housing,
     )
 
     # ── Step 8: Gemini summary ──

@@ -2,13 +2,22 @@ import { useState } from "react";
 import { Polygon, InfoWindow } from "@vis.gl/react-google-maps";
 import type { HexGeoJSON, HexFeatureProperties } from "../lib/hexApi";
 
+// Higher score = stronger developer opportunity → green end of the gradient.
 function scoreToColor(score: number): string {
-  if (score >= 70) return "#ef4444";
-  if (score >= 55) return "#f97316";
+  if (score >= 70) return "#22c55e";
+  if (score >= 55) return "#84cc16";
   if (score >= 40) return "#eab308";
-  if (score >= 25) return "#84cc16";
-  return "#22c55e";
+  if (score >= 25) return "#f97316";
+  return "#ef4444";
 }
+
+// "high"/"medium"/"low" come from the backend hex labels — we relabel them
+// in opportunity language without changing the underlying keys.
+const OPPORTUNITY_LABEL: Record<string, string> = {
+  high: "Strong opportunity",
+  medium: "Emerging market",
+  low: "Saturated market",
+};
 
 function transitBadgeStyle(label: HexFeatureProperties["transit_label"]): {
   bg: string;
@@ -86,8 +95,8 @@ export function HexChoropleth({ hexData }: { hexData: HexGeoJSON }) {
                   </span>
                 );
               })()}
-              <p className="capitalize font-medium pt-1" style={{ color: scoreToColor(selectedHex.pressure_score) }}>
-                {selectedHex.label} pressure
+              <p className="font-medium pt-1" style={{ color: scoreToColor(selectedHex.pressure_score) }}>
+                {OPPORTUNITY_LABEL[selectedHex.label] ?? selectedHex.label}
               </p>
             </div>
           </div>

@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 from backend.models.schemas import (
     DisasterRisk,
     EnrollmentTrend,
+    ExistingHousingStock,
     HousingCapacity,
     HousingPressureScore,
     InstitutionalStrength,
@@ -209,6 +210,7 @@ def compute_pressure_score(
     housing_capacity: HousingCapacity | None = None,
     disaster_risk: DisasterRisk | None = None,
     institutional_strength: InstitutionalStrength | None = None,
+    existing_housing: ExistingHousingStock | None = None,
     gemini_summary: str | None = None,
 ) -> HousingPressureScore:
     """Compute the full Housing Pressure Score for a university market."""
@@ -280,6 +282,17 @@ def compute_pressure_score(
         elif s_label == "watch":
             multiplier *= 0.93
 
+    # 5. Existing Stock Saturation Penalty
+    # Markets that already have a wall of apartment buildings near campus
+    # have less greenfield to build into. We dock the score for "high"
+    # saturation. "low" saturation is genuine headroom and gets a small
+    # bump because the demand model isn't picking up the available land.
+    if existing_housing is not None:
+        if existing_housing.saturation_label == "high":
+            multiplier *= 0.92
+        elif existing_housing.saturation_label == "low":
+            multiplier *= 1.03
+
     final_score = max(0.0, min(100.0, round(raw_score * multiplier, 1)))
 
     components = ScoreComponents(
@@ -300,6 +313,7 @@ def compute_pressure_score(
         housing_capacity=housing_capacity,
         disaster_risk=disaster_risk,
         institutional_strength=institutional_strength,
+        existing_housing=existing_housing,
         gemini_summary=gemini_summary,
         scored_at=datetime.now(timezone.utc).isoformat(),
     )

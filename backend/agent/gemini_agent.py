@@ -153,6 +153,7 @@ async def score_with_streaming(
         census_acs_extra,
         rent,
         fema_disasters,
+        osm_buildings,
     )
     from backend.scoring.pressure import compute_pressure_score
 
@@ -241,6 +242,9 @@ async def score_with_streaming(
         tasks["housing_cap"] = asyncio.create_task(
             ipeds_housing.fetch_housing_capacity(uni.unitid)
         )
+        tasks["existing_housing"] = asyncio.create_task(
+            osm_buildings.fetch_buildings(uni.lat, uni.lon, 1.5)
+        )
 
         # Await all concurrently
         results = {}
@@ -257,6 +261,7 @@ async def score_with_streaming(
         demographics = results.get("demographics")
         housing_capacity = results.get("housing_cap")
         disaster_risk = results.get("disaster")
+        existing_housing = results.get("existing_housing")
 
         # ── Log results ──
         if permit_history:
@@ -287,6 +292,14 @@ async def score_with_streaming(
                 f"{disaster_risk.weather_disasters} weather-related"
             )
 
+        if existing_housing:
+            yield _log_event(
+                f"Existing housing footprint: {existing_housing.apartment_buildings} apartment "
+                f"+ {existing_housing.dormitory_buildings} dormitory + "
+                f"{existing_housing.house_buildings} house buildings within 1.5mi "
+                f"({existing_housing.saturation_label} saturation)"
+            )
+
         # ── Step 7: Compute score ──
         yield _log_event("Computing Housing Pressure Score...")
         result = compute_pressure_score(
@@ -299,6 +312,7 @@ async def score_with_streaming(
             housing_capacity=housing_capacity,
             disaster_risk=disaster_risk,
             institutional_strength=institutional_strength,
+            existing_housing=existing_housing,
         )
         yield _log_event(
             f"Score: {result.score}/100 — "

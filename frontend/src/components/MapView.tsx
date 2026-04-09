@@ -22,8 +22,9 @@ function mergeUniversities(
   return [...UNIVERSITIES, ...extras];
 }
 
+// Higher score = better developer opportunity → green.
 const SCORE_COLOR = (score: number) =>
-  score >= 70 ? "#ef4444" : score >= 40 ? "#eab308" : "#22c55e";
+  score >= 70 ? "#22c55e" : score >= 40 ? "#f59e0b" : "#ef4444";
 
 const NATIONAL_CENTER = { lat: 39.5, lng: -98.35 };
 const NATIONAL_ZOOM = 4;
@@ -38,6 +39,17 @@ const US_BOUNDS = {
 
 // ── Logo Pin ──────────────────────────────────────────────────────────────────
 // Circle with school favicon, pointer triangle at bottom, colored ring.
+//
+// Image source priority:
+//   1. Per-school manual override (for schools whose favicon is the default
+//      Google globe — e.g. Washington State, Utah)
+//   2. Google s2 favicons by domain
+//   3. Clearbit logo API
+//   4. Initials fallback (last resort)
+//
+// The circle background is forced to a per-school brand color so transparent
+// PNGs sit cleanly instead of showing the white circle bleeding through the
+// edges of the logo.
 
 interface LogoPinProps {
   uni: UniversitySuggestion;
@@ -45,15 +57,35 @@ interface LogoPinProps {
   scale: number;
 }
 
+// Per-domain logo overrides — keyed by the bare hostname stored on the
+// suggestion. Use a Wikimedia URL when the school's favicon is generic.
+const LOGO_OVERRIDES: Record<string, string> = {
+  "wsu.edu":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Washington_State_Cougars_logo.svg/240px-Washington_State_Cougars_logo.svg.png",
+  "utah.edu":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Utah_Utes_-_U_logo.svg/240px-Utah_Utes_-_U_logo.svg.png",
+};
+
+// Per-domain background tint behind transparent logos. Falls back to white
+// for any school not listed.
+const LOGO_BG: Record<string, string> = {
+  "wsu.edu": "#981e32",   // WSU crimson
+  "utah.edu": "#cc0000",  // Utah red
+};
+
 function LogoPin({ uni, borderColor, scale }: LogoPinProps) {
   const [srcIdx, setSrcIdx] = useState(0);
 
-  const srcs = [
-    `https://www.google.com/s2/favicons?domain=${uni.domain}&sz=64`,
-    `https://logo.clearbit.com/${uni.domain}`,
-  ];
+  const override = LOGO_OVERRIDES[uni.domain];
+  const srcs = override
+    ? [override]
+    : [
+        `https://www.google.com/s2/favicons?domain=${uni.domain}&sz=64`,
+        `https://logo.clearbit.com/${uni.domain}`,
+      ];
 
   const src = srcs[srcIdx];
+  const bg = LOGO_BG[uni.domain] ?? "#ffffff";
 
   // Initials fallback
   const initials = uni.name
@@ -82,7 +114,7 @@ function LogoPin({ uni, borderColor, scale }: LogoPinProps) {
           width: 34,
           height: 34,
           borderRadius: "50%",
-          background: "#ffffff",
+          background: bg,
           border: `2.5px solid ${borderColor}`,
           display: "flex",
           alignItems: "center",
@@ -94,13 +126,20 @@ function LogoPin({ uni, borderColor, scale }: LogoPinProps) {
         {src ? (
           <img
             src={src}
-            width={22}
-            height={22}
+            width={26}
+            height={26}
             style={{ objectFit: "contain", display: "block" }}
             onError={() => setSrcIdx((i) => i + 1)}
           />
         ) : (
-          <span style={{ fontSize: 9, fontWeight: 800, color: borderColor, letterSpacing: -0.5 }}>
+          <span
+            style={{
+              fontSize: 9,
+              fontWeight: 800,
+              color: bg === "#ffffff" ? borderColor : "#ffffff",
+              letterSpacing: -0.5,
+            }}
+          >
             {initials}
           </span>
         )}
@@ -310,14 +349,16 @@ export function MapView({ selectedName, scoreCache, dynamicUnis, activeHexData, 
       <div className="absolute bottom-6 left-6 bg-zinc-950/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 text-xs pointer-events-none">
         {activeHexData ? (
           <div className="flex gap-4">
-            {[["High Pressure", "#ef4444"], ["Emerging", "#eab308"], ["Balanced", "#22c55e"]].map(
-              ([label, color]) => (
-                <div key={label} className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-                  <span className="text-zinc-400">{label}</span>
-                </div>
-              )
-            )}
+            {[
+              ["Strong Opportunity", "#22c55e"],
+              ["Emerging", "#f59e0b"],
+              ["Saturated", "#ef4444"],
+            ].map(([label, color]) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                <span className="text-zinc-400">{label}</span>
+              </div>
+            ))}
           </div>
         ) : (
           <p className="text-zinc-500">

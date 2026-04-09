@@ -1,7 +1,10 @@
+// "high" pressure score = good investment opportunity → green.
+// "low" = saturated/limited → red. The keys stay the same so cached scores
+// continue to resolve.
 const GAUGE_COLORS = {
-  high: "#ef4444",
-  medium: "#eab308",
-  low: "#22c55e",
+  high: "#22c55e",
+  medium: "#f59e0b",
+  low: "#ef4444",
 } as const;
 
 interface ScoreGaugeProps {
