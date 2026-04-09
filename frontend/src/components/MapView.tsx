@@ -527,7 +527,6 @@ export function MapView({
         ) : (
           <p className="text-zinc-500">
             <span className="text-zinc-300 font-medium">{allUniversities.length} universities</span>
-            {" "}· click any pin to explore
           </p>
         )}
       </div>
