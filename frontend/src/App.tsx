@@ -553,7 +553,11 @@ function App() {
         onToggleCompare={handleToggleCompare}
         compareGuide={compareGuide}
       />
-      <LocationButton />
+      <LocationButton onLocation={(coords) => {
+      setSelectedCoords(coords);
+      setSelectedName(null);
+      }}
+      />
       <main className="flex mt-[73px] h-[calc(100vh-73px)]">
         <APIProvider apiKey={MAPS_API_KEY}>
           <MapView
