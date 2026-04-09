@@ -56,7 +56,7 @@ from backend.agent.gemini_agent import generate_gemini_summary, score_with_strea
 # ── Pre-scored cache ──
 _prescored: dict[int, HousingPressureScore] = {}
 _hex_response_cache: dict[tuple, dict] = {}
-CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v1_6_0"
+CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v1_5_2"
 
 
 def _slugify_filename(value: str) -> str:
