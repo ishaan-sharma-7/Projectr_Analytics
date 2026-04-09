@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { APIProvider } from "@vis.gl/react-google-maps";
-import { streamScore } from "./lib/api";
+import { streamScore, fetchUniversities } from "./lib/api";
 import { fetchHexGrid } from "./lib/hexApi";
 import { readCache, writeEntry } from "./lib/storage";
 import { UNIVERSITIES } from "./lib/universityList";
@@ -10,7 +10,8 @@ import { MapView } from "./components/MapView";
 import { SidePanel } from "./components/SidePanel";
 import { ComparePanel } from "./components/panels/ComparePanel";
 import { CompareSetupPanel } from "./components/panels/CompareSetupPanel";
-import type { HousingPressureScore } from "./lib/api";
+import { RankingView } from "./components/RankingView";
+import type { HousingPressureScore, UniversityListItem } from "./lib/api";
 import type { HexGeoJSON } from "./lib/hexApi";
 const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 const CACHE_VERSION = "v8";
@@ -193,6 +194,17 @@ function App() {
   // ── Compare mode state ──────────────────────────────────────────────────
   const [compareMode, setCompareMode] = useState(false);
   const [compareNames, setCompareNames] = useState<[string | null, string | null]>([null, null]);
+
+  // ── Ranking mode state ──────────────────────────────────────────────────
+  const [rankingMode, setRankingMode] = useState(false);
+  const [nationalUniversities, setNationalUniversities] = useState<UniversityListItem[]>([]);
+
+  // Fetch pre-scored universities on mount
+  useEffect(() => {
+    fetchUniversities()
+      .then(setNationalUniversities)
+      .catch(() => {});
+  }, []);
 
   // Queue: name to auto-run report for after current loading finishes
   const pendingReportRef = useRef<string | null>(null);
@@ -503,6 +515,7 @@ function App() {
 
   // Toggle compare mode
   const handleToggleCompare = () => {
+    if (rankingMode) setRankingMode(false);
     setCompareMode((prev) => {
       if (!prev) {
         if (selectedName) {
@@ -516,6 +529,23 @@ function App() {
       }
       return !prev;
     });
+  };
+
+  // Toggle ranking mode
+  const handleToggleRanking = () => {
+    if (compareMode) setCompareMode(false);
+    setRankingMode((prev) => !prev);
+  };
+
+  // Ranking row click → exit ranking, select university, auto-generate report
+  const handleRankingSelect = (name: string) => {
+    setSelectedName(name);
+    setSearchQuery(name);
+    const known = findKnownCoords(name, dynamicUnis, scoreCache);
+    if (known) setSelectedCoords(known);
+    if (!scoreCache[name]) {
+      runReport(name);
+    }
   };
 
   // Clear compare selections
@@ -553,53 +583,65 @@ function App() {
         compareMode={compareMode}
         onToggleCompare={handleToggleCompare}
         compareGuide={compareGuide}
+        rankingMode={rankingMode}
+        onToggleRanking={handleToggleRanking}
       />
       <main className="flex flex-1 min-h-0">
-        <APIProvider apiKey={MAPS_API_KEY}>
-          <MapView
-            selectedName={selectedName}
-            selectedCoords={selectedCoords}
-            scoreCache={scoreCache}
-            dynamicUnis={dynamicUnis}
-            activeHexData={activeHexData}
-            hexRadiusMiles={hexRadiusMiles}
-            onHexRadiusChange={setHexRadiusMiles}
-            onPinClick={handleSelectUniversity}
-            onZoomOut={handleZoomOutMap}
-            onZoomChange={setMapZoom}
-            onHoverPrefetch={handleHoverPrefetch}
+        {rankingMode ? (
+          <RankingView
+            universities={nationalUniversities}
+            onSelect={handleRankingSelect}
+            onExitRanking={() => setRankingMode(false)}
           />
-        </APIProvider>
-
-        {/* Side panel: compare result → compare setup → normal */}
-        {showCompareResult ? (
-          <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
-            <ComparePanel
-              scoreA={compareScoreA!}
-              scoreB={compareScoreB!}
-              onClear={handleClearCompare}
-            />
-          </aside>
-        ) : compareMode ? (
-          <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
-            <CompareSetupPanel
-              compareNames={compareNames}
-              scoreCache={scoreCache}
-              loadingName={loadingName}
-            />
-          </aside>
         ) : (
-          <SidePanel
-            loading={loading}
-            error={error}
-            selectedName={selectedName}
-            activeScore={activeScore}
-            agentLogs={agentLogs}
-            onRecompute={handleRecompute}
-            onGenerateReport={handleGenerateReport}
-            onSelectNearest={handleSelectUniversity}
-            extraUniversities={Object.values(dynamicUnis)}
-          />
+          <>
+            <APIProvider apiKey={MAPS_API_KEY}>
+              <MapView
+                selectedName={selectedName}
+                selectedCoords={selectedCoords}
+                scoreCache={scoreCache}
+                dynamicUnis={dynamicUnis}
+                activeHexData={activeHexData}
+                hexRadiusMiles={hexRadiusMiles}
+                onHexRadiusChange={setHexRadiusMiles}
+                onPinClick={handleSelectUniversity}
+                onZoomOut={handleZoomOutMap}
+                onZoomChange={setMapZoom}
+                onHoverPrefetch={handleHoverPrefetch}
+              />
+            </APIProvider>
+
+            {/* Side panel: compare result → compare setup → normal */}
+            {showCompareResult ? (
+              <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
+                <ComparePanel
+                  scoreA={compareScoreA!}
+                  scoreB={compareScoreB!}
+                  onClear={handleClearCompare}
+                />
+              </aside>
+            ) : compareMode ? (
+              <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
+                <CompareSetupPanel
+                  compareNames={compareNames}
+                  scoreCache={scoreCache}
+                  loadingName={loadingName}
+                />
+              </aside>
+            ) : (
+              <SidePanel
+                loading={loading}
+                error={error}
+                selectedName={selectedName}
+                activeScore={activeScore}
+                agentLogs={agentLogs}
+                onRecompute={handleRecompute}
+                onGenerateReport={handleGenerateReport}
+                onSelectNearest={handleSelectUniversity}
+                extraUniversities={Object.values(dynamicUnis)}
+              />
+            )}
+          </>
         )}
       </main>
     </div>
