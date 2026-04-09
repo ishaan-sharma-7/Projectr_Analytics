@@ -392,6 +392,26 @@ function App() {
             writeEntry(SCORE_CACHE_KEY, name, event.data);
             if (actualName !== name) writeEntry(SCORE_CACHE_KEY, actualName, event.data);
 
+            setNationalUniversities(prev => {
+              const newItem: UniversityListItem = {
+                unitid: uni.unitid,
+                name: actualName,
+                city: uni.city,
+                state: uni.state,
+                lat: uni.lat,
+                lon: uni.lon,
+                score: event.data.score,
+                score_label: event.data.score >= 70 ? "high" : event.data.score >= 40 ? "medium" : "low"
+              };
+              const existingIndex = prev.findIndex(u => u.unitid === uni.unitid);
+              if (existingIndex >= 0) {
+                const next = [...prev];
+                next[existingIndex] = newItem;
+                return next;
+              }
+              return [...prev, newItem];
+            });
+
             const inStatic =
               UNIVERSITIES.some(u => u.name === name) ||
               UNIVERSITIES.some(u => u.name === actualName);
