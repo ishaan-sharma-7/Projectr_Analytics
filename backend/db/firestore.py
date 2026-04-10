@@ -169,6 +169,38 @@ async def get_hex(cache_key: tuple) -> dict | None:
         return None
 
 
+async def get_hex_any_version(unitid: int) -> dict | None:
+    """Return the most recent hex grid for a university, ignoring model version.
+
+    Queries Firestore for any hex doc whose ID starts with the unitid prefix.
+    Serves stale-but-fast data while a fresh recompute runs in the background.
+    """
+    db = _get_db()
+    if not db:
+        return None
+    try:
+        prefix = f"{unitid}_"
+        query = (
+            db.collection("hexes")
+            .where("__name__", ">=", prefix)
+            .where("__name__", "<", f"{unitid + 1}_")
+            .limit(1)
+        )
+        docs = []
+        async for doc in query.stream():
+            docs.append(doc)
+        if not docs:
+            return None
+        data = docs[0].to_dict()
+        if "_features_gz" in data:
+            raw = data.pop("_features_gz")
+            data["features"] = json.loads(gzip.decompress(raw).decode())
+        return data
+    except Exception as exc:
+        logger.warning(f"[Firestore] get_hex_any_version({unitid}): {exc}")
+        return None
+
+
 async def set_hex(cache_key: tuple, geojson: dict) -> bool:
     db = _get_db()
     if not db:

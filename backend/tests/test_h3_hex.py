@@ -118,16 +118,7 @@ def test_already_developed_when_built_coverage_is_high() -> None:
 
 
 def test_water_threshold_boundary_behavior() -> None:
-    below = _classify_development_status(
-        coverage_pct={
-            "water": HARD_WATER_THRESHOLD - 0.01,
-            "wetland": 0.0,
-            "campus": 0.0,
-            "residential_built": 0.0,
-            "commercial_built": 0.0,
-            "parking_infrastructure": 0.0,
-            "open_recreation": 0.0,
-        },
+    _shared_kwargs = dict(
         distance_miles=1.0,
         campus_share=0.0,
         campus_feature_count=0,
@@ -139,9 +130,23 @@ def test_water_threshold_boundary_behavior() -> None:
         wetland_marker_count=0,
         floodplain_marker_count=0,
         golf_marker_count=0,
+        forest_marker_count=0,
         field_marker_count=0,
         park_marker_count=0,
+        protected_marker_count=0,
         development_density=0.0,
+    )
+    below = _classify_development_status(
+        coverage_pct={
+            "water": HARD_WATER_THRESHOLD - 0.01,
+            "wetland": 0.0,
+            "campus": 0.0,
+            "residential_built": 0.0,
+            "commercial_built": 0.0,
+            "parking_infrastructure": 0.0,
+            "open_recreation": 0.0,
+        },
+        **_shared_kwargs,
     )
     above = _classify_development_status(
         coverage_pct={
@@ -153,20 +158,7 @@ def test_water_threshold_boundary_behavior() -> None:
             "parking_infrastructure": 0.0,
             "open_recreation": 0.0,
         },
-        distance_miles=1.0,
-        campus_share=0.0,
-        campus_feature_count=0,
-        dormitory_count=0,
-        off_campus_housing_count=0,
-        development_marker_count=0,
-        commercial_marker_count=0,
-        water_marker_count=0,
-        wetland_marker_count=0,
-        floodplain_marker_count=0,
-        golf_marker_count=0,
-        field_marker_count=0,
-        park_marker_count=0,
-        development_density=0.0,
+        **_shared_kwargs,
     )
 
     assert below[0] == "Potentially buildable"

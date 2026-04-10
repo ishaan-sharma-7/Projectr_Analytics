@@ -81,25 +81,11 @@ async def fetch_bus_stops(
     radius_m = int(radius_miles * 1609.34)
     query = _build_query(lat, lon, radius_m)
 
-    # 25s client timeout — Overpass server-side timeout is set to 10s in the
-    # query header, but cold caches at the canonical endpoint can still take
-    # 15+ seconds before responding even after Overpass itself completes.
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[Overpass] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[Overpass] {endpoint} failed: {exc}")
-                continue
-        else:
-            # All endpoints failed
-            _CACHE[cache_key] = []
-            return []
+    from backend.adapters.osm_buildings import _overpass_query
+    payload = await _overpass_query(query, "OSM-transit")
+    if payload is None:
+        _CACHE[cache_key] = []
+        return []
 
     elements = payload.get("elements", [])
     stops: list[tuple[float, float]] = []

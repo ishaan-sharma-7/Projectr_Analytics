@@ -612,8 +612,8 @@ function App() {
       writeEntry(DYNAMIC_UNIS_CACHE_KEY, name, pin);
     }
 
-    const debugHex = isVirginiaTechName(name);
-    void loadHexStream(name, [name], HEX_RESOLUTION, MAX_HEX_RADIUS_MILES, debugHex, false, true);
+    // Hex loading deferred to the guarded useEffect (requires selectedName
+    // match + scoreCache + mapZoom >= 11). No eager loading here.
   };
 
   /** Download PDF from the DoneBanner — looks up score from cache */
@@ -624,6 +624,10 @@ function App() {
   };
 
   const handleHoverPrefetch = (name: string) => {
+    // Only prefetch hexes if the university already has a completed report.
+    // Without this guard, hovering any pin on the national map triggers
+    // hex loading and shows a spurious loading indicator.
+    if (!scoreCache[name]) return;
     const debugHex = isVirginiaTechName(name);
     const key = hexCacheKey(name, HEX_RESOLUTION, debugHex, MAX_HEX_RADIUS_MILES);
     if (!hexCache[key]) {

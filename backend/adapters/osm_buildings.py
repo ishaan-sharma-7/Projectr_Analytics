@@ -16,6 +16,7 @@ Mirror:    https://overpass-api.de/api/interpreter
 
 from __future__ import annotations
 
+import asyncio
 import math
 from collections import Counter
 
@@ -26,7 +27,117 @@ from backend.models.schemas import ExistingHousingStock
 _ENDPOINTS = (
     "https://overpass.kumi.systems/api/interpreter",
     "https://overpass-api.de/api/interpreter",
+    "https://overpass.openstreetmap.ru/api/interpreter",
 )
+
+# Limit concurrent Overpass requests across the entire process.
+# 3 concurrent keeps throughput high while avoiding rate limits.
+_OVERPASS_SEMAPHORE = asyncio.Semaphore(3)
+
+# ── Circuit breaker ──
+# Track which endpoints are down so we don't waste time on them.
+# Reset automatically after _CB_RESET_S seconds.
+import time as _time
+_circuit_breaker: dict[str, float] = {}  # endpoint → timestamp of last failure
+_CB_RESET_S = 60.0  # re-try a tripped endpoint after 60s
+
+
+def _endpoint_is_healthy(endpoint: str) -> bool:
+    """Return False if the endpoint failed recently (circuit breaker open)."""
+    tripped_at = _circuit_breaker.get(endpoint)
+    if tripped_at is None:
+        return True
+    if _time.monotonic() - tripped_at > _CB_RESET_S:
+        del _circuit_breaker[endpoint]
+        return True
+    return False
+
+
+def _trip_circuit(endpoint: str) -> None:
+    _circuit_breaker[endpoint] = _time.monotonic()
+
+
+async def _overpass_query(query: str, label: str = "OSM") -> dict | None:
+    """Execute an Overpass query with concurrency limiting, circuit breaker, and racing.
+
+    Strategy:
+      1. Pick healthy endpoints (circuit breaker filters out recently-failed ones).
+      2. Race the first two healthy endpoints concurrently — first 200 wins.
+      3. On 429, do a single brief retry on the same endpoint.
+      4. On 5xx or connection error, trip the circuit breaker for that endpoint.
+    """
+    healthy = [ep for ep in _ENDPOINTS if _endpoint_is_healthy(ep)]
+    if not healthy:
+        # All tripped — try them all anyway (circuit breaker will reset soon)
+        healthy = list(_ENDPOINTS)
+
+    async with _OVERPASS_SEMAPHORE:
+        # Race the first two healthy endpoints for speed
+        if len(healthy) >= 2:
+            result = await _race_endpoints(healthy[:2], query, label)
+            if result is not None:
+                return result
+            # Both raced endpoints failed — try remaining ones sequentially
+            healthy = healthy[2:]
+
+        # Sequential fallback for remaining endpoints
+        async with httpx.AsyncClient(timeout=18.0, follow_redirects=True) as client:
+            for endpoint in healthy:
+                result = await _try_endpoint(client, endpoint, query, label)
+                if result is not None:
+                    return result
+    return None
+
+
+async def _race_endpoints(endpoints: list[str], query: str, label: str) -> dict | None:
+    """Race two endpoints concurrently. First 200 response wins."""
+    async def _attempt(ep: str) -> dict | None:
+        try:
+            async with httpx.AsyncClient(timeout=18.0, follow_redirects=True) as client:
+                resp = await client.post(ep, data={"data": query})
+                if resp.status_code == 200:
+                    return resp.json()
+                if resp.status_code in (429, 502, 503, 504):
+                    _trip_circuit(ep)
+                return None
+        except (httpx.HTTPError, ValueError):
+            _trip_circuit(ep)
+            return None
+
+    tasks = [asyncio.create_task(_attempt(ep)) for ep in endpoints]
+    try:
+        for coro in asyncio.as_completed(tasks):
+            result = await coro
+            if result is not None:
+                # Cancel the slower task
+                for t in tasks:
+                    t.cancel()
+                return result
+    except Exception:
+        pass
+    return None
+
+
+async def _try_endpoint(
+    client: httpx.AsyncClient, endpoint: str, query: str, label: str
+) -> dict | None:
+    """Try a single endpoint with one retry on 429."""
+    for attempt in range(2):
+        try:
+            resp = await client.post(endpoint, data={"data": query})
+            if resp.status_code == 200:
+                return resp.json()
+            if resp.status_code == 429 and attempt == 0:
+                await asyncio.sleep(2.0)
+                continue
+            if resp.status_code in (502, 503, 504):
+                _trip_circuit(endpoint)
+                return None
+            return None
+        except (httpx.HTTPError, ValueError):
+            _trip_circuit(endpoint)
+            return None
+    return None
 
 # In-memory cache: (round(lat,4), round(lon,4), radius_mi) -> ExistingHousingStock
 _CACHE: dict[tuple[float, float, float], ExistingHousingStock] = {}
@@ -281,19 +392,7 @@ async def fetch_buildings(
     radius_m = int(radius_miles * 1609.34)
     query = _build_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-buildings] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-buildings] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-buildings")
 
     if payload is None:
         return None
@@ -351,19 +450,7 @@ async def fetch_campus_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_campus_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-campus] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-campus] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-campus")
 
     if payload is None:
         _CAMPUS_CACHE[cache_key] = []
@@ -398,19 +485,7 @@ async def fetch_residential_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_residential_marker_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-residential] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-residential] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-residential")
 
     if payload is None:
         _RESIDENTIAL_MARKER_CACHE[cache_key] = []
@@ -486,19 +561,7 @@ async def fetch_non_buildable_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_non_buildable_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-nonbuildable] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-nonbuildable] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-nonbuildable")
 
     if payload is None:
         _NON_BUILDABLE_CACHE[cache_key] = []
@@ -567,19 +630,7 @@ async def fetch_development_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_development_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-development] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-development] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-development")
 
     if payload is None:
         _DEVELOPMENT_CACHE[cache_key] = []
@@ -613,19 +664,7 @@ async def fetch_commercial_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_commercial_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-commercial] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-commercial] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-commercial")
 
     if payload is None:
         _COMMERCIAL_CACHE[cache_key] = []
@@ -653,19 +692,7 @@ async def fetch_parking_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_parking_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-parking] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-parking] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-parking")
 
     if payload is None:
         _PARKING_CACHE[cache_key] = []
