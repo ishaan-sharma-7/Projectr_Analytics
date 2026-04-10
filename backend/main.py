@@ -42,11 +42,10 @@ from backend.adapters import (
     national_constraints,
     master_plans,
     occupancy_ordinances,
-    str_markets,
     zoning_gis,
     land_attom,
 )
-from backend.models.schemas import MasterPlanData, OccupancyOrdinance, STRMarket
+from backend.models.schemas import MasterPlanData, OccupancyOrdinance
 from backend.scoring.pressure import compute_pressure_score
 from backend.scoring.h3_hex import (
     generate_campus_hex_grid,
@@ -269,12 +268,6 @@ async def score_university(req: ScoreRequest):
     if occ_raw:
         occupancy_ordinance = OccupancyOrdinance(**occ_raw)
 
-    # ── Step 6h: Look up STR shadow supply market ──
-    str_market: STRMarket | None = None
-    str_raw = str_markets.get_str_market(uni.city, uni.state)
-    if str_raw:
-        str_market = STRMarket(**str_raw)
-
     # ── Step 7: Compute score ──
     result = compute_pressure_score(
         university=uni,
@@ -289,7 +282,6 @@ async def score_university(req: ScoreRequest):
         existing_housing=existing_housing,
         master_plan=master_plan,
         occupancy_ordinance=occupancy_ordinance,
-        str_market=str_market,
     )
 
     # ── Step 8: Gemini summary ──

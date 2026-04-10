@@ -85,18 +85,6 @@ export interface ScoreComponents {
   rent_pressure: number;
 }
 
-export interface STRMarket {
-  city: string;
-  state: string;
-  str_intensity: "very_high" | "high" | "moderate" | "low";
-  estimated_str_pct: number | null;
-  pbsh_signal: "positive" | "neutral";
-  score_multiplier: number;
-  confidence: "high" | "medium" | "low";
-  source: string;
-  notes: string | null;
-}
-
 export interface OccupancyOrdinance {
   city: string;
   state: string;
@@ -135,7 +123,6 @@ export interface HousingPressureScore {
   existing_housing: ExistingHousingStock | null;
   master_plan: MasterPlanData | null;
   occupancy_ordinance: OccupancyOrdinance | null;
-  str_market: STRMarket | null;
   gemini_summary: string | null;
   scored_at: string;
 }

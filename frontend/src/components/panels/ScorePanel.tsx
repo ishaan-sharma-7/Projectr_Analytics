@@ -1,4 +1,4 @@
-import { TrendingUp, Building2, DollarSign, MapPin, RefreshCw, BedDouble, Home, CloudRain, GraduationCap, Warehouse, Scale, Hotel } from "lucide-react";
+import { TrendingUp, Building2, DollarSign, MapPin, RefreshCw, BedDouble, Home, CloudRain, GraduationCap, Warehouse, Scale } from "lucide-react";
 import { ScoreGauge } from "../ui/ScoreGauge";
 import { EnrollmentChart } from "../charts/EnrollmentChart";
 import { RentChart } from "../charts/RentChart";
@@ -479,38 +479,6 @@ export function ScorePanel({ score, onRecompute }: { score: HousingPressureScore
           </div>
         )}
 
-        {/* STR Shadow Supply */}
-        {score.str_market && score.str_market.str_intensity !== "low" && (
-          <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50 col-span-2">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5">
-                <Hotel className="w-3.5 h-3.5 text-pink-400" />
-                <p className="text-xs text-zinc-500 font-medium">STR Shadow Supply</p>
-              </div>
-              {score.str_market.pbsh_signal === "positive" && (
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border text-emerald-400 bg-emerald-500/10 border-emerald-500/20">
-                  PBSH Positive
-                </span>
-              )}
-            </div>
-            <p className={`text-lg font-bold tabular-nums ${
-              score.str_market.str_intensity === "very_high"
-                ? "text-red-400"
-                : score.str_market.str_intensity === "high"
-                ? "text-amber-400"
-                : "text-zinc-50"
-            }`}>
-              {score.str_market.str_intensity.replace("_", " ")}
-            </p>
-            <p className="text-xs text-zinc-500 mt-0.5">
-              ~{score.str_market.estimated_str_pct?.toFixed(1)}% of units on Airbnb/VRBO
-              {" · "}{score.str_market.confidence} confidence
-            </p>
-            {score.str_market.notes && (
-              <p className="text-xs text-zinc-600 mt-1 leading-relaxed">{score.str_market.notes}</p>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Trend charts */}

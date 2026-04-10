@@ -347,9 +347,8 @@ async def score_with_streaming(
         osm_buildings,
         master_plans,
         occupancy_ordinances,
-        str_markets,
     )
-    from backend.models.schemas import MasterPlanData, OccupancyOrdinance, STRMarket
+    from backend.models.schemas import MasterPlanData, OccupancyOrdinance
     from backend.scoring.pressure import compute_pressure_score
 
     try:
@@ -532,18 +531,6 @@ async def score_with_streaming(
                     f"{occupancy_ordinance.pbsh_signal} PBSH signal"
                 )
 
-        # ── Step 6h: STR shadow supply lookup ──
-        str_market: STRMarket | None = None
-        str_raw = str_markets.get_str_market(uni.city, uni.state)
-        if str_raw:
-            str_market = STRMarket(**str_raw)
-            if str_market.pbsh_signal == "positive":
-                yield _log_event(
-                    f"STR shadow supply: {str_market.str_intensity} "
-                    f"(~{str_market.estimated_str_pct:.1f}% of units on Airbnb/VRBO) — "
-                    f"positive PBSH signal"
-                )
-
         # ── Step 7: Compute score ──
         yield _log_event("Computing Housing Pressure Score...")
         result = compute_pressure_score(
@@ -559,7 +546,6 @@ async def score_with_streaming(
             existing_housing=existing_housing,
             master_plan=master_plan,
             occupancy_ordinance=occupancy_ordinance,
-            str_market=str_market,
         )
         yield _log_event(
             f"Score: {result.score}/100 — "
