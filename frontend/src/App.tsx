@@ -339,18 +339,21 @@ function App() {
     }
   };
 
-  // Hex loading: ensure selected campus has a fetched grid, but only when the
-  // score is already cached — keeps hex and score coupled so neither is stored
-  // without the other.
+  // Hex loading: fetch hex grid only for the selected university, only when
+  // score is cached AND user is at city zoom. Avoids phantom hex loads for
+  // universities the user isn't viewing.
+  const hexCacheRef = useRef(hexCache);
+  hexCacheRef.current = hexCache;
   useEffect(() => {
     if (!selectedName) return;
     if (!scoreCache[selectedName]) return;
+    if (mapZoom < 11) return; // only load at city zoom
     const debugHex = isVirginiaTechName(selectedName);
     const key = hexCacheKey(selectedName, HEX_RESOLUTION, debugHex, MAX_HEX_RADIUS_MILES);
-    if (!hexCache[key]) {
+    if (!hexCacheRef.current[key]) {
       void loadHexStream(selectedName, [selectedName], HEX_RESOLUTION, MAX_HEX_RADIUS_MILES, debugHex, false);
     }
-  }, [selectedName, hexCache, scoreCache]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedName, scoreCache, mapZoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Report queue processing ─────────────────────────────────────────────────
 
@@ -457,8 +460,8 @@ function App() {
               writeEntry(DYNAMIC_UNIS_CACHE_KEY, actualName, newPin);
             }
 
-            const debugHex = isVirginiaTechName(actualName) || isVirginiaTechName(name);
-            void loadHexStream(actualName, [name, actualName], HEX_RESOLUTION, MAX_HEX_RADIUS_MILES, debugHex, forceRefreshHex, true);
+            // Hex data loaded on-demand when user views university at city zoom
+            // (driven by the hex loading useEffect, not eagerly here)
 
             // Mark done — let the user navigate themselves
             setReportQueue(prev => prev.map(j =>
