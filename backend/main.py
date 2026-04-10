@@ -415,6 +415,17 @@ async def score_stream(req: ScoreRequest):
     """
     async def generate():
         async for chunk in score_with_streaming(req, _prescored):
+            # Persist newly computed scores to Firestore + in-memory cache
+            if '"type": "result"' in chunk:
+                try:
+                    payload = json.loads(chunk.removeprefix("data: ").strip())
+                    result = HousingPressureScore.model_validate(payload["data"])
+                    uni = result.university
+                    _prescored[uni.unitid] = result
+                    _name_to_unitid[uni.name.lower()] = uni.unitid
+                    await db.set_score(uni.unitid, json.loads(result.model_dump_json()))
+                except Exception:
+                    pass  # don't break the stream on persistence failure
             yield chunk
 
     return StreamingResponse(
