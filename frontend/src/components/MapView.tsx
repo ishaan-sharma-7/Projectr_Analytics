@@ -465,6 +465,7 @@ interface MapViewProps {
   onZoomChange?: (zoom: number) => void;
   onHoverPrefetch?: (name: string) => void;
   isHexLoading?: boolean;
+  onViewAllParcels?: (parcels: { address: string; lot_size_acres: number; land_value: number; market_value: number; owner_name: string; is_absentee: boolean; land_use: string; parcel_type: string }[], label: string) => void;
 }
 
 export function MapView({
@@ -480,6 +481,7 @@ export function MapView({
   onZoomChange,
   onHoverPrefetch,
   isHexLoading = false,
+  onViewAllParcels,
 }: MapViewProps) {
   const allUniversities = mergeUniversities(dynamicUnis);
   const [hoveredName, setHoveredName] = useState<string | null>(null);
@@ -532,7 +534,7 @@ export function MapView({
           <HexLoadingGrid lat={selectedCoords.lat} lng={selectedCoords.lng} />
         )}
         {activeHexData && (
-          <HexChoropleth hexData={activeHexData} maxDistanceMiles={hexRadiusMiles} />
+          <HexChoropleth hexData={activeHexData} maxDistanceMiles={hexRadiusMiles} onViewAllParcels={onViewAllParcels} />
         )}
 
         {allUniversities.map((uni, i) => {

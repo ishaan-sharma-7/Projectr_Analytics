@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
+import { ChevronDown, AlertCircle, CheckCircle2, ArrowRight, ArrowLeft, MapPin } from "lucide-react";
 import { EmptyState } from "./panels/EmptyState";
 import { PreviewPanel } from "./panels/PreviewPanel";
 import { ScorePanel } from "./panels/ScorePanel";
@@ -228,6 +228,134 @@ function ErrorBanner({
   );
 }
 
+// ── LandParcelDetailPanel ─────────────────────────────────────────────────────
+
+type LandParcel = {
+  address: string;
+  lot_size_acres: number;
+  land_value: number;
+  market_value: number;
+  owner_name: string;
+  is_absentee: boolean;
+  land_use: string;
+  parcel_type: string;
+};
+
+function LandParcelDetailPanel({
+  parcels,
+  label,
+  onDismiss,
+}: {
+  parcels: LandParcel[];
+  label: string;
+  onDismiss: () => void;
+}) {
+  const absenteeCount = parcels.filter(p => p.is_absentee).length;
+  const landValues = parcels.filter(p => p.land_value > 0).map(p => p.land_value);
+  const avgLandValue = landValues.length > 0
+    ? landValues.reduce((a, b) => a + b, 0) / landValues.length
+    : 0;
+  const totalAcres = parcels.reduce((s, p) => s + (p.lot_size_acres || 0), 0);
+
+  return (
+    <div className="absolute inset-0 bg-zinc-950 flex flex-col z-30 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800 flex-shrink-0">
+        <button
+          onClick={onDismiss}
+          className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition-colors text-xs"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-white truncate">Available Land Parcels</p>
+          <p className="text-[11px] text-zinc-500">{label}</p>
+        </div>
+      </div>
+
+      {/* Summary strip */}
+      <div className="grid grid-cols-3 divide-x divide-zinc-800 border-b border-zinc-800 flex-shrink-0">
+        {[
+          ["Lots", parcels.length],
+          ["Avg value", avgLandValue > 0 ? `$${(avgLandValue / 1000).toFixed(0)}k` : "—"],
+          ["Total acres", totalAcres > 0 ? totalAcres.toFixed(1) : "—"],
+        ].map(([k, v]) => (
+          <div key={String(k)} className="px-3 py-2 text-center">
+            <p className="text-sm font-bold text-white">{v}</p>
+            <p className="text-[10px] text-zinc-500 mt-0.5">{k}</p>
+          </div>
+        ))}
+      </div>
+      {absenteeCount > 0 && (
+        <div className="px-4 py-2 bg-pink-950/30 border-b border-pink-900/40 flex-shrink-0">
+          <p className="text-[11px] text-pink-300">
+            <span className="font-semibold">{absenteeCount}</span> absentee owner{absenteeCount !== 1 ? "s" : ""} — potential off-market leads
+          </p>
+        </div>
+      )}
+
+      {/* Parcel list */}
+      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2">
+        {parcels.map((parcel, i) => {
+          const value = parcel.land_value > 0
+            ? parcel.land_value
+            : parcel.market_value;
+          return (
+            <div
+              key={i}
+              className="rounded-xl border border-zinc-800 bg-zinc-900 p-3 hover:border-amber-600/50 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2 mb-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <MapPin className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                  <p className="text-xs font-medium text-white truncate">
+                    {parcel.address || "Address not listed"}
+                  </p>
+                </div>
+                {parcel.is_absentee && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase flex-shrink-0 bg-pink-950/60 text-pink-300 border border-pink-800/50">
+                    Absentee
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[11px]">
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Size</span>
+                  <span className="text-zinc-300">
+                    {parcel.lot_size_acres > 0 ? `${parcel.lot_size_acres.toFixed(2)} ac` : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Value</span>
+                  <span className="text-amber-400 font-medium">
+                    {value > 0 ? `$${(value / 1000).toFixed(0)}k` : "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Owner</span>
+                  <span className="text-zinc-300 truncate max-w-[120px] text-right">{parcel.owner_name || "—"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Type</span>
+                  <span className="text-zinc-400 capitalize">
+                    {parcel.parcel_type === "land_dominant" ? "Underutilized" : "Vacant"}
+                  </span>
+                </div>
+              </div>
+
+              {parcel.land_use && (
+                <p className="text-[10px] text-zinc-600 mt-1.5 truncate">{parcel.land_use}</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── SidePanel ─────────────────────────────────────────────────────────────────
 
 interface SidePanelProps {
@@ -245,6 +373,8 @@ interface SidePanelProps {
   extraUniversities?: UniversitySuggestion[];
   hexLoadingName?: string | null;
   hexJustLoaded?: string | null;
+  activeLandParcels?: { parcels: LandParcel[]; label: string } | null;
+  onDismissLandParcels?: () => void;
 }
 
 export function SidePanel({
@@ -262,6 +392,8 @@ export function SidePanel({
   extraUniversities,
   hexLoadingName,
   hexJustLoaded,
+  activeLandParcels,
+  onDismissLandParcels,
 }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState<"data" | "chat">("data");
 
@@ -271,7 +403,16 @@ export function SidePanel({
 
   return (
     <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
-      
+
+      {/* Land parcel detail overlay — slides in when user clicks "view all" */}
+      {activeLandParcels && (
+        <LandParcelDetailPanel
+          parcels={activeLandParcels.parcels}
+          label={activeLandParcels.label}
+          onDismiss={() => onDismissLandParcels?.()}
+        />
+      )}
+
       {/* Tab Header */}
       {selectedName && (
         <div className="flex bg-zinc-900 border-b border-zinc-800 p-2 gap-2 z-30 shrink-0">

@@ -165,6 +165,12 @@ function App() {
     () => readSplitCache<HexGeoJSON>(HEX_CACHE_KEY)
   );
 
+  // Land parcel detail panel — populated when user clicks "view all" in a hex popup
+  const [activeLandParcels, setActiveLandParcels] = useState<{
+    parcels: { address: string; lot_size_acres: number; land_value: number; market_value: number; owner_name: string; is_absentee: boolean; land_use: string; parcel_type: string }[];
+    label: string;
+  } | null>(null);
+
   // Dynamic universities discovered via search — appear as map pins and suggestions
   const [dynamicUnis, setDynamicUnis] = useState<Record<string, UniversitySuggestion>>(
     () => readCache<UniversitySuggestion>(DYNAMIC_UNIS_CACHE_KEY)
@@ -647,6 +653,7 @@ function App() {
                 onZoomChange={setMapZoom}
                 onHoverPrefetch={handleHoverPrefetch}
                 isHexLoading={selectedName ? hexLoadingNames.has(selectedName) : false}
+                onViewAllParcels={(parcels, label) => setActiveLandParcels({ parcels, label })}
               />
             </APIProvider>
 
@@ -685,6 +692,8 @@ function App() {
                 extraUniversities={Object.values(dynamicUnis)}
                 hexLoadingName={hexLoadingNames.size > 0 ? [...hexLoadingNames][0] : null}
                 hexJustLoaded={hexJustLoaded}
+                activeLandParcels={activeLandParcels}
+                onDismissLandParcels={() => setActiveLandParcels(null)}
               />
             )}
           </>

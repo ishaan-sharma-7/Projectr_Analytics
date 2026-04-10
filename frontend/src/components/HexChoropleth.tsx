@@ -135,12 +135,16 @@ function transitBadgeStyle(label: HexFeatureProperties["transit_label"]): {
 }
 
 
+type LandParcelItem = NonNullable<HexFeatureProperties["land_parcels"]>[number];
+
 export function HexChoropleth({
   hexData,
   maxDistanceMiles,
+  onViewAllParcels,
 }: {
   hexData: HexGeoJSON;
   maxDistanceMiles?: number;
+  onViewAllParcels?: (parcels: LandParcelItem[], label: string) => void;
 }) {
   const [selectedHex, setSelectedHex] = useState<HexFeatureProperties | null>(null);
   const normalizedStatus = selectedHex
@@ -287,9 +291,19 @@ export function HexChoropleth({
                       </div>
                     ))}
                     {parcels.length > 2 && (
-                      <div className="text-[10px] text-center" style={{ color: "#a16207" }}>
-                        +{parcels.length - 2} more lot{parcels.length - 2 !== 1 ? "s" : ""} in this hex
-                      </div>
+                      <button
+                        onClick={() => {
+                          const label = `${selectedHex.vacant_parcel_count} lots near hex #${selectedHex.hex_number ?? ""}`;
+                          onViewAllParcels?.(parcels, label);
+                          setSelectedHex(null);
+                        }}
+                        className="w-full text-[10px] text-center py-1 rounded font-medium transition-colors"
+                        style={{ color: "#92400e", background: "#fef3c7" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "#fde68a")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "#fef3c7")}
+                      >
+                        +{parcels.length - 2} more lot{parcels.length - 2 !== 1 ? "s" : ""} — view all in sidebar →
+                      </button>
                     )}
                   </div>
                 </div>
