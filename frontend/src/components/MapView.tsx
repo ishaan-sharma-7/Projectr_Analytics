@@ -854,9 +854,9 @@ export function MapView({
         )}
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-6 left-6 bg-zinc-950/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 text-xs pointer-events-none">
-        {activeHexData ? (
+      {/* Legend — only shown when hex data is active */}
+      {activeHexData && (
+        <div className="absolute bottom-6 left-6 bg-zinc-950/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 text-xs pointer-events-none">
           <div className="flex gap-4 flex-wrap">
             {[
               ["Strong Opportunity", "#22c55e"],
@@ -876,19 +876,8 @@ export function MapView({
               <span className="text-zinc-400">Land available</span>
             </div>
           </div>
-        ) : (
-          <p className="text-zinc-500">
-            <span className="text-zinc-300 font-medium">
-              {filteredUniversities.length === allUniversities.length
-                ? `${allUniversities.length} universities`
-                : `${filteredUniversities.length} of ${allUniversities.length} universities`}
-            </span>
-            {filteredUniversities.length !== allUniversities.length && (
-              <span className="ml-1 text-blue-400">(filtered)</span>
-            )}
-          </p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

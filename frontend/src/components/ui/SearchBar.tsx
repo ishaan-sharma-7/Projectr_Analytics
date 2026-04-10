@@ -135,28 +135,32 @@ export function SearchBar({
   };
 
   return (
-    <header className="shrink-0 z-10 flex items-center justify-between px-6 py-4 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800">
-      {/* Logo */}
+    <header className="shrink-0 z-10 flex items-center justify-between px-6 py-3 bg-[#080808]/90 backdrop-blur-md border-b border-white/[0.08]">
+      {/* Logo — CAMPUS + LENS outline, matches campuslens.html nav */}
       <button
         onClick={onHome}
-        className="flex items-center gap-3 hover:opacity-75 transition-opacity cursor-pointer"
+        className="flex items-center gap-2.5 hover:opacity-70 transition-opacity cursor-pointer shrink-0"
       >
-        <img src="/logo.png" alt="CampusLens" className="w-8 h-8 object-contain" />
-        <h1 className="text-xl font-bold tracking-tight">CampusLens</h1>
+        <img src="/logo.png" alt="CampusLens" className="w-8 h-8 object-contain shrink-0" />
+        <h1 className="text-base font-extrabold tracking-[-0.04em] leading-none">
+          CAMPUS<span style={{ color: 'transparent', WebkitTextStroke: '1.5px #f0f0f0' }}>LENS</span>
+        </h1>
       </button>
 
       {/* Search form */}
-      <form onSubmit={(e) => { setOpen(false); onSubmit(e); }} className="flex-1 max-w-md mx-8">
+      <form onSubmit={(e) => { setOpen(false); onSubmit(e); }} className="flex-1 max-w-lg mx-8">
         <div ref={containerRef} className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none z-10" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none z-10" />
 
           <input
             ref={inputRef}
             type="text"
             placeholder={compareGuide ?? "Search any US university..."}
-            className={`w-full bg-zinc-900 border ${compareMode ? 'border-blue-500/50' : 'border-zinc-700'} focus:border-blue-500 px-5 py-2.5 pl-11 pr-10 outline-none text-sm transition-colors disabled:opacity-50 ${
+            className={`w-full bg-white/[0.04] border text-sm outline-none transition-all disabled:opacity-40 placeholder:text-zinc-600 px-5 py-2.5 pl-11 pr-10 ${
+              compareMode ? 'border-blue-500/40 focus:border-blue-400' : 'border-white/[0.1] focus:border-blue-500/60'
+            } ${
               open && query.trim().length > 0
-                ? "rounded-t-2xl rounded-b-none border-b-zinc-800"
+                ? "rounded-t-2xl rounded-b-none"
                 : "rounded-full"
             }`}
             value={query}
@@ -167,29 +171,27 @@ export function SearchBar({
             autoComplete="off"
           />
 
-          {/* Clear button */}
+          {/* Clear */}
           {query.length > 0 && !disabled && (
             <button
               type="button"
               onClick={() => { onChange(""); setOpen(false); inputRef.current?.focus(); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors z-10"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-300 transition-colors z-10"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
 
           {/* ⌘K hint */}
           {query.length === 0 && (
-            <kbd className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 text-xs font-mono bg-zinc-800 rounded px-1.5 py-0.5 pointer-events-none">
+            <kbd className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-700 text-[10px] font-mono bg-white/[0.06] rounded px-1.5 py-0.5 pointer-events-none tracking-wide">
               ⌘K
             </kbd>
           )}
 
           {/* Dropdown */}
           {open && query.trim().length > 0 && (
-            <div className="absolute top-full left-0 right-0 bg-zinc-900 border border-zinc-700 border-t-zinc-800 rounded-b-2xl shadow-2xl overflow-hidden z-50">
-
-              {/* Static list suggestions */}
+            <div className="absolute top-full left-0 right-0 bg-[#0d0d0d] border border-white/[0.1] border-t-0 rounded-b-2xl shadow-2xl overflow-hidden z-50">
               {suggestions.map((uni, i) => (
                 <button
                   key={`${uni.name}-${uni.city}`}
@@ -198,64 +200,57 @@ export function SearchBar({
                   onClick={() => handleSuggestionClick(uni)}
                   onMouseEnter={() => setActiveIdx(i)}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                    activeIdx === i ? "bg-zinc-800" : "hover:bg-zinc-800/60"
+                    activeIdx === i ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"
                   }`}
                 >
-                  <MapPin className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-
+                  <MapPin className="w-3 h-3 text-zinc-600 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <HighlightedName name={uni.name} query={query} />
-                    <p className="text-xs text-zinc-500 mt-0.5">
-                      {uni.city}, {uni.state}
-                    </p>
+                    <p className="text-[11px] text-zinc-600 mt-0.5 tracking-wide uppercase">{uni.city}, {uni.state}</p>
                   </div>
-
                   {i === 0 && topIsExact && (
-                    <span className="text-xs text-zinc-600 ml-1 shrink-0">↵</span>
+                    <span className="text-[10px] text-zinc-700 ml-1 shrink-0 font-mono">↵</span>
                   )}
                 </button>
               ))}
 
-              {/* Divider */}
-              {suggestions.length > 0 && (
-                <div className="h-px bg-zinc-800 mx-4" />
-              )}
+              {suggestions.length > 0 && <div className="h-px bg-white/[0.06] mx-4" />}
 
-              {/* Live search fallback row */}
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={handleLiveSearchClick}
                 onMouseEnter={() => setActiveIdx(suggestions.length)}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                  activeIdx === suggestions.length ? "bg-zinc-800" : "hover:bg-zinc-800/60"
+                  activeIdx === suggestions.length ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"
                 }`}
               >
-                <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-blue-500" />
+                <div className="w-3 h-3 rounded-full shrink-0 bg-blue-500" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-zinc-300">
-                    Search for{" "}
-                    <span className="font-semibold text-white">"{query}"</span>
+                    Search <span className="font-bold text-white">"{query}"</span>
                   </p>
-                  <p className="text-xs text-zinc-500 mt-0.5">Live analysis via Gemini</p>
+                  <p className="text-[11px] text-zinc-600 mt-0.5 tracking-wide">Live analysis via Gemini</p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-zinc-600 shrink-0" />
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-700 shrink-0" />
               </button>
             </div>
           )}
         </div>
       </form>
 
-      <div className="flex items-center gap-2">
+      {/* Action buttons */}
+      <div className="flex items-center gap-2 shrink-0">
         {onToggleRanking && (
           <button
             onClick={onToggleRanking}
             title={rankingMode ? "Exit rankings" : "View market rankings"}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.08em] uppercase transition-all ${
               rankingMode
-                ? "bg-amber-500 text-black shadow-lg shadow-amber-500/25"
-                : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:border-amber-500"
+                ? "text-black shadow-lg"
+                : "border border-white/[0.12] text-zinc-400 hover:text-white hover:border-amber-400/50"
             }`}
+            style={rankingMode ? { background: '#f59e0b' } : {}}
           >
             <Trophy className="w-3.5 h-3.5" />
             Rankings
@@ -265,16 +260,16 @@ export function SearchBar({
           <button
             onClick={onToggleCompare}
             title={compareMode ? "Exit compare mode" : "Compare two universities"}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold tracking-[0.08em] uppercase transition-all ${
               compareMode
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-                : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:border-blue-500"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                : "border border-white/[0.12] text-zinc-400 hover:text-white hover:border-blue-400/50"
             }`}
           >
             {compareMode && compareLoading
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <GitCompareArrows className="w-3.5 h-3.5" />
-          }
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <GitCompareArrows className="w-3.5 h-3.5" />
+            }
             {compareMode ? "Comparing" : "Compare"}
           </button>
         )}

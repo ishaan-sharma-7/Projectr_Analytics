@@ -1,5 +1,46 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap');
+
+:root {
+  --accent: #3b82f6;
+  --border-dim: rgba(240, 240, 240, 0.08);
+  --border-subtle: rgba(240, 240, 240, 0.12);
+}
+
+* {
+  font-family: 'Archivo', sans-serif;
+}
+
+/* Custom scrollbar — editorial thin rail */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(240,240,240,0.12); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(240,240,240,0.25); }
+
+/* Outline / stroke text utility */
+.text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px #f0f0f0;
+}
+.text-outline-sm {
+  color: transparent;
+  -webkit-text-stroke: 1px #f0f0f0;
+}
+
+/* Editorial pill badge */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 100px;
+  border: 1px solid var(--border-subtle);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
 
 @keyframes markerIn {
   from {

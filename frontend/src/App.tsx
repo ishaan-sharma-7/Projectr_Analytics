@@ -681,7 +681,7 @@ function App() {
   const errorJobs = reportQueue.filter(j => j.status === "error");
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-zinc-950 text-zinc-50">
+    <div className="flex flex-col h-screen overflow-hidden text-zinc-50" style={{ background: "#080808" }}>
       <SearchBar
         query={searchQuery}
         onChange={setSearchQuery}

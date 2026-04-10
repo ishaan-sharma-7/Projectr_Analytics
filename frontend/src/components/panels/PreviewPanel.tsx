@@ -67,43 +67,60 @@ export function PreviewPanel({ name, onGenerateReport }: PreviewPanelProps) {
   const uni = UNIVERSITIES.find((u) => u.name === name);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Hero */}
-      <div className="flex flex-col items-center justify-center px-8 py-12 border-b border-zinc-800 text-center">
-        <UniversityLogo name={name} domain={uni?.domain} />
+    <div className="flex flex-col h-full" style={{ borderLeft: "1px solid rgba(240,240,240,0.08)" }}>
+      {/* Header eyebrow */}
+      <div className="px-7 pt-7 pb-5" style={{ borderBottom: "1px solid rgba(240,240,240,0.08)" }}>
+        <p className="text-[10px] font-semibold tracking-[0.15em] uppercase mb-4" style={{ color: "rgba(240,240,240,0.3)" }}>
+          University Profile
+        </p>
 
-        <h2 className="text-xl font-bold text-zinc-50 leading-snug mt-5 mb-1">{name}</h2>
-
-        {uni ? (
-          <div className="flex items-center gap-1 text-sm text-zinc-400 mt-1">
-            <MapPin className="w-3.5 h-3.5 shrink-0" />
-            {uni.city}, {uni.state}
+        {/* Logo + name editorial block */}
+        <div className="flex items-start gap-4">
+          <UniversityLogo name={name} domain={uni?.domain} />
+          <div className="flex-1 min-w-0 pt-1">
+            <h2
+              className="font-extrabold tracking-[-0.03em] leading-[0.95] break-words"
+              style={{ fontSize: "clamp(1.4rem, 2.2vw, 2rem)" }}
+            >
+              {name}
+            </h2>
+            {uni ? (
+              <div className="flex items-center gap-1 mt-2">
+                <MapPin className="w-3 h-3 shrink-0" style={{ color: "rgba(240,240,240,0.4)" }} />
+                <p className="text-[11px] tracking-[0.1em] uppercase font-medium" style={{ color: "rgba(240,240,240,0.4)" }}>
+                  {uni.city}, {uni.state}
+                </p>
+              </div>
+            ) : (
+              <p className="text-[11px] tracking-[0.1em] uppercase font-medium mt-2" style={{ color: "rgba(240,240,240,0.3)" }}>
+                United States
+              </p>
+            )}
           </div>
-        ) : (
-          <p className="text-sm text-zinc-500 mt-1">United States</p>
-        )}
+        </div>
       </div>
 
-      {/* CTA */}
-      <div className="flex flex-col items-center justify-center flex-1 px-8 gap-5">
-        <p className="text-sm text-zinc-400 text-center leading-relaxed max-w-xs">
-          Run a live housing market analysis — enrollment trends, building permits,
-          rent data, and an AI-generated market brief from Gemini.
+      {/* CTA section */}
+      <div className="flex flex-col flex-1 px-7 py-7 justify-between">
+        <p className="text-sm leading-relaxed font-light" style={{ color: "rgba(240,240,240,0.45)", maxWidth: "260px" }}>
+          Run a live housing market analysis — enrollment trends, building permits, rent data, and an AI-generated brief from Gemini.
         </p>
 
-        <button
-          onClick={() => onGenerateReport(name)}
-          className="flex items-center gap-2.5 px-6 py-3 rounded-xl font-semibold text-sm
-                     bg-blue-600 hover:bg-blue-500 text-white transition-colors shadow-lg
-                     shadow-blue-600/25 active:scale-95"
-        >
-          <Zap className="w-4 h-4" />
-          Generate Report
-        </button>
+        <div>
+          <button
+            onClick={() => onGenerateReport(name)}
+            className="w-full flex items-center justify-center gap-2.5 py-3 rounded-full font-bold text-sm tracking-[-0.01em] transition-all active:scale-95 bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20"
+          >
+            <Zap className="w-4 h-4" />
+            Generate Report
+          </button>
 
-        <p className="text-xs text-zinc-600 text-center">
-          Pulls live data from 5 sources · takes ~15 seconds
-        </p>
+          <div className="h-px my-5" style={{ background: "rgba(240,240,240,0.08)" }} />
+
+          <p className="text-[10px] tracking-[0.1em] uppercase font-medium text-center" style={{ color: "rgba(240,240,240,0.28)" }}>
+            5 live sources · ~15 seconds
+          </p>
+        </div>
       </div>
     </div>
   );
