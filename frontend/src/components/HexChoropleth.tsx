@@ -222,30 +222,36 @@ export function HexChoropleth({
       overlayRef.current?.setProps({ layers: [] });
       return;
     }
-    const hexLayer = new H3HexagonLayer<(typeof filteredFeatures)[number]>({
-      id: "hex-choropleth",
+    // Two layers: fills underneath, then outlines on top so borders aren't
+    // hidden by adjacent hex fills.
+    const fillLayer = new H3HexagonLayer<(typeof filteredFeatures)[number]>({
+      id: "hex-fill",
       data: filteredFeatures,
       getHexagon: (d) => d.properties.h3_index,
-      getFillColor: (d) => {
-        const label = d.properties.label;
-        return hexToRgba(LABEL_COLORS[label] ?? "#60a5fa", 0.45);
-      },
-      getLineColor: [30, 30, 30, 160],
-      getLineWidth: 1,
-      lineWidthUnits: "pixels",
-      lineWidthMinPixels: 1,
+      getFillColor: (d) => hexToRgba(LABEL_COLORS[d.properties.label] ?? "#60a5fa", 0.45),
+      filled: true,
+      stroked: false,
       pickable: true,
       onClick: (info) => {
         if (info.object) setSelectedHex(info.object.properties);
       },
       highPrecision: true,
-      filled: true,
-      stroked: true,
-      updateTriggers: {
-        getFillColor: [hexData],
-      },
+      updateTriggers: { getFillColor: [hexData] },
     });
-    overlayRef.current.setProps({ layers: [hexLayer] });
+    const outlineLayer = new H3HexagonLayer<(typeof filteredFeatures)[number]>({
+      id: "hex-outline",
+      data: filteredFeatures,
+      getHexagon: (d) => d.properties.h3_index,
+      filled: false,
+      stroked: true,
+      getLineColor: [0, 0, 0, 100],
+      getLineWidth: 1,
+      lineWidthUnits: "pixels",
+      lineWidthMinPixels: 1,
+      highPrecision: true,
+      pickable: false,
+    });
+    overlayRef.current.setProps({ layers: [fillLayer, outlineLayer] });
   }, [filteredFeatures, hexData]);
 
   // External hex selection (e.g. from chat agent)
