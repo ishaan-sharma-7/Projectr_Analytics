@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   Map,
   AdvancedMarker,
@@ -359,10 +359,11 @@ function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void })
   const map = useMap();
   useEffect(() => {
     if (!map) return;
-    const listener = map.addListener("zoom_changed", () => {
-      onZoomChange(map.getZoom() ?? 9);
-    });
-    return () => listener.remove();
+    const update = () => onZoomChange(map.getZoom() ?? 9);
+    // zoom_changed fires on manual zoom; idle fires after moveCamera() settles
+    const l1 = map.addListener("zoom_changed", update);
+    const l2 = map.addListener("idle", update);
+    return () => { l1.remove(); l2.remove(); };
   }, [map, onZoomChange]);
   return null;
 }
@@ -486,6 +487,11 @@ export function MapView({
   const [localZoom, setLocalZoom] = useState(14);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const handleZoomUpdate = useCallback((z: number) => {
+    setLocalZoom(z);
+    onZoomChange?.(z);
+  }, [onZoomChange]);
+
   useEffect(() => {
     if (selectedName) setForceNational(false);
   }, [selectedName]);
@@ -520,7 +526,7 @@ export function MapView({
           onReturnToCampus={() => setForceNational(false)}
           onForceNational={() => setForceNational(true)}
         />
-        <ZoomTracker onZoomChange={(z) => { setLocalZoom(z); onZoomChange?.(z); }} />
+        <ZoomTracker onZoomChange={handleZoomUpdate} />
         {/* Loading phantom hex grid — anchored to map coordinates, moves with pan/zoom */}
         {isHexLoading && localZoom >= 11 && selectedCoords && (
           <HexLoadingGrid lat={selectedCoords.lat} lng={selectedCoords.lng} />
