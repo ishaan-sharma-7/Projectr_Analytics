@@ -43,6 +43,8 @@ from backend.adapters import (
     master_plans,
     occupancy_ordinances,
     str_markets,
+    zoning_gis,
+    land_attom,
 )
 from backend.models.schemas import MasterPlanData, OccupancyOrdinance, STRMarket
 from backend.scoring.pressure import compute_pressure_score
@@ -57,7 +59,7 @@ from backend.db import firestore as db
 # ── Pre-scored cache ──
 _prescored: dict[int, HousingPressureScore] = {}
 _hex_response_cache: dict[tuple, dict] = {}
-CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v1_5_2"
+CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v1_6_0"
 
 
 def _slugify_filename(value: str) -> str:
@@ -407,6 +409,20 @@ async def get_hex_grid(
             uni.lat, uni.lon, probe_radius_miles
         )
     )
+    # Zoning layer: only fetched for universities with a known GIS endpoint.
+    zoning_task = (
+        asyncio.create_task(
+            zoning_gis.fetch_zoning_polygons(
+                uni.lat, uni.lon, probe_radius_miles, uni.name
+            )
+        )
+        if zoning_gis.has_gis_support(uni.name)
+        else None
+    )
+    # Land parcel layer: ATTOM vacant lots + land-dominant parcels.
+    land_task = asyncio.create_task(
+        land_attom.fetch_land_parcels(uni.lat, uni.lon, probe_radius_miles, uni.name)
+    )
 
     if uni.unitid in _prescored:
         cached = _prescored[uni.unitid]
@@ -490,6 +506,24 @@ async def get_hex_grid(
         national_constraint_points = []
         national_constraints_ok = False
 
+    zoning_polygons: list[dict] | None = None
+    zoning_ok = False
+    if zoning_task is not None:
+        try:
+            zoning_polygons = await zoning_task
+            zoning_ok = True
+        except Exception as exc:
+            print(f"[/hex] Zoning GIS task failed: {exc}")
+            zoning_polygons = None
+
+    land_parcels: list[dict] = []
+    land_ok = False
+    try:
+        land_parcels = await land_task
+        land_ok = True
+    except Exception as exc:
+        print(f"[/hex] Land parcel task failed: {exc}")
+
     effective_radius_miles = (
         _derive_effective_radius_miles(
             campus_lat=uni.lat,
@@ -510,7 +544,7 @@ async def get_hex_grid(
         int(hex_resolution),
         bool(debug_hex),
         CLASSIFICATION_MODEL_VERSION,
-        f"{osm_layer_version}|{national_constraints.LAYER_DATA_VERSION}",
+        f"{osm_layer_version}|{national_constraints.LAYER_DATA_VERSION}|{zoning_gis.LAYER_DATA_VERSION}|{land_attom.LAYER_DATA_VERSION}",
     )
     if cache_key in _hex_response_cache:
         return _hex_response_cache[cache_key]
@@ -544,6 +578,8 @@ async def get_hex_grid(
         commercial_markers=commercial_markers,
         parking_markers=parking_markers,
         national_constraint_points=national_constraint_points,
+        zoning_polygons=zoning_polygons,
+        land_parcels=land_parcels,
         resolution=hex_resolution,
     )
 
@@ -568,10 +604,15 @@ async def get_hex_grid(
         "commercial_markers_fetched": len(commercial_markers),
         "parking_markers_fetched": len(parking_markers),
         "national_constraint_points_fetched": len(national_constraint_points),
+        "zoning_polygons_fetched": len(zoning_polygons) if zoning_polygons is not None else 0,
+        "zoning_gis_supported": zoning_task is not None,
+        "land_parcels_fetched": len(land_parcels),
         "classification_model_version": CLASSIFICATION_MODEL_VERSION,
         "data_layer_versions": {
             "osm": osm_layer_version,
             "national_constraints": national_constraints.LAYER_DATA_VERSION,
+            "zoning_gis": zoning_gis.LAYER_DATA_VERSION,
+            "land_attom": land_attom.LAYER_DATA_VERSION,
         },
         "source_completeness": {
             "bus_stops": bus_stops_ok,
@@ -582,6 +623,8 @@ async def get_hex_grid(
             "commercial_markers": commercial_markers_ok,
             "parking_markers": parking_markers_ok,
             "national_constraints": national_constraints_ok,
+            "zoning_gis": zoning_ok,
+            "land_attom": land_ok,
         },
         "development_status_counts": dict(status_counts),
         "debug_hex_enabled": debug_hex,
