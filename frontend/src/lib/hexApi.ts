@@ -5,7 +5,7 @@ export interface HexFeatureProperties {
   h3_index: string;
   pressure_score: number;
   raw_pressure_score?: number;
-  label: "high" | "medium" | "low";
+  label: "protected" | "campus" | "developed" | "constrained" | "zoning_blocked" | "prime" | "opportunity" | "emerging" | "open_land" | "high" | "medium" | "low";
   distance_km: number;
   distance_to_campus_miles: number;
   permit_density: number;
@@ -80,7 +80,7 @@ export interface HexGeoJSON {
   type: "FeatureCollection";
   features: Array<{
     type: "Feature";
-    geometry: { type: "Polygon"; coordinates: [number, number][][] };
+    geometry?: { type: "Polygon"; coordinates: [number, number][][] };
     properties: HexFeatureProperties;
   }>;
   metadata?: {
