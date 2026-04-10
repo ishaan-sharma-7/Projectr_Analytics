@@ -7,12 +7,12 @@ import { TrendingUp, ChevronDown, ArrowLeft, ArrowRight } from "lucide-react";
 import type { UniversityListItem } from "../lib/api";
 
 const SCORE_COLOR = (score: number) =>
-  score >= 70 ? "#ef4444" : score >= 40 ? "#eab308" : "#22c55e";
+  score < 0 ? "rgba(255,255,255,0.25)" : score >= 70 ? "#ef4444" : score >= 40 ? "#eab308" : "#22c55e";
 
 const LABEL = (score: number) =>
-  score >= 70 ? "High Pressure" : score >= 40 ? "Emerging" : "Balanced";
+  score < 0 ? "Not Scored" : score >= 70 ? "High Pressure" : score >= 40 ? "Emerging" : "Balanced";
 
-type ScoreFilter = "all" | "high" | "medium" | "low";
+type ScoreFilter = "all" | "high" | "medium" | "low" | "unscored";
 
 interface RankingViewProps {
   universities: UniversityListItem[];
@@ -29,7 +29,14 @@ export function RankingView({
   const [scoreFilter, setScoreFilter] = useState<ScoreFilter>("all");
 
   const sorted = useMemo(
-    () => [...universities].sort((a, b) => b.score - a.score),
+    () =>
+      [...universities].sort((a, b) => {
+        // Unscored (score < 0) sink to bottom, alphabetical among themselves
+        if (a.score < 0 && b.score < 0) return a.name.localeCompare(b.name);
+        if (a.score < 0) return 1;
+        if (b.score < 0) return -1;
+        return b.score - a.score;
+      }),
     [universities],
   );
 
@@ -44,7 +51,8 @@ export function RankingView({
       if (scoreFilter === "high" && u.score < 70) return false;
       if (scoreFilter === "medium" && (u.score < 40 || u.score >= 70))
         return false;
-      if (scoreFilter === "low" && u.score >= 40) return false;
+      if (scoreFilter === "low" && (u.score >= 40 || u.score < 0)) return false;
+      if (scoreFilter === "unscored" && u.score >= 0) return false;
       return true;
     });
   }, [sorted, stateFilter, scoreFilter]);
@@ -134,6 +142,7 @@ export function RankingView({
                 ["high", "70+"],
                 ["medium", "40–69"],
                 ["low", "<40"],
+                ["unscored", "—"],
               ] as [ScoreFilter, string][]
             ).map(([key, label]) => (
               <button
@@ -183,7 +192,10 @@ export function RankingView({
             </div>
           ) : (
             filtered.map((uni) => {
-              const rank = sorted.findIndex((u) => u.unitid === uni.unitid) + 1;
+              const isScored = uni.score >= 0;
+              const rank = isScored
+                ? sorted.filter((u) => u.score >= 0).findIndex((u) => u.unitid === uni.unitid) + 1
+                : 0;
 
               return (
                 <button
@@ -201,15 +213,15 @@ export function RankingView({
                 >
                   <span
                     className="text-sm font-semibold tabular-nums"
-                    style={{ color: rank <= 3 ? "#f59e0b" : "var(--text-3)" }}
+                    style={{ color: isScored && rank <= 3 ? "#f59e0b" : "var(--text-3)" }}
                   >
-                    {rank}
+                    {isScored ? rank : "—"}
                   </span>
 
                   <div className="min-w-0 flex items-center gap-2">
                     <p
                       className="text-sm font-medium truncate transition-colors"
-                      style={{ color: "var(--text-2)" }}
+                      style={{ color: isScored ? "var(--text-2)" : "var(--text-3)" }}
                     >
                       {uni.name}
                     </p>
@@ -227,16 +239,22 @@ export function RankingView({
                   </p>
 
                   <div className="flex items-center justify-end gap-2">
-                    <div
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ background: SCORE_COLOR(uni.score) }}
-                    />
-                    <span
-                      className="text-sm font-semibold tabular-nums"
-                      style={{ color: SCORE_COLOR(uni.score) }}
-                    >
-                      {uni.score.toFixed(1)}
-                    </span>
+                    {isScored ? (
+                      <>
+                        <div
+                          className="w-1.5 h-1.5 rounded-full"
+                          style={{ background: SCORE_COLOR(uni.score) }}
+                        />
+                        <span
+                          className="text-sm font-semibold tabular-nums"
+                          style={{ color: SCORE_COLOR(uni.score) }}
+                        >
+                          {uni.score.toFixed(1)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-sm" style={{ color: "var(--text-3)" }}>—</span>
+                    )}
                   </div>
 
                   <div className="flex justify-end">

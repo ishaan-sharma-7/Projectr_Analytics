@@ -135,7 +135,7 @@ export interface UniversityListItem {
   lat: number;
   lon: number;
   score: number;
-  score_label: "high" | "medium" | "low";
+  score_label: "high" | "medium" | "low" | "none";
 }
 
 const API_BASE = "http://localhost:8000";

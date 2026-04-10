@@ -278,11 +278,41 @@ function App() {
     UniversityListItem[]
   >([]);
 
-  // Fetch pre-scored universities on mount
+  // Fetch pre-scored universities on mount, then merge in the static list
+  // so the leaderboard is always fully populated.
   useEffect(() => {
     fetchUniversities()
-      .then(setNationalUniversities)
-      .catch(() => {});
+      .then((scored) => {
+        const scoredNames = new Set(scored.map((u) => normName(u.name)));
+        const unscored: typeof scored = UNIVERSITIES
+          .filter((u) => !scoredNames.has(normName(u.name)))
+          .map((u, i) => ({
+            unitid: -(i + 1), // negative sentinel — not a real IPEDS id
+            name: u.name,
+            city: u.city,
+            state: u.state,
+            lat: u.lat,
+            lon: u.lon,
+            score: -1,
+            score_label: "none" as const,
+          }));
+        setNationalUniversities([...scored, ...unscored]);
+      })
+      .catch(() => {
+        // API unavailable — populate from static list so leaderboard isn't empty
+        setNationalUniversities(
+          UNIVERSITIES.map((u, i) => ({
+            unitid: -(i + 1),
+            name: u.name,
+            city: u.city,
+            state: u.state,
+            lat: u.lat,
+            lon: u.lon,
+            score: -1,
+            score_label: "none" as const,
+          })),
+        );
+      });
   }, []);
   // Derived — what the side panel shows right now
   const activeScore = selectedName ? (scoreCache[selectedName] ?? null) : null;
