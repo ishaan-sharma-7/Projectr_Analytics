@@ -238,9 +238,9 @@ def _neighbor_bucket_points(
     return pts
 
 
-HARD_WATER_THRESHOLD = 0.06
-HARD_WETLAND_THRESHOLD = 0.08
-HARD_COMBINED_THRESHOLD = 0.18
+HARD_WATER_THRESHOLD = 0.14
+HARD_WETLAND_THRESHOLD = 0.12
+HARD_COMBINED_THRESHOLD = 0.25
 HARD_NATURAL_LAND_THRESHOLD = 0.20
 HARD_FLOODPLAIN_MARKERS = 2
 HARD_HYDRO_MIX_THRESHOLD = 0.12
@@ -307,8 +307,8 @@ def _classify_development_status(
         or natural_land_coverage >= HARD_NATURAL_LAND_THRESHOLD
         or hard_non_buildable_coverage >= HARD_COMBINED_THRESHOLD
         or floodplain_marker_count >= HARD_FLOODPLAIN_MARKERS
-        or water_marker_count >= 4
-        or wetland_marker_count >= 4
+        or water_marker_count >= 10
+        or wetland_marker_count >= 8
         or golf_marker_count >= 12
         or forest_marker_count >= 6
         or (forest_marker_count + protected_marker_count) >= 8
@@ -348,11 +348,8 @@ def _classify_development_status(
     likely_non_buildable = (
         natural_land_coverage >= LIKELY_NATURAL_THRESHOLD
         or (coverage_pct["water"] + coverage_pct["wetland"] + natural_land_coverage) >= LIKELY_COMBINED_THRESHOLD
-        or coverage_pct["water"] >= 0.02  # any measurable water coverage
-        or water_marker_count >= 2  # even 2 water markers = on/near water
-        or wetland_marker_count >= 2
         or forest_marker_count >= 3
-        or (water_marker_count + wetland_marker_count + forest_marker_count) >= 3
+        or (water_marker_count + wetland_marker_count + forest_marker_count) >= 5
         or zoning_pbsh_signal == "negative"
         or (
             zoning_pbsh_signal == "restrictive"
@@ -428,10 +425,6 @@ def _classify_development_status(
         )
 
     if likely_non_buildable:
-        if coverage_pct["water"] >= 0.02 or water_marker_count >= 2:
-            classification_reason_codes.append("water_present")
-        if coverage_pct["wetland"] >= 0.02 or wetland_marker_count >= 2:
-            classification_reason_codes.append("wetland_present")
         if natural_land_coverage >= LIKELY_NATURAL_THRESHOLD:
             classification_reason_codes.append("natural_land")
         if forest_marker_count >= 3:

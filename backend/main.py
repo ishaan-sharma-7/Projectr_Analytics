@@ -62,7 +62,7 @@ _name_to_unitid: dict[str, int] = {}  # lowercase name → unitid (O(1) lookup)
 _hex_response_cache: dict[tuple, dict] = {}
 _hex_slim_cache: dict[tuple, bytes] = {}  # pre-serialized gzipped slim responses
 _unitid_hex_keys: dict[int, set[tuple]] = {}  # unitid → set of cache keys
-CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v2_1_0"
+CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v2_0_0"
 
 
 def _register_hex_cache(cache_key: tuple, geojson: dict, compressed: bytes):
