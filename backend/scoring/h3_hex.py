@@ -841,7 +841,7 @@ def compute_hex_features(
             + floodplain_marker_count
         )
 
-        samples = _sample_points_in_polygon(polygon_latlng, sample_side=5)
+        samples = _sample_points_in_polygon(polygon_latlng, sample_side=7)
         sample_count = len(samples)
         coverage_radius_km = max(0.085, _avg_hex_edge_km(resolution) * 0.45)
         # Precompute cos(latitude) once per hex for fast distance approximation
@@ -966,9 +966,19 @@ def compute_hex_features(
 
         # ── Low-confidence dampening ──
         # Hexes with very few observed markers likely have undetected terrain.
-        # Don't give high scores to areas we know nothing about.
+        # Apply a gentle dampening so the base-score gradient still produces
+        # a meaningful spread across label thresholds (10 / 20 / 35).
+        # With 0 markers (Overpass failure), the university-level base score
+        # is still valid demand signal — don't crush it to nothing.
         if observed_markers <= 5 and buildable_for_housing:
-            confidence_factor = max(0.35, observed_markers / 12.0)
+            if observed_markers == 0:
+                # Complete data absence (likely API failure) — preserve most
+                # of the base-score gradient so distance decay still creates
+                # prime / opportunity / emerging / open_land tiers.
+                confidence_factor = 0.80
+            else:
+                # Sparse data — moderate dampening
+                confidence_factor = max(0.55, observed_markers / 8.0)
             hex_pressure = round(hex_pressure * confidence_factor, 1)
 
         natural_land_coverage = coverage_pct.get("natural_land", 0.0)
@@ -1095,7 +1105,7 @@ def compute_hex_features(
             classification_confidence=classification_confidence,
             debug_trace={
                 "sampling": {
-                    "sample_side": 9,
+                    "sample_side": 7,
                     "sample_count": sample_count,
                     "coverage_radius_km": round(coverage_radius_km, 4),
                     "neighbor_rings": 2,
@@ -1167,6 +1177,49 @@ def compute_hex_features(
             vacant_parcel_count=vacant_count,
             land_parcels=slim_parcels,
         ))
+
+    # ── Second pass: assign buildable-tier labels using percentile thresholds ──
+    # Fixed thresholds (35/20/10) fail when the base score is high (all hexes
+    # land in 1-2 tiers) or low (all land in open_land). Instead, compute
+    # percentile cutoffs from the actual pressure distribution of buildable
+    # hexes so we always produce a 4-tier gradient.
+    buildable_features = [f for f in features if f.buildable_for_housing
+                          and f.label not in ("zoning_blocked",)]
+    if buildable_features:
+        bp = sorted(f.pressure_score for f in buildable_features)
+        n = len(bp)
+        p75 = bp[int(n * 0.75)] if n > 3 else bp[-1]
+        p40 = bp[int(n * 0.40)] if n > 3 else bp[n // 2]
+        p15 = bp[int(n * 0.15)] if n > 3 else bp[0]
+
+        # Use whichever produces more tiers: fixed or percentile thresholds
+        fixed_labels = set()
+        for f in buildable_features:
+            if f.pressure_score >= 35:
+                fixed_labels.add("prime")
+            elif f.pressure_score >= 20:
+                fixed_labels.add("opportunity")
+            elif f.pressure_score >= 10:
+                fixed_labels.add("emerging")
+            else:
+                fixed_labels.add("open_land")
+
+        if len(fixed_labels) >= 3:
+            # Fixed thresholds work well — keep them (already assigned above)
+            pass
+        else:
+            # Fixed thresholds collapsed — use percentile-based tiers
+            for f in buildable_features:
+                if f.label in ("zoning_blocked",):
+                    continue
+                if f.pressure_score >= p75:
+                    f.label = "prime"
+                elif f.pressure_score >= p40:
+                    f.label = "opportunity"
+                elif f.pressure_score >= p15:
+                    f.label = "emerging"
+                else:
+                    f.label = "open_land"
 
     features.sort(key=lambda f: f.distance_km)
     for idx, feat in enumerate(features, start=1):

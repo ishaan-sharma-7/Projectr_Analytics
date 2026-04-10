@@ -62,7 +62,7 @@ _name_to_unitid: dict[str, int] = {}  # lowercase name → unitid (O(1) lookup)
 _hex_response_cache: dict[tuple, dict] = {}
 _hex_slim_cache: dict[tuple, bytes] = {}  # pre-serialized gzipped slim responses
 _unitid_hex_keys: dict[int, set[tuple]] = {}  # unitid → set of cache keys
-CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v2_0_0"
+CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v3_0_0"
 
 
 def _register_hex_cache(cache_key: tuple, geojson: dict, compressed: bytes):
@@ -550,62 +550,44 @@ async def get_hex_grid(
             )
             permits_5yr = sum(p.permits for p in permit_history[-5:])
 
-    # ── Await transit data (may be empty if Overpass unreachable) ──
+    # ── Await all OSM tasks with a global timeout ──
+    # Use gather+wait_for so Overpass failures don't stall the whole request.
+    # With the circuit breaker, healthy endpoints respond in 2-8s; if all are
+    # down, this caps total wait at 35s and proceeds with whatever data we got.
+    _osm_tasks = [
+        bus_stops_task, campus_markers_task, residential_markers_task,
+        non_buildable_markers_task, development_markers_task,
+        commercial_markers_task, parking_markers_task,
+    ]
     try:
-        bus_stops = await bus_stops_task
-        bus_stops_ok = True
-    except Exception as exc:
-        print(f"[/hex] Overpass task failed: {exc}")
-        bus_stops = []
-        bus_stops_ok = False
+        _osm_results = await asyncio.wait_for(
+            asyncio.gather(*_osm_tasks, return_exceptions=True),
+            timeout=35.0,
+        )
+    except asyncio.TimeoutError:
+        print("[/hex] OSM tasks timed out at 35s — using partial data")
+        _osm_results = []
+        for t in _osm_tasks:
+            if t.done() and not t.cancelled():
+                try:
+                    _osm_results.append(t.result())
+                except Exception:
+                    _osm_results.append([])
+            else:
+                t.cancel()
+                _osm_results.append([])
 
-    try:
-        campus_markers = await campus_markers_task
-        campus_markers_ok = True
-    except Exception as exc:
-        print(f"[/hex] Campus marker task failed: {exc}")
-        campus_markers = []
-        campus_markers_ok = False
+    def _safe_result(r, idx):
+        val = _osm_results[idx] if idx < len(_osm_results) else []
+        return ([], False) if isinstance(val, Exception) else (val, True)
 
-    try:
-        residential_markers = await residential_markers_task
-        residential_markers_ok = True
-    except Exception as exc:
-        print(f"[/hex] Residential marker task failed: {exc}")
-        residential_markers = []
-        residential_markers_ok = False
-
-    try:
-        non_buildable_markers = await non_buildable_markers_task
-        non_buildable_markers_ok = True
-    except Exception as exc:
-        print(f"[/hex] Non-buildable marker task failed: {exc}")
-        non_buildable_markers = []
-        non_buildable_markers_ok = False
-
-    try:
-        development_markers = await development_markers_task
-        development_markers_ok = True
-    except Exception as exc:
-        print(f"[/hex] Development marker task failed: {exc}")
-        development_markers = []
-        development_markers_ok = False
-
-    try:
-        commercial_markers = await commercial_markers_task
-        commercial_markers_ok = True
-    except Exception as exc:
-        print(f"[/hex] Commercial marker task failed: {exc}")
-        commercial_markers = []
-        commercial_markers_ok = False
-
-    try:
-        parking_markers = await parking_markers_task
-        parking_markers_ok = True
-    except Exception as exc:
-        print(f"[/hex] Parking marker task failed: {exc}")
-        parking_markers = []
-        parking_markers_ok = False
+    bus_stops, bus_stops_ok = _safe_result(_osm_results, 0)
+    campus_markers, campus_markers_ok = _safe_result(_osm_results, 1)
+    residential_markers, residential_markers_ok = _safe_result(_osm_results, 2)
+    non_buildable_markers, non_buildable_markers_ok = _safe_result(_osm_results, 3)
+    development_markers, development_markers_ok = _safe_result(_osm_results, 4)
+    commercial_markers, commercial_markers_ok = _safe_result(_osm_results, 5)
+    parking_markers, parking_markers_ok = _safe_result(_osm_results, 6)
 
     try:
         national_constraint_points = await national_constraint_points_task
@@ -669,13 +651,10 @@ async def get_hex_grid(
         _register_hex_cache(cache_key, fs_hit, compressed)
         return _hex_bytes_response(compressed)
 
-    # ── Fallback: serve ANY previously computed version for this university ──
-    # Better to show slightly stale hexes instantly than make the user wait 60s.
-    stale_hit = await db.get_hex_any_version(uni.unitid)
-    if stale_hit:
-        compressed = _slim_hex_bytes(stale_hit)
-        _register_hex_cache(cache_key, stale_hit, compressed)
-        return _hex_bytes_response(compressed)
+    # NOTE: Stale fallback removed — old cached versions use legacy labels
+    # (high/medium/low) that don't match the current 9-label color system.
+    # Serving stale data poisons the cache and causes the "2 color" regression.
+    # Fresh computation is always preferred over stale data.
 
     # ── Generate hex grid ──
     hex_indices = generate_campus_hex_grid(

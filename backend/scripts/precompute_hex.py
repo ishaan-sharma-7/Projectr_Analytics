@@ -26,9 +26,6 @@ from backend.adapters import (
 from backend.config import config
 from backend.main import (
     CLASSIFICATION_MODEL_VERSION,
-    _hex_disk_cache_path,
-    _load_hex_disk_cache,
-    _write_hex_disk_cache,
     _derive_effective_radius_miles,
 )
 from backend.scoring.h3_hex import (
@@ -36,6 +33,41 @@ from backend.scoring.h3_hex import (
     compute_hex_features,
     to_geojson,
 )
+
+import hashlib
+from datetime import datetime, timezone
+
+
+def _hex_disk_cache_path(cache_key: tuple) -> Path:
+    """Return the on-disk path for a hex cache entry."""
+    slug = hashlib.md5(str(cache_key).encode()).hexdigest()[:16]
+    return Path(config.cache_dir) / "hex" / f"{cache_key[0]}_{slug}.json"
+
+
+def _load_hex_disk_cache(cache_key: tuple) -> dict | None:
+    """Load a hex GeoJSON from disk if it exists and is < 7 days old."""
+    path = _hex_disk_cache_path(cache_key)
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text())
+        cached_at = data.get("metadata", {}).get("cached_at")
+        if cached_at:
+            saved = datetime.fromisoformat(cached_at)
+            if (datetime.now(timezone.utc) - saved).days > 7:
+                return None
+        return data
+    except Exception:
+        return None
+
+
+def _write_hex_disk_cache(cache_key: tuple, geojson: dict) -> None:
+    """Persist hex GeoJSON to disk cache."""
+    path = _hex_disk_cache_path(cache_key)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    geojson.setdefault("metadata", {})["cached_at"] = datetime.now(timezone.utc).isoformat()
+    path.write_text(json.dumps(geojson), encoding="utf-8")
+    print(f"  [disk] Cached → {path.name}")
 
 RESOLUTION = 9
 RADIUS_MILES = 1.5
