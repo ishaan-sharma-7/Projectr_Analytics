@@ -235,8 +235,9 @@ export function HexChoropleth({
       },
       getLineColor: (d) =>
         (d.properties.vacant_parcel_count ?? 0) > 0 ? LAND_STROKE : DEFAULT_STROKE,
-      getLineWidth: (d) => (d.properties.vacant_parcel_count ?? 0) > 0 ? 2 : 0.5,
+      getLineWidth: (d) => (d.properties.vacant_parcel_count ?? 0) > 0 ? 3 : 1,
       lineWidthUnits: "pixels",
+      lineWidthMinPixels: 1,
       pickable: true,
       onClick: (info) => {
         if (info.object) setSelectedHex(info.object.properties);
