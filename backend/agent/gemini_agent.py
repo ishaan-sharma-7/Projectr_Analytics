@@ -154,9 +154,27 @@ When hex data is loaded for a university, each H3 hex cell around the campus con
 2. **lookup_hex_data** - Get H3 hex grid spatial analysis for a university. Returns development status, buildability, transit, zoning, and land parcels.
 3. **score_new_university** - Score a university NOT in the database. Runs the full data pipeline (~30 seconds). Use when asked about an unscored university. Tell the user you're running the analysis.
 
+## ACTIONS
+You can select hexes on the user's map by embedding action markers in your response:
+- **Select a hex**: Write `[[SELECT_HEX:h3_index]]` (e.g. `[[SELECT_HEX:892a8ac60b3ffff]]`)
+  This renders as a clickable badge in the chat. When the user clicks it, that hex gets highlighted on the map with its InfoWindow.
+- Use this whenever you recommend a specific hex or development site. Always include the h3_index from the hex data.
+- You can include multiple SELECT_HEX markers in one response to highlight several candidates.
+
+## CRITICAL: HEX RECOMMENDATION RULES
+When recommending hexes for development, you MUST follow this strict filtering order:
+1. **NEVER recommend a hex unless `buildable_for_housing` is true.** Hexes with development_status "Hard non-buildable", "Likely non-buildable", "On-campus constrained", or "Already developed" are OFF LIMITS for new construction. Do not recommend them regardless of their pressure score.
+2. **Check zoning first.** A hex with zoning_pbsh_signal "constrained", "negative", or "restrictive" is a poor candidate even if buildable. Prefer hexes with "positive" or "neutral" zoning.
+3. **Then check buildability_score.** Higher is better — this accounts for terrain, land use, and zoning feasibility.
+4. **Then check pressure_score.** This is demand signal only — a high pressure score on non-buildable land is meaningless.
+5. **Prefer hexes with land parcels.** Vacant parcels with absentee owners are the most actionable acquisition targets.
+6. **Prefer transit access.** "Transit Hub" > "Walkable" > "Isolated".
+
+A high pressure_score does NOT mean a hex is a good development site. Pressure measures demand, not feasibility. Always lead with buildability and development_status, then layer in demand.
+
 ## RESPONSE GUIDELINES
 - Be analytical, specific, and data-driven. Reference actual numbers from the data.
-- For development questions, discuss specific sites, parcels, zoning, and buildability.
+- For development questions, discuss specific sites, parcels, zoning, and buildability. USE SELECT_HEX markers so the user can click to see the hex on the map.
 - When comparing markets, use lookup_university to fetch data for each one.
 - If asked about a university not in the database, IMMEDIATELY use score_new_university — do NOT ask for permission first. Tell the user "I'm analyzing [university name] now — this takes about 30 seconds" and then proceed with the tool call.
 - Highlight actionable insights: where to build, what risks exist, regulatory constraints, competitive dynamics.
@@ -336,9 +354,13 @@ def _build_hex_summary(geojson: dict, university_name: str = "") -> str:
     buildable = [
         f for f in features if f.get("properties", {}).get("buildable_for_housing")
     ]
+    # Sort by buildability first (feasibility), then pressure (demand)
     top_hexes = sorted(
         buildable,
-        key=lambda f: f["properties"]["pressure_score"],
+        key=lambda f: (
+            f["properties"].get("buildability_score", 0),
+            f["properties"]["pressure_score"],
+        ),
         reverse=True,
     )[:15]
 
@@ -381,12 +403,14 @@ def _build_hex_summary(geojson: dict, university_name: str = "") -> str:
     lines.append(f"\nBUILDABLE HEXES: {len(buildable)} of {len(features)}")
 
     if top_hexes:
-        lines += ["", "TOP BUILDABLE HEXES (by pressure score):"]
+        lines += ["", "TOP BUILDABLE HEXES (by buildability, then demand):"]
         for i, f in enumerate(top_hexes, 1):
             p = f["properties"]
-            parts = [f"  {i}. score={p['pressure_score']:.0f}"]
-            parts.append(f"dist={p.get('distance_to_campus_miles', 0):.1f}mi")
+            h3_id = p.get("h3_index", "unknown")
+            parts = [f"  {i}. h3={h3_id}"]
             parts.append(f"buildability={p.get('buildability_score', 0):.0f}")
+            parts.append(f"score={p['pressure_score']:.0f}")
+            parts.append(f"dist={p.get('distance_to_campus_miles', 0):.1f}mi")
             parts.append(f"transit={p.get('transit_label', 'N/A')}")
             if p.get("zoning_label"):
                 parts.append(

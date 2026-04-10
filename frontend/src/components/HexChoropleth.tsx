@@ -1,52 +1,81 @@
-import { useState } from "react";
-import { Polygon, InfoWindow } from "@vis.gl/react-google-maps";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { InfoWindow, useMap } from "@vis.gl/react-google-maps";
+import { GoogleMapsOverlay } from "@deck.gl/google-maps";
+import { H3HexagonLayer } from "@deck.gl/geo-layers";
 import type { HexGeoJSON, HexFeatureProperties } from "../lib/hexApi";
 import { detectPBSHFromParcels } from "../lib/pbshOperators";
 
-// Higher score = stronger developer opportunity → green end of the gradient.
-function scoreToColor(score: number): string {
-  if (score >= 70) return "#22c55e";
-  if (score >= 55) return "#84cc16";
-  if (score >= 40) return "#eab308";
-  if (score >= 25) return "#f97316";
-  return "#ef4444";
+/** Convert CSS hex color + opacity to deck.gl RGBA tuple (0-255). */
+function hexToRgba(hex: string, opacity: number): [number, number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return [r, g, b, Math.round(opacity * 255)];
 }
+
+
+// Label-driven color palette. Each label gets a distinct, meaningful color.
+const LABEL_COLORS: Record<string, string> = {
+  protected:      "#64748b",  // slate gray — natural land, can't build
+  campus:         "#6b7280",  // neutral gray — university land
+  developed:      "#a855f7",  // purple — already built
+  constrained:    "#78716c",  // warm gray — terrain/zoning constraints
+  zoning_blocked: "#b45309",  // amber — buildable but zoning blocks
+  prime:          "#22c55e",  // bright green — best opportunity
+  opportunity:    "#84cc16",  // lime — good opportunity
+  emerging:       "#14b8a6",  // teal — some potential
+  open_land:      "#60a5fa",  // light blue — buildable but low demand, not bad just empty
+  // Legacy fallbacks
+  high:           "#22c55e",
+  medium:         "#eab308",
+  low:            "#60a5fa",
+};
 
 // One-sentence plain-English verdict for the InfoWindow.
 function hexVerdict(hex: HexFeatureProperties, status: NormalizedStatus): string {
   if (status === "Hard non-buildable") {
-    return "Land constraints prevent development — water, wetland, or preserved open space.";
+    return "Land constraints prevent development — water, wetland, forest, or preserved open space.";
+  }
+  if (status === "Likely non-buildable (water/land-use constraints)") {
+    return "Terrain or zoning constraints make development unlikely. May require environmental review or rezoning.";
   }
   if (status === "On-campus constrained") {
-    return "Campus-controlled land. University approval required for any off-campus development nearby.";
+    return "Campus-controlled land. University approval required for any development.";
   }
   if (status === "Already developed (infill/redevelopment only)") {
-    return hex.pressure_score >= 55
+    return hex.pressure_score >= 40
       ? "High-demand infill zone — redevelopment or value-add opportunity."
-      : "Existing structures present. Moderate demand; infill or value-add play.";
+      : "Existing structures present. Infill or value-add play.";
   }
-  // Zoning overrides for buildable hexes
   if (hex.zoning_pbsh_signal === "restrictive") {
-    return `Demand is here but zoning (${hex.zoning_code}) requires rezoning before PBSH can be built. Planning commission approval needed.`;
+    return `Buildable land but zoning (${hex.zoning_code}) requires rezoning for PBSH. Planning commission approval needed.`;
   }
   if (hex.zoning_pbsh_signal === "negative") {
-    return `Zoned ${hex.zoning_code} — industrial or R&D use. Residential conversion is very costly and unlikely to be approved.`;
+    return `Zoned ${hex.zoning_code} — not residential. Conversion is costly and unlikely to be approved.`;
   }
   if (hex.zoning_pbsh_signal === "constrained") {
-    return "University-zoned land. Effectively off-limits for private development without institutional partnership.";
+    return "University-zoned land. Off-limits for private development without institutional partnership.";
   }
-  // Potentially buildable — mention land availability if present
-  const s = hex.pressure_score;
-  const t = hex.transit_label;
   const lots = hex.vacant_parcel_count ?? 0;
   const lotSuffix = lots > 0 ? ` ${lots} vacant lot${lots !== 1 ? "s" : ""} available.` : "";
-  if (s >= 70 && t === "Transit Hub") return `Prime site — strong demand pressure and transit access. Leading development target.${lotSuffix}`;
-  if (s >= 70) return `Strong demand near campus with limited supply. High-priority development site.${lotSuffix}`;
-  if (s >= 55 && t !== "Isolated") return `Emerging opportunity with solid transit connectivity. Good mid-tier target.${lotSuffix}`;
-  if (s >= 55) return `Moderate demand pressure. Verify site-level buildability before committing.${lotSuffix}`;
-  if (lots > 0) return `Below-average demand signal but ${lots} vacant lot${lots !== 1 ? "s" : ""} available — potential off-market land play.`;
-  if (s >= 40) return "Below-average demand signal. May suit smaller-scale or value-add projects.";
-  return "Low demand in this zone. Elevated market-entry risk.";
+  const t = hex.transit_label;
+  if (hex.label === "prime") {
+    return t === "Transit Hub"
+      ? `Prime site — strong demand and transit access. Top development target.${lotSuffix}`
+      : `Strong demand near campus. High-priority development site.${lotSuffix}`;
+  }
+  if (hex.label === "opportunity") {
+    return `Solid development potential with moderate demand signal.${lotSuffix}`;
+  }
+  if (hex.label === "emerging") {
+    return lots > 0
+      ? `Lower demand but ${lots} vacant lot${lots !== 1 ? "s" : ""} available — potential land play.`
+      : "Some development potential. Verify site-level feasibility.";
+  }
+  // open_land
+  return lots > 0
+    ? `Open land with ${lots} lot${lots !== 1 ? "s" : ""}. Low demand — speculative opportunity.`
+    : "Open land with low demand. Not saturated, just far from the action.";
 }
 
 function zoningBadgeStyle(signal: HexFeatureProperties["zoning_pbsh_signal"]): {
@@ -72,17 +101,23 @@ const ZONING_SIGNAL_LABEL: Record<string, string> = {
   negative:    "Not residential",
 };
 
-// "high"/"medium"/"low" come from the backend hex labels — we relabel them
-// in opportunity language without changing the underlying keys.
 const OPPORTUNITY_LABEL: Record<string, string> = {
-  high: "Strong opportunity",
-  medium: "Emerging market",
-  low: "Saturated market",
+  protected:      "Protected land",
+  campus:         "Campus land",
+  developed:      "Developed area",
+  constrained:    "Terrain constraints",
+  zoning_blocked: "Zoning blocked",
+  prime:          "Prime site",
+  opportunity:    "Development opportunity",
+  emerging:       "Emerging area",
+  open_land:      "Open land",
+  // Legacy
+  high:           "Strong opportunity",
+  medium:         "Emerging market",
+  low:            "Open land",
 };
 
 function opportunityLabel(hex: HexFeatureProperties): string {
-  if (hex.zoning_pbsh_signal === "restrictive") return "Rezoning risk";
-  if (hex.zoning_pbsh_signal === "negative") return "Not buildable (zoning)";
   return OPPORTUNITY_LABEL[hex.label] ?? hex.label;
 }
 
@@ -90,6 +125,7 @@ type NormalizedStatus =
   | "Hard non-buildable"
   | "On-campus constrained"
   | "Already developed (infill/redevelopment only)"
+  | "Likely non-buildable (water/land-use constraints)"
   | "Potentially buildable";
 
 function normalizeDevelopmentStatus(hex: HexFeatureProperties): NormalizedStatus {
@@ -97,6 +133,7 @@ function normalizeDevelopmentStatus(hex: HexFeatureProperties): NormalizedStatus
   if (status === "Hard non-buildable") return status;
   if (status === "On-campus constrained") return status;
   if (status === "Already developed (infill/redevelopment only)") return status;
+  if (status === "Likely non-buildable (water/land-use constraints)") return status;
   if (status === "Potentially buildable") return status;
   if (hex.on_campus_constrained) return "On-campus constrained";
   if (hex.already_developed_for_housing) return "Already developed (infill/redevelopment only)";
@@ -104,21 +141,8 @@ function normalizeDevelopmentStatus(hex: HexFeatureProperties): NormalizedStatus
   return "Potentially buildable";
 }
 
-// Amber-brown — distinct from the green→red demand gradient and from
-// the gray physical-constraint palette. Reads as "caution: political risk."
-const ZONING_BLOCK_COLOR = "#b45309";
-
 function hexFillColor(hex: HexFeatureProperties): string {
-  const status = normalizeDevelopmentStatus(hex);
-  if (status === "Hard non-buildable") return "#64748b";
-  if (status === "On-campus constrained") return "#6b7280";
-  if (status === "Already developed (infill/redevelopment only)") return "#a855f7";
-  // Potentially buildable physically, but zoning blocks residential use
-  if (
-    status === "Potentially buildable" &&
-    (hex.zoning_pbsh_signal === "restrictive" || hex.zoning_pbsh_signal === "negative")
-  ) return ZONING_BLOCK_COLOR;
-  return scoreToColor(hex.pressure_score);
+  return LABEL_COLORS[hex.label] ?? "#60a5fa";
 }
 
 function transitBadgeStyle(label: HexFeatureProperties["transit_label"]): {
@@ -143,17 +167,88 @@ export function HexChoropleth({
   maxDistanceMiles,
   onViewAllParcels,
   onHexSelect,
+  focusHexId,
 }: {
   hexData: HexGeoJSON;
   maxDistanceMiles?: number;
   onViewAllParcels?: (parcels: LandParcelItem[], label: string) => void;
   onHexSelect?: (hex: HexFeatureProperties | null) => void;
+  focusHexId?: string | null;
 }) {
+  const map = useMap();
+  const overlayRef = useRef<GoogleMapsOverlay | null>(null);
   const [selectedHex, setSelectedHexLocal] = useState<HexFeatureProperties | null>(null);
   const setSelectedHex = (hex: HexFeatureProperties | null) => {
     setSelectedHexLocal(hex);
     onHexSelect?.(hex);
   };
+
+  // Fast lookup: h3_index → properties
+  const propsMap = useMemo(() => {
+    const m = new Map<string, HexFeatureProperties>();
+    for (const f of hexData.features) m.set(f.properties.h3_index, f.properties);
+    return m;
+  }, [hexData]);
+
+  // Filtered feature list (stable reference when inputs don't change)
+  const filteredFeatures = useMemo(
+    () =>
+      maxDistanceMiles == null
+        ? hexData.features
+        : hexData.features.filter(
+            (f) => f.properties.distance_to_campus_miles <= maxDistanceMiles
+          ),
+    [hexData, maxDistanceMiles]
+  );
+
+  // ── deck.gl WebGL overlay — renders all hexes on the GPU ──
+  // Attach overlay to map once; update layers when data changes.
+  useEffect(() => {
+    if (!map) return;
+    if (!overlayRef.current) {
+      overlayRef.current = new GoogleMapsOverlay({ interleaved: false });
+      overlayRef.current.setMap(map as unknown as google.maps.Map);
+    }
+    return () => {
+      overlayRef.current?.setMap(null);
+      overlayRef.current?.finalize();
+      overlayRef.current = null;
+    };
+  }, [map]);
+
+  // Update deck.gl layers when hex data changes
+  useEffect(() => {
+    if (!overlayRef.current || !filteredFeatures.length) {
+      overlayRef.current?.setProps({ layers: [] });
+      return;
+    }
+    const hexLayer = new H3HexagonLayer<(typeof filteredFeatures)[number]>({
+      id: "hex-choropleth",
+      data: filteredFeatures,
+      getHexagon: (d) => d.properties.h3_index,
+      getFillColor: (d) => hexToRgba(LABEL_COLORS[d.properties.label] ?? "#60a5fa", 0.45),
+      filled: true,
+      stroked: false,
+      pickable: true,
+      onClick: (info) => {
+        if (info.object) setSelectedHex(info.object.properties);
+      },
+      highPrecision: true,
+      updateTriggers: { getFillColor: [hexData] },
+    });
+    overlayRef.current.setProps({ layers: [hexLayer] });
+  }, [filteredFeatures, hexData]);
+
+  // External hex selection (e.g. from chat agent)
+  useEffect(() => {
+    if (!focusHexId) return;
+    const props = propsMap.get(focusHexId);
+    if (props) {
+      setSelectedHexLocal(props);
+      onHexSelect?.(props);
+    }
+  }, [focusHexId]);
+
   const normalizedStatus = selectedHex
     ? normalizeDevelopmentStatus(selectedHex)
     : null;
@@ -167,24 +262,6 @@ export function HexChoropleth({
 
   return (
     <>
-      {hexData.features
-        .filter((f) => maxDistanceMiles == null || f.properties.distance_to_campus_miles <= maxDistanceMiles)
-        .map((f) => {
-          const hasLand = (f.properties.vacant_parcel_count ?? 0) > 0;
-          return (
-            <Polygon
-              key={f.properties.h3_index}
-              // GeoJSON coordinates are [lng, lat] — swap to {lat, lng} for Maps API
-              paths={f.geometry.coordinates[0].map(([lng, lat]) => ({ lat, lng }))}
-              strokeColor={hasLand ? "#d97706" : "#09090b"}
-              strokeOpacity={hasLand ? 0.9 : 0.5}
-              strokeWeight={hasLand ? 2 : 0.5}
-              fillColor={hexFillColor(f.properties)}
-              fillOpacity={hasLand ? 0.55 : 0.42}
-              onClick={() => setSelectedHex(f.properties)}
-            />
-          );
-        })}
 
       {selectedHex && (
         <InfoWindow

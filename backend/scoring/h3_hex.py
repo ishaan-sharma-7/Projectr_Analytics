@@ -216,7 +216,8 @@ def _neighbor_bucket_points(
 
 HARD_WATER_THRESHOLD = 0.14
 HARD_WETLAND_THRESHOLD = 0.12
-HARD_COMBINED_THRESHOLD = 0.30
+HARD_COMBINED_THRESHOLD = 0.25
+HARD_NATURAL_LAND_THRESHOLD = 0.20
 HARD_FLOODPLAIN_MARKERS = 2
 HARD_HYDRO_MIX_THRESHOLD = 0.12
 HARD_HYDRO_MIN_MARKERS = 6
@@ -231,6 +232,10 @@ DEVELOPED_COMMERCIAL_THRESHOLD = 0.15
 DEVELOPED_DENSITY_THRESHOLD = 110.0
 DEVELOPED_STRUCTURE_MARKERS = 16
 DEVELOPED_MIXED_MARKERS = 10
+
+# "Likely non-buildable" — softer tier for moderate terrain / restrictive zoning
+LIKELY_NATURAL_THRESHOLD = 0.10
+LIKELY_COMBINED_THRESHOLD = 0.15
 
 
 def _classify_development_status(
@@ -247,30 +252,42 @@ def _classify_development_status(
     wetland_marker_count: int,
     floodplain_marker_count: int,
     golf_marker_count: int,
+    forest_marker_count: int,
     field_marker_count: int,
     park_marker_count: int,
+    protected_marker_count: int,
     development_density: float,
+    zoning_pbsh_signal: str | None = None,
+    observed_markers: int = 0,
 ) -> tuple[str, bool, bool, bool, list[str], float, dict[str, bool]]:
-    """Classify a hex into one status using strict precedence rules."""
+    """Classify a hex into one status using strict precedence rules.
+
+    Includes terrain (forest/natural), zoning, and low-confidence detection.
+    """
     built_total_coverage = (
         coverage_pct["residential_built"]
         + coverage_pct["commercial_built"]
         + coverage_pct["parking_infrastructure"]
     )
+    natural_land_coverage = coverage_pct.get("natural_land", 0.0)
     hard_non_buildable_coverage = (
         coverage_pct["water"]
         + coverage_pct["wetland"]
         + coverage_pct["open_recreation"]
+        + natural_land_coverage
     )
 
     hard_non_buildable = (
         coverage_pct["water"] >= HARD_WATER_THRESHOLD
         or coverage_pct["wetland"] >= HARD_WETLAND_THRESHOLD
+        or natural_land_coverage >= HARD_NATURAL_LAND_THRESHOLD
         or hard_non_buildable_coverage >= HARD_COMBINED_THRESHOLD
         or floodplain_marker_count >= HARD_FLOODPLAIN_MARKERS
         or water_marker_count >= 10
         or wetland_marker_count >= 8
         or golf_marker_count >= 12
+        or forest_marker_count >= 6
+        or (forest_marker_count + protected_marker_count) >= 8
         or (golf_marker_count + field_marker_count + park_marker_count) >= 20
         or (
             (coverage_pct["water"] + coverage_pct["wetland"]) >= HARD_HYDRO_MIX_THRESHOLD
@@ -285,6 +302,8 @@ def _classify_development_status(
             and campus_feature_count >= CAMPUS_MIN_MARKERS
         )
         or (distance_miles <= 1.6 and campus_feature_count >= 14)
+        # Zoning says university/institutional land
+        or zoning_pbsh_signal == "constrained"
     )
     already_developed = (
         built_total_coverage >= DEVELOPED_BUILT_COVERAGE_THRESHOLD
@@ -300,10 +319,26 @@ def _classify_development_status(
             and (off_campus_housing_count + commercial_marker_count) >= DEVELOPED_MIXED_MARKERS
         )
     )
+
+    # "Likely non-buildable" — moderate terrain or restrictive zoning
+    likely_non_buildable = (
+        natural_land_coverage >= LIKELY_NATURAL_THRESHOLD
+        or (coverage_pct["water"] + coverage_pct["wetland"] + natural_land_coverage) >= LIKELY_COMBINED_THRESHOLD
+        or forest_marker_count >= 3
+        or (water_marker_count + wetland_marker_count + forest_marker_count) >= 5
+        or zoning_pbsh_signal == "negative"
+        or (
+            zoning_pbsh_signal == "restrictive"
+            and off_campus_housing_count <= 2
+            and coverage_pct["residential_built"] < 0.10
+        )
+    )
+
     decision_flags = {
         "hard_non_buildable": hard_non_buildable,
         "campus_constrained": campus_constrained,
         "already_developed": already_developed,
+        "likely_non_buildable": likely_non_buildable,
     }
 
     classification_reason_codes: list[str] = []
@@ -312,12 +347,16 @@ def _classify_development_status(
             classification_reason_codes.append("water_majority")
         if coverage_pct["wetland"] >= HARD_WETLAND_THRESHOLD:
             classification_reason_codes.append("wetland_majority")
+        if natural_land_coverage >= HARD_NATURAL_LAND_THRESHOLD:
+            classification_reason_codes.append("forest_dominant")
         if floodplain_marker_count >= HARD_FLOODPLAIN_MARKERS:
             classification_reason_codes.append("floodplain_major")
-        if coverage_pct["open_recreation"] >= 0.30:
+        if coverage_pct["open_recreation"] >= 0.25:
             classification_reason_codes.append("open_recreation_major")
         if golf_marker_count >= 12:
             classification_reason_codes.append("golf_course_dominant")
+        if forest_marker_count >= 6:
+            classification_reason_codes.append("forest_dominant")
         return (
             "Hard non-buildable",
             False,
@@ -332,6 +371,8 @@ def _classify_development_status(
         classification_reason_codes.append("campus_dominant")
         if dormitory_count >= 1:
             classification_reason_codes.append("dormitory_present")
+        if zoning_pbsh_signal == "constrained":
+            classification_reason_codes.append("zoning_constrained")
         return (
             "On-campus constrained",
             False,
@@ -356,6 +397,25 @@ def _classify_development_status(
             False,
             classification_reason_codes,
             22.0,
+            decision_flags,
+        )
+
+    if likely_non_buildable:
+        if natural_land_coverage >= LIKELY_NATURAL_THRESHOLD:
+            classification_reason_codes.append("natural_land")
+        if forest_marker_count >= 3:
+            classification_reason_codes.append("forest_present")
+        if zoning_pbsh_signal in ("negative", "restrictive"):
+            classification_reason_codes.append(f"zoning_{zoning_pbsh_signal}")
+        if not classification_reason_codes:
+            classification_reason_codes.append("terrain_constraints")
+        return (
+            "Likely non-buildable (water/land-use constraints)",
+            False,
+            False,
+            False,
+            classification_reason_codes,
+            15.0,
             decision_flags,
         )
 
@@ -659,6 +719,11 @@ def compute_hex_features(
         {"golf_course", "field", "park"},
         resolution,
     )
+    natural_land_bucket = _bucket_marker_points(
+        non_buildable_markers,
+        {"forest", "protected", "restricted"},
+        resolution,
+    )
     national_water_bucket = _bucket_marker_points(national_constraint_points, {"water"}, resolution)
     national_wetland_bucket = _bucket_marker_points(
         national_constraint_points,
@@ -795,6 +860,11 @@ def compute_hex_features(
                 _neighbor_bucket_points(open_recreation_bucket, hex_id, rings=2),
                 coverage_radius_km,
             ),
+            "natural_land": _marker_coverage_ratio(
+                samples,
+                _neighbor_bucket_points(natural_land_bucket, hex_id, rings=2),
+                coverage_radius_km,
+            ),
         }
         coverage_pct = {k: round(max(0.0, min(1.0, v)), 3) for k, v in coverage_raw.items()}
 
@@ -805,6 +875,27 @@ def compute_hex_features(
             else 0.0
         )
         development_density = development_marker_count / max(hex_area_km2, 0.01)
+
+        observed_markers = (
+            campus_feature_count
+            + off_campus_housing_count
+            + development_marker_count
+            + commercial_marker_count
+            + parking_marker_count
+            + non_buildable_marker_count
+        )
+
+        # ── Zoning layer (looked up BEFORE classification) ──
+        zone_feat = _find_zone_for_point(c_lat, c_lng, zoning_index) if zoning_index else None
+        if zone_feat:
+            zoning_code: str | None = zone_feat["zone_code"]
+            zoning_label: str | None = zone_feat["zone_label"]
+            zoning_pbsh_signal: str | None = zone_feat["pbsh_signal"]
+        else:
+            zoning_code = None
+            zoning_label = None
+            zoning_pbsh_signal = None
+
         (
             development_status,
             buildable_for_housing,
@@ -826,23 +917,19 @@ def compute_hex_features(
             wetland_marker_count=wetland_marker_count,
             floodplain_marker_count=floodplain_marker_count,
             golf_marker_count=golf_marker_count,
+            forest_marker_count=forest_marker_count,
             field_marker_count=field_marker_count,
             park_marker_count=park_marker_count,
+            protected_marker_count=protected_marker_count,
             development_density=development_density,
+            zoning_pbsh_signal=zoning_pbsh_signal,
+            observed_markers=observed_markers,
         )
         hex_pressure = raw_pressure if pressure_cap >= 99.0 else min(raw_pressure, pressure_cap)
 
         dominant_land_use = max(
             coverage_pct.keys(),
             key=lambda key: coverage_pct[key],
-        )
-        observed_markers = (
-            campus_feature_count
-            + off_campus_housing_count
-            + development_marker_count
-            + commercial_marker_count
-            + parking_marker_count
-            + non_buildable_marker_count
         )
         if observed_markers >= 500:
             classification_confidence: Literal["high", "medium", "low"] = "high"
@@ -851,10 +938,19 @@ def compute_hex_features(
         else:
             classification_confidence = "low"
 
+        # ── Low-confidence dampening ──
+        # Hexes with very few observed markers likely have undetected terrain.
+        # Don't give high scores to areas we know nothing about.
+        if observed_markers <= 5 and buildable_for_housing:
+            confidence_factor = max(0.35, observed_markers / 12.0)
+            hex_pressure = round(hex_pressure * confidence_factor, 1)
+
+        natural_land_coverage = coverage_pct.get("natural_land", 0.0)
         weighted_non_buildable = (
             4.0 * coverage_pct["water"]
             + 3.2 * coverage_pct["wetland"]
             + 2.4 * coverage_pct["open_recreation"]
+            + 2.8 * natural_land_coverage
         )
         development_pressure = (
             2.4 * coverage_pct["residential_built"]
@@ -862,27 +958,15 @@ def compute_hex_features(
             + 1.2 * coverage_pct["parking_infrastructure"]
             + 0.04 * development_density
         )
-        availability_signal = max(7.5, 7.5 + 0.5 * stop_count)
+        availability_signal = max(4.0, 4.0 + 0.5 * stop_count)
         buildability_score = 100.0 * (
             availability_signal
             / (availability_signal + weighted_non_buildable + development_pressure)
         )
 
-        # ── Zoning layer ──
-        # Look up which municipal zone contains this hex center.
-        # Apply a buildability multiplier — a hex in a single-family zone
-        # requires rezoning before PBSH can be built, sharply reducing viability.
-        zone_feat = _find_zone_for_point(c_lat, c_lng, zoning_index) if zoning_index else None
-        if zone_feat:
-            zoning_code: str | None = zone_feat["zone_code"]
-            zoning_label: str | None = zone_feat["zone_label"]
-            zoning_pbsh_signal: str | None = zone_feat["pbsh_signal"]
-            zoning_factor = _ZONING_BUILDABILITY_FACTORS.get(zoning_pbsh_signal or "unknown", 1.0)
-            buildability_score = buildability_score * zoning_factor
-        else:
-            zoning_code = None
-            zoning_label = None
-            zoning_pbsh_signal = None
+        # ── Zoning buildability multiplier ──
+        zoning_factor = _ZONING_BUILDABILITY_FACTORS.get(zoning_pbsh_signal or "unknown", 1.0)
+        buildability_score = buildability_score * zoning_factor
 
         coverage_hits = {
             key: int(round(value * sample_count))
@@ -901,11 +985,25 @@ def compute_hex_features(
         else:
             transit_label = "Isolated"
 
-        label = (
-            "high" if hex_pressure >= 70
-            else "medium" if hex_pressure >= 40
-            else "low"
-        )
+        # ── Descriptive label: tells the user WHY, not just a number ──
+        if development_status == "Hard non-buildable":
+            label = "protected"
+        elif development_status == "On-campus constrained":
+            label = "campus"
+        elif development_status == "Already developed (infill/redevelopment only)":
+            label = "developed"
+        elif development_status == "Likely non-buildable (water/land-use constraints)":
+            label = "constrained"
+        elif zoning_pbsh_signal in ("restrictive", "negative"):
+            label = "zoning_blocked"
+        elif buildable_for_housing and hex_pressure >= 35:
+            label = "prime"
+        elif buildable_for_housing and hex_pressure >= 20:
+            label = "opportunity"
+        elif buildable_for_housing and hex_pressure >= 10:
+            label = "emerging"
+        else:
+            label = "open_land"
 
         # ── Land parcel signal ──────────────────────────────────────────────
         # Vacant / land-dominant parcels in this hex signal transactable land.

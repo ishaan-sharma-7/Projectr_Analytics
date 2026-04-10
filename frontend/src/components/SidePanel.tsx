@@ -390,6 +390,7 @@ interface SidePanelProps {
   selectedHexProps?: HexFeatureProperties | null;
   onUniversityScored?: (score: HousingPressureScore) => void;
   onExportJob?: (job: ReportJob) => void;
+  onSelectHex?: (h3Index: string) => void;
 }
 
 export function SidePanel({
@@ -412,6 +413,7 @@ export function SidePanel({
   selectedHexProps,
   onUniversityScored,
   onExportJob,
+  onSelectHex,
 }: SidePanelProps) {
   const [activeTab, setActiveTab] = useState<"data" | "chat">("data");
 
@@ -527,7 +529,7 @@ export function SidePanel({
         
         {/* Chatbot Panel - rendered always, but visibility depends on tab */}
         <div className={`absolute inset-0 flex flex-col transition-opacity duration-300 ${activeTab === "chat" && !!selectedName ? "opacity-100 z-10" : "opacity-0 pointer-events-none"}`}>
-          <ChatbotWidget selectedName={selectedName} activeScore={activeScore} selectedHex={selectedHexProps ?? null} onUniversityScored={onUniversityScored} />
+          <ChatbotWidget selectedName={selectedName} activeScore={activeScore} selectedHex={selectedHexProps ?? null} onUniversityScored={onUniversityScored} onSelectHex={onSelectHex} />
         </div>
       </div>
     </aside>

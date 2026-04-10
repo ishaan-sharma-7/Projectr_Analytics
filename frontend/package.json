@@ -10,10 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@deck.gl/geo-layers": "^9.2.11",
+    "@deck.gl/google-maps": "^9.2.11",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.2",
     "@vis.gl/react-google-maps": "^1.8.2",
     "clsx": "^2.1.1",
+    "deck.gl": "^9.2.11",
     "docx": "^9.6.1",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",

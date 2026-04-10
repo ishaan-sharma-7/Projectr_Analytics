@@ -19,6 +19,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import StreamingResponse
 
 from backend.config import config
@@ -58,7 +59,37 @@ from backend.db import firestore as db
 # ── Pre-scored cache ──
 _prescored: dict[int, HousingPressureScore] = {}
 _hex_response_cache: dict[tuple, dict] = {}
-CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v1_6_0"
+_hex_slim_cache: dict[tuple, bytes] = {}  # pre-serialized gzipped slim responses
+CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v2_0_0"
+
+
+def _slim_hex_bytes(geojson: dict) -> bytes:
+    """Pre-serialize and gzip a slim hex response (no geometry).
+
+    deck.gl renders from h3_index, not polygon coordinates, so geometry
+    is stripped. The result is cached as compressed bytes and served
+    directly — zero JSON serialization or gzip on cache hits.
+    """
+    import gzip as _gzip
+    slim = {
+        "type": "FeatureCollection",
+        "features": [
+            {"type": "Feature", "properties": f["properties"]}
+            for f in geojson.get("features", [])
+        ],
+        "metadata": geojson.get("metadata"),
+    }
+    return _gzip.compress(json.dumps(slim, separators=(",", ":")).encode(), compresslevel=6)
+
+
+def _hex_bytes_response(compressed: bytes):
+    """Return pre-compressed bytes with correct headers."""
+    from fastapi.responses import Response
+    return Response(
+        content=compressed,
+        media_type="application/json",
+        headers={"Content-Encoding": "gzip"},
+    )
 
 
 def _slugify_filename(value: str) -> str:
@@ -107,6 +138,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=6)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -386,10 +418,29 @@ async def get_hex_grid(
     """
     import asyncio
 
+    # ── Fast-path: check if ANY cached version exists for this university ──
+    # Avoids the Scorecard API call + OSM fetches on every repeat visit.
+    for cached_key, cached_bytes in _hex_slim_cache.items():
+        if (
+            isinstance(cached_key, tuple)
+            and len(cached_key) >= 4
+            and cached_key[2] == int(hex_resolution)
+            and cached_key[3] == bool(debug_hex)
+        ):
+            # Check if this cache entry matches the university name
+            cached_geojson = _hex_response_cache.get(cached_key)
+            if cached_geojson and cached_geojson.get("metadata", {}).get("university", "").lower() in university_name.lower() or university_name.lower() in cached_geojson.get("metadata", {}).get("university", "").lower():
+                return _hex_bytes_response(cached_bytes)
+
     # ── Resolve university ──
     uni = await scorecard.search_university(university_name)
     if not uni:
         raise HTTPException(404, f"University not found: {university_name}")
+
+    # ── Fast-path with unitid: check slim cache before launching OSM tasks ──
+    for cached_key, cached_bytes in _hex_slim_cache.items():
+        if isinstance(cached_key, tuple) and len(cached_key) >= 1 and cached_key[0] == uni.unitid:
+            return _hex_bytes_response(cached_bytes)
 
     osm_layer_version = "osm_geom_v2"
     # ── Get base score (from cache or compute) ──
@@ -563,13 +614,20 @@ async def get_hex_grid(
         CLASSIFICATION_MODEL_VERSION,
         f"{osm_layer_version}|{national_constraints.LAYER_DATA_VERSION}|{zoning_gis.LAYER_DATA_VERSION}|{land_attom.LAYER_DATA_VERSION}",
     )
+    if cache_key in _hex_slim_cache:
+        return _hex_bytes_response(_hex_slim_cache[cache_key])
+
     if cache_key in _hex_response_cache:
-        return _hex_response_cache[cache_key]
+        compressed = _slim_hex_bytes(_hex_response_cache[cache_key])
+        _hex_slim_cache[cache_key] = compressed
+        return _hex_bytes_response(compressed)
 
     fs_hit = await db.get_hex(cache_key)
     if fs_hit:
         _hex_response_cache[cache_key] = fs_hit
-        return fs_hit
+        compressed = _slim_hex_bytes(fs_hit)
+        _hex_slim_cache[cache_key] = compressed
+        return _hex_bytes_response(compressed)
 
     # ── Generate hex grid ──
     hex_indices = generate_campus_hex_grid(
@@ -660,7 +718,9 @@ async def get_hex_grid(
             print(f"[/hex] Debug snapshot written: {debug_path}")
     _hex_response_cache[cache_key] = geojson
     await db.set_hex(cache_key, geojson)
-    return geojson
+    compressed = _slim_hex_bytes(geojson)
+    _hex_slim_cache[cache_key] = compressed
+    return _hex_bytes_response(compressed)
 
 
 @app.get("/hex/stream/{university_name}")
