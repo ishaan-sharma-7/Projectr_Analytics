@@ -139,6 +139,8 @@ const LOGO_OVERRIDES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Washington_State_Cougars_logo.svg/240px-Washington_State_Cougars_logo.svg.png",
   "utah.edu":
     "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Utah_Utes_-_U_logo.svg/240px-Utah_Utes_-_U_logo.svg.png",
+  "colostate.edu":
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Colorado_State_University_logo.svg/240px-Colorado_State_University_logo.svg.png",
 };
 
 // Per-domain background tint behind transparent logos. Falls back to white
@@ -146,6 +148,7 @@ const LOGO_OVERRIDES: Record<string, string> = {
 const LOGO_BG: Record<string, string> = {
   "wsu.edu": "#981e32",   // WSU crimson
   "utah.edu": "#cc0000",  // Utah red
+  "colostate.edu": "#1E4D2B",  // CSU green
 };
 
 function LogoPin({ uni, borderColor, scale }: LogoPinProps) {
