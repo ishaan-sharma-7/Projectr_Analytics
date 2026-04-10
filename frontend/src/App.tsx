@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { exportToPDF } from "./lib/exportReport";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { streamScore, fetchUniversities } from "./lib/api";
-import { fetchHexGrid } from "./lib/hexApi";
+import { fetchHexGrid, streamHexGrid } from "./lib/hexApi";
 import { readCache, writeEntry, readSplitCache, writeSplitEntry, purgeSplitCache } from "./lib/storage";
 import { UNIVERSITIES } from "./lib/universityList";
 import type { UniversitySuggestion } from "./lib/universityList";
@@ -304,25 +304,43 @@ function App() {
         });
       }
 
-      let partial: HexGeoJSON = { type: "FeatureCollection", features: [], metadata: undefined };
+      const cacheKey = (n: string) => hexCacheKey(n, resolution, debugHex, radiusMiles);
 
       const applyPartial = (payload: HexGeoJSON) => {
         setHexCache((prev) => {
           const next = { ...prev };
-          for (const n of names) {
-            next[hexCacheKey(n, resolution, debugHex, radiusMiles)] = payload;
-          }
+          for (const n of names) next[cacheKey(n)] = payload;
           return next;
         });
       };
 
-      applyPartial(partial);
+      // Progressive streaming: hexes appear center-outward as chunks arrive
+      let accumulated: HexGeoJSON = { type: "FeatureCollection", features: [], metadata: undefined };
+      applyPartial(accumulated);
 
-      partial = await fetchHexGrid(queryName, radiusMiles, resolution, false, debugHex);
-      applyPartial(partial);
+      try {
+        for await (const event of streamHexGrid(queryName, radiusMiles, resolution, false, debugHex)) {
+          if (event.type === "metadata") {
+            accumulated = { ...accumulated, metadata: event.metadata };
+          } else if (event.type === "chunk") {
+            accumulated = {
+              ...accumulated,
+              features: [...accumulated.features, ...event.features],
+            };
+            applyPartial(accumulated);
+          }
+        }
+      } catch {
+        // Stream failed — fall back to full fetch
+        if (accumulated.features.length === 0) {
+          accumulated = await fetchHexGrid(queryName, radiusMiles, resolution, false, debugHex);
+          applyPartial(accumulated);
+        }
+      }
+
       if (persistToStorage) {
         for (const n of names) {
-          writeSplitEntry(HEX_CACHE_KEY, hexCacheKey(n, resolution, debugHex, radiusMiles), partial);
+          writeSplitEntry(HEX_CACHE_KEY, cacheKey(n), accumulated);
         }
       }
     } catch {

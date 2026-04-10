@@ -731,10 +731,11 @@ async def get_hex_grid_stream(
     auto_radius: bool = Query(default=True),
     debug_hex: bool = Query(default=False),
 ):
-    """Stream H3 hex features as NDJSON chunks for progressive map rendering."""
+    """Stream hex features as NDJSON, sorted center-outward for progressive rendering."""
     import asyncio
 
-    geojson = await get_hex_grid(
+    # Ensure the full hex grid is computed and cached
+    await get_hex_grid(
         university_name=university_name,
         radius_miles=radius_miles,
         hex_resolution=hex_resolution,
@@ -742,11 +743,37 @@ async def get_hex_grid_stream(
         debug_hex=debug_hex,
     )
 
+    # Pull the full geojson from cache (the main endpoint caches the dict)
+    geojson: dict | None = None
+    query_lower = university_name.lower()
+    for key, cached in _hex_response_cache.items():
+        meta = cached.get("metadata", {})
+        cached_name = meta.get("university", "").lower()
+        if cached_name and (query_lower in cached_name or cached_name in query_lower):
+            geojson = cached
+            break
+
+    if not geojson:
+        yield json.dumps({"type": "error", "message": "Hex data not found"}) + "\n"
+        return
+
     async def generate():
         features = geojson.get("features", [])
         metadata = geojson.get("metadata", {})
-        total = len(features)
-        batch_size = 12
+
+        # Sort center-outward so closest hexes render first
+        features_sorted = sorted(
+            features,
+            key=lambda f: f.get("properties", {}).get("distance_km", 999),
+        )
+        # Strip geometry (deck.gl uses h3_index)
+        slim_features = [
+            {"type": "Feature", "properties": f["properties"]}
+            for f in features_sorted
+        ]
+
+        total = len(slim_features)
+        batch_size = 80
 
         yield json.dumps({
             "type": "metadata",
@@ -755,14 +782,13 @@ async def get_hex_grid_stream(
         }) + "\n"
 
         for start in range(0, total, batch_size):
-            batch = features[start:start + batch_size]
+            batch = slim_features[start:start + batch_size]
             yield json.dumps({
                 "type": "chunk",
                 "start": start,
                 "count": len(batch),
                 "features": batch,
             }) + "\n"
-            await asyncio.sleep(0.12)
 
         yield json.dumps({"type": "done"}) + "\n"
 
