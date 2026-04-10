@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Map,
   AdvancedMarker,
   MapControl,
   ControlPosition,
   useMap,
+  Polygon,
 } from "@vis.gl/react-google-maps";
 import { Crosshair, Globe, Plus, Minus } from "lucide-react";
 import { HexChoropleth } from "./HexChoropleth";
@@ -366,6 +367,88 @@ function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void })
   return null;
 }
 
+// ── HexLoadingGrid ────────────────────────────────────────────────────────────
+// Renders a phantom honeycomb of blue pulsing polygons anchored to lat/lng so
+// they stay fixed to the map during pan/zoom — disappears when real hexes arrive.
+
+type LatLngLit = { lat: number; lng: number };
+
+function buildLoadingHexes(centerLat: number, centerLng: number, rings = 4): LatLngLit[][] {
+  // H3 resolution-9 approximate dimensions
+  const edgeM = 174; // metres per edge
+  const hexW = edgeM * Math.sqrt(3); // pointy-top: point-to-point width
+  const hexH = edgeM * 2;            // pointy-top: flat-to-flat height
+
+  const latPerM = 1 / 111_000;
+  const lngPerM = 1 / (111_000 * Math.cos((centerLat * Math.PI) / 180));
+
+  const out: { paths: LatLngLit[]; ring: number }[] = [];
+
+  for (let q = -rings; q <= rings; q++) {
+    for (let r = -rings; r <= rings; r++) {
+      const s = -q - r;
+      const ring = Math.max(Math.abs(q), Math.abs(r), Math.abs(s));
+      if (ring > rings) continue;
+
+      // Axial → cartesian (pointy-top orientation)
+      const xM = hexW * (q + r * 0.5);
+      const yM = hexH * 0.75 * r;
+
+      const cLat = centerLat + yM * latPerM;
+      const cLng = centerLng + xM * lngPerM;
+
+      const paths: LatLngLit[] = [];
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i + Math.PI / 6; // pointy-top vertex angles
+        paths.push({
+          lat: cLat + edgeM * Math.sin(angle) * latPerM,
+          lng: cLng + edgeM * Math.cos(angle) * lngPerM,
+        });
+      }
+      out.push({ paths, ring });
+    }
+  }
+
+  // Sort by ring so animation ripples outward from center
+  out.sort((a, b) => a.ring - b.ring);
+  return out.map((h) => h.paths);
+}
+
+function HexLoadingGrid({ lat, lng }: { lat: number; lng: number }) {
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 90);
+    return () => clearInterval(id);
+  }, []);
+
+  const hexes = useMemo(() => buildLoadingHexes(lat, lng, 4), [lat, lng]);
+
+  return (
+    <>
+      {hexes.map((paths, i) => {
+        // Ripple outward: each hex offset in the wave by its position index
+        const t = ((tick * 90 - i * 160) / 2200) % 1;
+        const sin = Math.sin(Math.max(0, t) * Math.PI * 2);
+        const fillOpacity = 0.06 + 0.28 * Math.max(0, sin);
+        const strokeOpacity = 0.25 + 0.45 * Math.max(0, sin);
+
+        return (
+          <Polygon
+            key={i}
+            paths={paths}
+            strokeColor="#60a5fa"
+            strokeOpacity={strokeOpacity}
+            strokeWeight={1}
+            fillColor="#3b82f6"
+            fillOpacity={fillOpacity}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 // ── MapView ───────────────────────────────────────────────────────────────────
 
 interface MapViewProps {
@@ -400,6 +483,7 @@ export function MapView({
   const allUniversities = mergeUniversities(dynamicUnis);
   const [hoveredName, setHoveredName] = useState<string | null>(null);
   const [forceNational, setForceNational] = useState(false);
+  const [localZoom, setLocalZoom] = useState(14);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -436,7 +520,11 @@ export function MapView({
           onReturnToCampus={() => setForceNational(false)}
           onForceNational={() => setForceNational(true)}
         />
-        {onZoomChange && <ZoomTracker onZoomChange={onZoomChange} />}
+        <ZoomTracker onZoomChange={(z) => { setLocalZoom(z); onZoomChange?.(z); }} />
+        {/* Loading phantom hex grid — anchored to map coordinates, moves with pan/zoom */}
+        {isHexLoading && localZoom >= 11 && selectedCoords && (
+          <HexLoadingGrid lat={selectedCoords.lat} lng={selectedCoords.lng} />
+        )}
         {activeHexData && (
           <HexChoropleth hexData={activeHexData} maxDistanceMiles={hexRadiusMiles} />
         )}
@@ -516,30 +604,6 @@ export function MapView({
           );
         })}
       </Map>
-
-      {/* Hex loading indicator — small pulsing hex in top-right */}
-      {isHexLoading && selectedName && (
-        <div className="absolute top-4 right-4 z-10 group">
-          <svg
-            width="28" height="28"
-            viewBox="-14 -14 28 28"
-            className="animate-pulse cursor-default"
-            style={{ filter: "drop-shadow(0 0 5px rgba(59,130,246,0.7))" }}
-          >
-            <polygon
-              points="10.5,6 0,12 -10.5,6 -10.5,-6 0,-12 10.5,-6"
-              fill="rgba(59,130,246,0.35)"
-              stroke="rgba(96,165,250,0.9)"
-              strokeWidth="1.5"
-            />
-          </svg>
-          {/* Hover tooltip */}
-          <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 bg-zinc-900/95 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
-            Hex grid loading for{" "}
-            <span className="text-white font-medium">{selectedName}</span>
-          </div>
-        </div>
-      )}
 
       {/* Radius slider */}
       {activeHexData && (
