@@ -612,8 +612,8 @@ function App() {
       writeEntry(DYNAMIC_UNIS_CACHE_KEY, name, pin);
     }
 
-    const debugHex = isVirginiaTechName(name);
-    void loadHexStream(name, [name], HEX_RESOLUTION, MAX_HEX_RADIUS_MILES, debugHex, false, true);
+    // Hex loading deferred to the guarded useEffect (requires selectedName
+    // match + scoreCache + mapZoom >= 11). No eager loading here.
   };
 
   /** Download PDF from the DoneBanner — looks up score from cache */

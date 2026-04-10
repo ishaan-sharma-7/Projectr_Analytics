@@ -58,9 +58,41 @@ from backend.db import firestore as db
 
 # ── Pre-scored cache ──
 _prescored: dict[int, HousingPressureScore] = {}
+_name_to_unitid: dict[str, int] = {}  # lowercase name → unitid (O(1) lookup)
 _hex_response_cache: dict[tuple, dict] = {}
 _hex_slim_cache: dict[tuple, bytes] = {}  # pre-serialized gzipped slim responses
+_unitid_hex_keys: dict[int, set[tuple]] = {}  # unitid → set of cache keys
 CLASSIFICATION_MODEL_VERSION = "hex_accuracy_v2_0_0"
+
+
+def _register_hex_cache(cache_key: tuple, geojson: dict, compressed: bytes):
+    """Store hex data in all tiers and update the unitid index."""
+    _hex_response_cache[cache_key] = geojson
+    _hex_slim_cache[cache_key] = compressed
+    unitid = cache_key[0]
+    _unitid_hex_keys.setdefault(unitid, set()).add(cache_key)
+
+
+def _fast_path_hex_lookup(university_name: str, hex_resolution: int, debug_hex: bool) -> bytes | None:
+    """O(1) unitid-based cache lookup. Returns pre-compressed bytes or None."""
+    uid = _name_to_unitid.get(university_name.lower())
+    if uid is None:
+        return None
+    candidate_keys = _unitid_hex_keys.get(uid)
+    if not candidate_keys:
+        return None
+    # Prefer exact resolution+debug match
+    for ck in candidate_keys:
+        if len(ck) >= 4 and ck[2] == int(hex_resolution) and ck[3] == bool(debug_hex):
+            cached = _hex_slim_cache.get(ck)
+            if cached:
+                return cached
+    # Fall back to any cached version for this unitid
+    for ck in candidate_keys:
+        cached = _hex_slim_cache.get(ck)
+        if cached:
+            return cached
+    return None
 
 
 def _slim_hex_bytes(geojson: dict) -> bytes:
@@ -116,12 +148,22 @@ def _write_hex_debug_snapshot(university_name: str, payload: dict) -> str | None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load scored universities from Firestore on startup."""
+    import asyncio as _aio
 
     if db.is_available():
-        fs_scores = await db.get_all_scores()
+        try:
+            fs_scores = await _aio.wait_for(db.get_all_scores(), timeout=10.0)
+        except _aio.TimeoutError:
+            fs_scores = {}
+            print("[Firestore] Startup load timed out after 10s — continuing with empty cache.")
+        except Exception as exc:
+            fs_scores = {}
+            print(f"[Firestore] Startup load failed ({exc}) — continuing with empty cache.")
+
         if fs_scores:
             for uid, data in fs_scores.items():
                 _prescored[uid] = HousingPressureScore.model_validate(data)
+                _name_to_unitid[_prescored[uid].university.name.lower()] = uid
             print(f"Loaded {len(_prescored)} scores from Firestore.")
         else:
             print("[Firestore] scores collection empty — scores will be added on first analysis.")
@@ -347,6 +389,7 @@ async def score_university(req: ScoreRequest):
 
     # Persist to Firestore + in-memory cache
     _prescored[uni.unitid] = result
+    _name_to_unitid[result.university.name.lower()] = uni.unitid
     await db.set_score(uni.unitid, json.loads(result.model_dump_json()))
 
     return result
@@ -418,29 +461,27 @@ async def get_hex_grid(
     """
     import asyncio
 
-    # ── Fast-path: check if ANY cached version exists for this university ──
-    # Avoids the Scorecard API call + OSM fetches on every repeat visit.
-    for cached_key, cached_bytes in _hex_slim_cache.items():
-        if (
-            isinstance(cached_key, tuple)
-            and len(cached_key) >= 4
-            and cached_key[2] == int(hex_resolution)
-            and cached_key[3] == bool(debug_hex)
-        ):
-            # Check if this cache entry matches the university name
-            cached_geojson = _hex_response_cache.get(cached_key)
-            if cached_geojson and cached_geojson.get("metadata", {}).get("university", "").lower() in university_name.lower() or university_name.lower() in cached_geojson.get("metadata", {}).get("university", "").lower():
-                return _hex_bytes_response(cached_bytes)
+    # ── Fast-path: O(1) unitid index lookup (no API calls, no scanning) ──
+    fast = _fast_path_hex_lookup(university_name, hex_resolution, debug_hex)
+    if fast is not None:
+        return _hex_bytes_response(fast)
 
-    # ── Resolve university ──
-    uni = await scorecard.search_university(university_name)
+    # ── Resolve university: prefer _prescored (free), fall back to Scorecard API ──
+    uid = _name_to_unitid.get(university_name.lower())
+    if uid and uid in _prescored:
+        uni = _prescored[uid].university
+    else:
+        uni = await scorecard.search_university(university_name)
     if not uni:
         raise HTTPException(404, f"University not found: {university_name}")
 
-    # ── Fast-path with unitid: check slim cache before launching OSM tasks ──
-    for cached_key, cached_bytes in _hex_slim_cache.items():
-        if isinstance(cached_key, tuple) and len(cached_key) >= 1 and cached_key[0] == uni.unitid:
-            return _hex_bytes_response(cached_bytes)
+    # ── Unitid cache check (catches cases where name didn't match but unitid does) ──
+    uid_keys = _unitid_hex_keys.get(uni.unitid)
+    if uid_keys:
+        for ck in uid_keys:
+            cached = _hex_slim_cache.get(ck)
+            if cached:
+                return _hex_bytes_response(cached)
 
     osm_layer_version = "osm_geom_v2"
     # ── Get base score (from cache or compute) ──
@@ -619,14 +660,13 @@ async def get_hex_grid(
 
     if cache_key in _hex_response_cache:
         compressed = _slim_hex_bytes(_hex_response_cache[cache_key])
-        _hex_slim_cache[cache_key] = compressed
+        _register_hex_cache(cache_key, _hex_response_cache[cache_key], compressed)
         return _hex_bytes_response(compressed)
 
     fs_hit = await db.get_hex(cache_key)
     if fs_hit:
-        _hex_response_cache[cache_key] = fs_hit
         compressed = _slim_hex_bytes(fs_hit)
-        _hex_slim_cache[cache_key] = compressed
+        _register_hex_cache(cache_key, fs_hit, compressed)
         return _hex_bytes_response(compressed)
 
     # ── Generate hex grid ──
@@ -716,10 +756,9 @@ async def get_hex_grid(
         if debug_path:
             geojson["metadata"]["debug_log_path"] = debug_path
             print(f"[/hex] Debug snapshot written: {debug_path}")
-    _hex_response_cache[cache_key] = geojson
     await db.set_hex(cache_key, geojson)
     compressed = _slim_hex_bytes(geojson)
-    _hex_slim_cache[cache_key] = compressed
+    _register_hex_cache(cache_key, geojson, compressed)
     return _hex_bytes_response(compressed)
 
 
@@ -743,19 +782,19 @@ async def get_hex_grid_stream(
         debug_hex=debug_hex,
     )
 
-    # Pull the full geojson from cache (the main endpoint caches the dict)
+    # Pull the full geojson from cache using unitid index
     geojson: dict | None = None
-    query_lower = university_name.lower()
-    for key, cached in _hex_response_cache.items():
-        meta = cached.get("metadata", {})
-        cached_name = meta.get("university", "").lower()
-        if cached_name and (query_lower in cached_name or cached_name in query_lower):
-            geojson = cached
-            break
+    uid = _name_to_unitid.get(university_name.lower())
+    if uid:
+        for key in (_unitid_hex_keys.get(uid) or ()):
+            if key in _hex_response_cache:
+                geojson = _hex_response_cache[key]
+                break
 
     if not geojson:
-        yield json.dumps({"type": "error", "message": "Hex data not found"}) + "\n"
-        return
+        async def error_gen():
+            yield json.dumps({"type": "error", "message": "Hex data not found"}) + "\n"
+        return StreamingResponse(error_gen(), media_type="application/x-ndjson")
 
     async def generate():
         features = geojson.get("features", [])
