@@ -7,7 +7,7 @@ import {
   useMap,
   Polygon,
 } from "@vis.gl/react-google-maps";
-import { Crosshair, Globe, Plus, Minus } from "lucide-react";
+import { Crosshair, Globe, Plus, Minus, SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import { HexChoropleth } from "./HexChoropleth";
 import { UNIVERSITIES } from "../lib/universityList";
 import type { UniversitySuggestion } from "../lib/universityList";
@@ -450,6 +450,176 @@ function HexLoadingGrid({ lat, lng }: { lat: number; lng: number }) {
   );
 }
 
+// ── MapFilterPanel ────────────────────────────────────────────────────────────
+
+type ScoreFilter = "all" | "high" | "mid" | "low" | "unscored";
+
+interface MapFilterPanelProps {
+  allStates: string[];
+  filterState: string | null;
+  setFilterState: (s: string | null) => void;
+  filterScore: ScoreFilter;
+  setFilterScore: (s: ScoreFilter) => void;
+  filterType: string | null;
+  setFilterType: (t: string | null) => void;
+  filteredCount: number;
+  totalCount: number;
+}
+
+function MapFilterPanel({
+  allStates,
+  filterState, setFilterState,
+  filterScore, setFilterScore,
+  filterType, setFilterType,
+  filteredCount, totalCount,
+}: MapFilterPanelProps) {
+  const [open, setOpen] = useState(false);
+
+  const activeCount =
+    (filterState ? 1 : 0) +
+    (filterScore !== "all" ? 1 : 0) +
+    (filterType ? 1 : 0);
+
+  const handleClear = () => {
+    setFilterState(null);
+    setFilterScore("all");
+    setFilterType(null);
+  };
+
+  const btnBase =
+    "px-2.5 py-1 rounded-lg text-xs font-medium transition-all border ";
+  const btnActive =
+    "bg-blue-600 border-blue-500 text-white";
+  const btnInactive =
+    "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200";
+
+  return (
+    <div className="flex flex-col gap-2">
+      {/* Toggle button */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={
+          "flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium " +
+          "bg-zinc-950/90 backdrop-blur-sm shadow-lg transition-all " +
+          (open || activeCount > 0
+            ? "border-blue-500/60 text-white"
+            : "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200")
+        }
+      >
+        <SlidersHorizontal className="w-3.5 h-3.5" />
+        <span>Filters</span>
+        {activeCount > 0 && (
+          <span className="bg-blue-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold leading-none">
+            {activeCount}
+          </span>
+        )}
+        <ChevronDown
+          className={"w-3 h-3 ml-0.5 transition-transform " + (open ? "rotate-180" : "")}
+        />
+      </button>
+
+      {/* Filter panel */}
+      {open && (
+        <div className="bg-zinc-950/95 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 shadow-2xl w-56 flex flex-col gap-3">
+          {/* Score filter */}
+          <div>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mb-1.5">
+              Opportunity Score
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {(
+                [
+                  ["all", "All"],
+                  ["high", "High 70+"],
+                  ["mid", "Mid 40–69"],
+                  ["low", "Low <40"],
+                  ["unscored", "Unscored"],
+                ] as [ScoreFilter, string][]
+              ).map(([val, label]) => (
+                <button
+                  key={val}
+                  onClick={() => setFilterScore(val)}
+                  className={btnBase + (filterScore === val ? btnActive : btnInactive)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* School type filter */}
+          <div>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mb-1.5">
+              School Type
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {[
+                [null, "All"],
+                ["Power", "Power 4"],
+                ["Mid-Major", "Mid-Major"],
+              ].map(([val, label]) => (
+                <button
+                  key={String(val)}
+                  onClick={() => setFilterType(val as string | null)}
+                  className={btnBase + (filterType === val ? btnActive : btnInactive)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* State filter */}
+          <div>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold mb-1.5">
+              State
+            </p>
+            <div className="relative">
+              <select
+                value={filterState ?? ""}
+                onChange={(e) => setFilterState(e.target.value || null)}
+                className={
+                  "w-full appearance-none bg-zinc-800 border rounded-lg px-2.5 py-1.5 " +
+                  "text-xs pr-7 cursor-pointer transition-colors " +
+                  (filterState
+                    ? "border-blue-500 text-white"
+                    : "border-zinc-700 text-zinc-400 hover:border-zinc-500")
+                }
+              >
+                <option value="">All States</option>
+                {allStates.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-1 border-t border-zinc-800">
+            <span className="text-[10px] text-zinc-500">
+              {filteredCount === totalCount
+                ? `${totalCount} universities`
+                : `${filteredCount} of ${totalCount} shown`}
+            </span>
+            {activeCount > 0 && (
+              <button
+                onClick={handleClear}
+                className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-white transition-colors"
+              >
+                <X className="w-2.5 h-2.5" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── MapView ───────────────────────────────────────────────────────────────────
 
 interface MapViewProps {
@@ -488,6 +658,40 @@ export function MapView({
   const [forceNational, setForceNational] = useState(false);
   const [localZoom, setLocalZoom] = useState(14);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Filter state ────────────────────────────────────────────────────────────
+  const [filterState, setFilterState] = useState<string | null>(null);
+  const [filterScore, setFilterScore] = useState<ScoreFilter>("all");
+  const [filterType, setFilterType] = useState<string | null>(null);
+
+  // Sorted unique states across all universities
+  const allStates = useMemo(
+    () => [...new Set(allUniversities.map((u) => u.state))].sort(),
+    [allUniversities]
+  );
+
+  // Apply filters
+  const filteredUniversities = useMemo(() => {
+    return allUniversities.filter((uni) => {
+      // State filter
+      if (filterState && uni.state !== filterState) return false;
+      // School type filter
+      if (filterType && (uni.school_type ?? "Mid-Major") !== filterType) return false;
+      // Score filter — always show the selected school regardless
+      if (filterScore !== "all" && uni.name !== selectedName) {
+        const computed = scoreCache[uni.name];
+        if (filterScore === "unscored") {
+          if (computed) return false;
+        } else {
+          if (!computed) return false;
+          if (filterScore === "high" && computed.score < 70) return false;
+          if (filterScore === "mid" && (computed.score < 40 || computed.score >= 70)) return false;
+          if (filterScore === "low" && computed.score >= 40) return false;
+        }
+      }
+      return true;
+    });
+  }, [allUniversities, filterState, filterScore, filterType, scoreCache, selectedName]);
 
   const handleZoomUpdate = useCallback((z: number) => {
     setLocalZoom(z);
@@ -537,7 +741,7 @@ export function MapView({
           <HexChoropleth hexData={activeHexData} maxDistanceMiles={hexRadiusMiles} onViewAllParcels={onViewAllParcels} />
         )}
 
-        {allUniversities.map((uni, i) => {
+        {filteredUniversities.map((uni, i) => {
           const computed = scoreCache[uni.name];
           const isSelected = selectedName === uni.name;
           const isHovered = hoveredName === uni.name;
@@ -613,27 +817,40 @@ export function MapView({
         })}
       </Map>
 
-      {/* Radius slider */}
-      {activeHexData && (
-        <div className="absolute top-4 left-4 bg-zinc-950/90 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 shadow-lg z-10">
-          <label className="text-xs text-zinc-400 font-medium block mb-1.5">
-            Radius: <span className="text-white">{hexRadiusMiles.toFixed(1)} mi</span>
-          </label>
-          <input
-            type="range"
-            min={0.5}
-            max={5.0}
-            step={0.1}
-            value={hexRadiusMiles}
-            onChange={(e) => onHexRadiusChange(parseFloat(e.target.value))}
-            className="w-36 h-1.5 accent-blue-500 cursor-pointer"
-          />
-          <div className="flex justify-between text-[10px] text-zinc-600 mt-0.5">
-            <span>0.5 mi</span>
-            <span>5.0 mi</span>
+      {/* Top-left: filters + radius slider stacked */}
+      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+        <MapFilterPanel
+          allStates={allStates}
+          filterState={filterState}
+          setFilterState={setFilterState}
+          filterScore={filterScore}
+          setFilterScore={setFilterScore}
+          filterType={filterType}
+          setFilterType={setFilterType}
+          filteredCount={filteredUniversities.length}
+          totalCount={allUniversities.length}
+        />
+        {activeHexData && (
+          <div className="bg-zinc-950/90 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 shadow-lg">
+            <label className="text-xs text-zinc-400 font-medium block mb-1.5">
+              Radius: <span className="text-white">{hexRadiusMiles.toFixed(1)} mi</span>
+            </label>
+            <input
+              type="range"
+              min={0.5}
+              max={5.0}
+              step={0.1}
+              value={hexRadiusMiles}
+              onChange={(e) => onHexRadiusChange(parseFloat(e.target.value))}
+              className="w-36 h-1.5 accent-blue-500 cursor-pointer"
+            />
+            <div className="flex justify-between text-[10px] text-zinc-600 mt-0.5">
+              <span>0.5 mi</span>
+              <span>5.0 mi</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Legend */}
       <div className="absolute bottom-6 left-6 bg-zinc-950/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 text-xs pointer-events-none">
@@ -659,7 +876,14 @@ export function MapView({
           </div>
         ) : (
           <p className="text-zinc-500">
-            <span className="text-zinc-300 font-medium">{allUniversities.length} universities</span>
+            <span className="text-zinc-300 font-medium">
+              {filteredUniversities.length === allUniversities.length
+                ? `${allUniversities.length} universities`
+                : `${filteredUniversities.length} of ${allUniversities.length} universities`}
+            </span>
+            {filteredUniversities.length !== allUniversities.length && (
+              <span className="ml-1 text-blue-400">(filtered)</span>
+            )}
           </p>
         )}
       </div>
