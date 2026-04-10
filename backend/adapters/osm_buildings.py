@@ -16,6 +16,7 @@ Mirror:    https://overpass-api.de/api/interpreter
 
 from __future__ import annotations
 
+import asyncio
 import math
 from collections import Counter
 
@@ -27,6 +28,27 @@ _ENDPOINTS = (
     "https://overpass.kumi.systems/api/interpreter",
     "https://overpass-api.de/api/interpreter",
 )
+
+# Limit concurrent Overpass requests to avoid overwhelming kumi.systems
+# (7 simultaneous requests trigger rate limiting → slow fallbacks)
+_OVERPASS_SEMAPHORE = asyncio.Semaphore(3)
+
+
+async def _overpass_query(query: str, label: str = "OSM") -> dict | None:
+    """Execute an Overpass query with concurrency limiting and endpoint fallback."""
+    async with _OVERPASS_SEMAPHORE:
+        async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
+            for endpoint in _ENDPOINTS:
+                try:
+                    resp = await client.post(endpoint, data={"data": query})
+                    if resp.status_code != 200:
+                        print(f"[{label}] {endpoint} → HTTP {resp.status_code}")
+                        continue
+                    return resp.json()
+                except (httpx.HTTPError, ValueError) as exc:
+                    print(f"[{label}] {endpoint} failed: {exc}")
+                    continue
+    return None
 
 # In-memory cache: (round(lat,4), round(lon,4), radius_mi) -> ExistingHousingStock
 _CACHE: dict[tuple[float, float, float], ExistingHousingStock] = {}
@@ -281,19 +303,7 @@ async def fetch_buildings(
     radius_m = int(radius_miles * 1609.34)
     query = _build_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-buildings] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-buildings] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-buildings")
 
     if payload is None:
         return None
@@ -351,19 +361,7 @@ async def fetch_campus_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_campus_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-campus] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-campus] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-campus")
 
     if payload is None:
         _CAMPUS_CACHE[cache_key] = []
@@ -398,19 +396,7 @@ async def fetch_residential_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_residential_marker_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-residential] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-residential] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-residential")
 
     if payload is None:
         _RESIDENTIAL_MARKER_CACHE[cache_key] = []
@@ -486,19 +472,7 @@ async def fetch_non_buildable_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_non_buildable_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-nonbuildable] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-nonbuildable] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-nonbuildable")
 
     if payload is None:
         _NON_BUILDABLE_CACHE[cache_key] = []
@@ -567,19 +541,7 @@ async def fetch_development_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_development_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-development] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-development] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-development")
 
     if payload is None:
         _DEVELOPMENT_CACHE[cache_key] = []
@@ -613,19 +575,7 @@ async def fetch_commercial_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_commercial_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-commercial] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-commercial] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-commercial")
 
     if payload is None:
         _COMMERCIAL_CACHE[cache_key] = []
@@ -653,19 +603,7 @@ async def fetch_parking_markers(
     radius_m = int(radius_miles * 1609.34)
     query = _build_parking_query(lat, lon, radius_m)
 
-    payload = None
-    async with httpx.AsyncClient(timeout=25.0, follow_redirects=True) as client:
-        for endpoint in _ENDPOINTS:
-            try:
-                resp = await client.post(endpoint, data={"data": query})
-                if resp.status_code != 200:
-                    print(f"[OSM-parking] {endpoint} → HTTP {resp.status_code}")
-                    continue
-                payload = resp.json()
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                print(f"[OSM-parking] {endpoint} failed: {exc}")
-                continue
+    payload = await _overpass_query(query, "OSM-parking")
 
     if payload is None:
         _PARKING_CACHE[cache_key] = []

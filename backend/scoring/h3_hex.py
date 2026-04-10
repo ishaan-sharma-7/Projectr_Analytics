@@ -117,6 +117,23 @@ def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return R * 2 * math.asin(math.sqrt(a))
 
 
+# Precomputed constant: degrees to km at equator
+_DEG_TO_KM = 111.32
+
+
+def _fast_distance_km(
+    lat1: float, lng1: float, lat2: float, lng2: float, cos_lat: float
+) -> float:
+    """Fast equirectangular distance approximation in km.
+
+    ~99.9% accurate for distances < 10 km. Avoids all trig calls in the
+    hot coverage loop — uses a single precomputed cos(lat) per hex.
+    """
+    dy = lat2 - lat1
+    dx = (lng2 - lng1) * cos_lat
+    return _DEG_TO_KM * math.sqrt(dx * dx + dy * dy)
+
+
 def _point_in_polygon(lat: float, lng: float, polygon_latlng: list[tuple[float, float]]) -> bool:
     """Ray-casting point-in-polygon test for (lat, lng)."""
     if len(polygon_latlng) < 3:
@@ -167,19 +184,26 @@ def _marker_coverage_ratio(
     samples: list[tuple[float, float]],
     candidate_markers: list[tuple[float, float]],
     radius_km: float,
+    cos_lat: float = 0.0,
 ) -> float:
-    """Estimate category coverage as sample-hit ratio within marker radius."""
+    """Estimate category coverage as sample-hit ratio within marker radius.
+
+    Uses fast equirectangular distance (no trig per call) with a bounding-box
+    pre-filter to skip obviously distant markers.
+    """
     if not samples or not candidate_markers:
         return 0.0
+    # Bounding-box pre-filter threshold in degrees (~radius in lat/lng)
+    deg_thresh = radius_km / _DEG_TO_KM * 1.2  # 20% margin
     hit_count = 0
     for slat, slng in samples:
-        covered = False
         for mlat, mlng in candidate_markers:
-            if _haversine_km(slat, slng, mlat, mlng) <= radius_km:
-                covered = True
+            # Cheap bounding-box reject before distance calc
+            if abs(mlat - slat) > deg_thresh or abs(mlng - slng) > deg_thresh:
+                continue
+            if _fast_distance_km(slat, slng, mlat, mlng, cos_lat) <= radius_km:
+                hit_count += 1
                 break
-        if covered:
-            hit_count += 1
     return hit_count / len(samples)
 
 
@@ -817,53 +841,55 @@ def compute_hex_features(
             + floodplain_marker_count
         )
 
-        samples = _sample_points_in_polygon(polygon_latlng, sample_side=9)
+        samples = _sample_points_in_polygon(polygon_latlng, sample_side=5)
         sample_count = len(samples)
         coverage_radius_km = max(0.085, _avg_hex_edge_km(resolution) * 0.45)
+        # Precompute cos(latitude) once per hex for fast distance approximation
+        _cos_lat = math.cos(math.radians(c_lat))
 
         coverage_raw = {
             "water": _marker_coverage_ratio(
                 samples,
                 _neighbor_bucket_points(water_bucket, hex_id, rings=2)
                 + _neighbor_bucket_points(national_water_bucket, hex_id, rings=2),
-                coverage_radius_km,
+                coverage_radius_km, _cos_lat,
             ),
             "wetland": _marker_coverage_ratio(
                 samples,
                 _neighbor_bucket_points(wetland_bucket, hex_id, rings=2)
                 + _neighbor_bucket_points(national_wetland_bucket, hex_id, rings=2),
-                coverage_radius_km,
+                coverage_radius_km, _cos_lat,
             ),
             "campus": _marker_coverage_ratio(
                 samples,
                 _neighbor_bucket_points(campus_bucket, hex_id, rings=1),
-                coverage_radius_km,
+                coverage_radius_km, _cos_lat,
             ),
             "residential_built": _marker_coverage_ratio(
                 samples,
                 _neighbor_bucket_points(residential_bucket, hex_id, rings=1),
-                coverage_radius_km,
+                coverage_radius_km, _cos_lat,
             ),
             "commercial_built": _marker_coverage_ratio(
                 samples,
                 _neighbor_bucket_points(commercial_bucket, hex_id, rings=1),
-                coverage_radius_km,
+                coverage_radius_km, _cos_lat,
             ),
             "parking_infrastructure": _marker_coverage_ratio(
                 samples,
                 _neighbor_bucket_points(parking_bucket, hex_id, rings=1)
                 + _neighbor_bucket_points(infrastructure_bucket, hex_id, rings=1),
-                coverage_radius_km,
+                coverage_radius_km, _cos_lat,
             ),
             "open_recreation": _marker_coverage_ratio(
                 samples,
                 _neighbor_bucket_points(open_recreation_bucket, hex_id, rings=2),
-                coverage_radius_km,
+                coverage_radius_km, _cos_lat,
             ),
             "natural_land": _marker_coverage_ratio(
                 samples,
                 _neighbor_bucket_points(natural_land_bucket, hex_id, rings=2),
-                coverage_radius_km,
+                coverage_radius_km, _cos_lat,
             ),
         }
         coverage_pct = {k: round(max(0.0, min(1.0, v)), 3) for k, v in coverage_raw.items()}
