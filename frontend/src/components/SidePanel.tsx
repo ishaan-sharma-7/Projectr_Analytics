@@ -404,27 +404,18 @@ export function SidePanel({
   return (
     <aside className="w-[440px] border-l border-zinc-800 bg-zinc-950 flex flex-col relative z-20 shadow-2xl overflow-hidden">
 
-      {/* Land parcel detail overlay — slides in when user clicks "view all" */}
-      {activeLandParcels && (
-        <LandParcelDetailPanel
-          parcels={activeLandParcels.parcels}
-          label={activeLandParcels.label}
-          onDismiss={() => onDismissLandParcels?.()}
-        />
-      )}
-
       {/* Tab Header */}
       {selectedName && (
-        <div className="flex bg-zinc-900 border-b border-zinc-800 p-2 gap-2 z-30 shrink-0">
-          <button 
-            onClick={() => setActiveTab("data")}
-            className={`flex-1 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${activeTab === "data" ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
+        <div className="flex bg-zinc-900 border-b border-zinc-800 p-2 gap-2 shrink-0" style={{ position: "relative", zIndex: 40 }}>
+          <button
+            onClick={() => { setActiveTab("data"); onDismissLandParcels?.(); }}
+            className={`flex-1 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${activeTab === "data" && !activeLandParcels ? "bg-zinc-700 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
           >
             Data Report
           </button>
-          <button 
-            onClick={() => setActiveTab("chat")}
-            className={`flex-1 flex justify-center items-center gap-2 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${activeTab === "chat" ? "bg-blue-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
+          <button
+            onClick={() => { setActiveTab("chat"); onDismissLandParcels?.(); }}
+            className={`flex-1 flex justify-center items-center gap-2 py-1.5 px-3 rounded-lg text-sm font-medium transition-colors ${activeTab === "chat" && !activeLandParcels ? "bg-blue-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50"}`}
           >
             AI Assistant
           </button>
@@ -467,6 +458,15 @@ export function SidePanel({
 
       {/* Content panels */}
       <div className="flex-1 overflow-hidden relative flex flex-col">
+        {/* Land parcel detail — overlays content area only (tabs remain visible/clickable) */}
+        {activeLandParcels && (
+          <LandParcelDetailPanel
+            parcels={activeLandParcels.parcels}
+            label={activeLandParcels.label}
+            onDismiss={() => onDismissLandParcels?.()}
+          />
+        )}
+
         {/* Empty — nothing selected */}
         <div
           className={`absolute inset-0 flex flex-col transition-opacity duration-300 ${
