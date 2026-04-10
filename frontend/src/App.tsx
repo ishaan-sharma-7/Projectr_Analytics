@@ -624,6 +624,10 @@ function App() {
   };
 
   const handleHoverPrefetch = (name: string) => {
+    // Only prefetch hexes if the university already has a completed report.
+    // Without this guard, hovering any pin on the national map triggers
+    // hex loading and shows a spurious loading indicator.
+    if (!scoreCache[name]) return;
     const debugHex = isVirginiaTechName(name);
     const key = hexCacheKey(name, HEX_RESOLUTION, debugHex, MAX_HEX_RADIUS_MILES);
     if (!hexCache[key]) {
