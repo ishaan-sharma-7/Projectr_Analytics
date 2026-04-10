@@ -857,29 +857,32 @@ export function MapView({
       </div>
 
       {/* Legend */}
-      <div className="absolute bottom-6 left-6 bg-zinc-950/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-3 text-xs pointer-events-none">
+      <div className="absolute bottom-6 left-6 bg-zinc-950/80 backdrop-blur-sm border border-zinc-800 rounded-xl px-3 py-2 pointer-events-none">
         {activeHexData ? (
-          <div className="flex gap-4 flex-wrap">
+          <div className="grid grid-cols-5 gap-x-3 gap-y-1">
             {[
-              ["Strong Opportunity", "#22c55e"],
-              ["Emerging", "#f59e0b"],
-              ["Saturated", "#ef4444"],
-              ["Already Developed", "#a855f7"],
-              ["On-campus constrained", "#6b7280"],
-              ["Hard non-buildable", "#64748b"],
+              ["Prime", "#22c55e"],
+              ["Opportunity", "#84cc16"],
+              ["Emerging", "#14b8a6"],
+              ["Open land", "#60a5fa"],
+              ["Developed", "#a855f7"],
+              ["Campus", "#6b7280"],
+              ["Protected", "#64748b"],
+              ["Constrained", "#78716c"],
+              ["Zoning blocked", "#b45309"],
             ].map(([label, color]) => (
-              <div key={label} className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-                <span className="text-zinc-400">{label}</span>
+              <div key={label} className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />
+                <span className="text-[10px] text-zinc-400 whitespace-nowrap">{label}</span>
               </div>
             ))}
-            <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-sm border-2" style={{ borderColor: "#d97706", background: "transparent" }} />
-              <span className="text-zinc-400">Land available</span>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-sm border shrink-0" style={{ borderColor: "#d97706", background: "transparent" }} />
+              <span className="text-[10px] text-zinc-400 whitespace-nowrap">Land avail.</span>
             </div>
           </div>
         ) : (
-          <p className="text-zinc-500">
+          <p className="text-xs text-zinc-500">
             <span className="text-zinc-300 font-medium">
               {filteredUniversities.length === allUniversities.length
                 ? `${allUniversities.length} universities`
