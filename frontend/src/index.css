@@ -12,12 +12,3 @@
   }
 }
 
-@keyframes hexBounce {
-  0%, 100% { transform: translateY(0px); opacity: 0.55; }
-  50%       { transform: translateY(-4px); opacity: 0.85; }
-}
-
-@keyframes hexFadeIn {
-  from { opacity: 0; transform: scale(0.85); }
-  to   { opacity: 1; transform: scale(1); }
-}

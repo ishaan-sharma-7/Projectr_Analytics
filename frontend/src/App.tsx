@@ -683,7 +683,7 @@ function App() {
                 onViewReport={handleViewReport}
                 onSelectNearest={handleSelectUniversity}
                 extraUniversities={Object.values(dynamicUnis)}
-                hexLoadingName={selectedName && hexLoadingNames.has(selectedName) ? selectedName : null}
+                hexLoadingName={hexLoadingNames.size > 0 ? [...hexLoadingNames][0] : null}
                 hexJustLoaded={hexJustLoaded}
               />
             )}

@@ -368,64 +368,6 @@ function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void })
 
 // ── MapView ───────────────────────────────────────────────────────────────────
 
-// ── HexLoadingOverlay ─────────────────────────────────────────────────────────
-
-// Pointy-top hexagon polygon points for r=15
-const HEX_PTS = "13,7.5 0,15 -13,7.5 -13,-7.5 0,-15 13,-7.5";
-
-// 7-hex honeycomb: center + 6 surrounding (dx=26, dy=22.5)
-const HEX_POSITIONS: [number, number][] = [
-  [0,    0  ],
-  [26,   0  ],
-  [13,   22.5],
-  [-13,  22.5],
-  [-26,  0  ],
-  [-13, -22.5],
-  [13,  -22.5],
-];
-
-function HexLoadingOverlay({ name }: { name: string }) {
-  return (
-    <div
-      className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
-      style={{ animation: "hexFadeIn 0.3s ease-out forwards" }}
-    >
-      <div className="flex flex-col items-center gap-5">
-        {/* Bouncing honeycomb */}
-        <svg
-          width="100"
-          height="88"
-          viewBox="-42 -34 84 68"
-          style={{ overflow: "visible" }}
-        >
-          {HEX_POSITIONS.map(([cx, cy], i) => (
-            <polygon
-              key={i}
-              points={HEX_PTS}
-              transform={`translate(${cx},${cy})`}
-              fill="rgba(59,130,246,0.25)"
-              stroke="rgba(96,165,250,0.7)"
-              strokeWidth="1.5"
-              style={{
-                animation: `hexBounce 1.1s ease-in-out infinite`,
-                animationDelay: `${i * 110}ms`,
-              }}
-            />
-          ))}
-        </svg>
-
-        {/* Label */}
-        <div className="bg-zinc-950/85 backdrop-blur-md border border-zinc-700/60 rounded-2xl px-4 py-2.5 text-center shadow-2xl">
-          <p className="text-[11px] text-blue-400 font-semibold uppercase tracking-widest mb-0.5">
-            Building hex grid
-          </p>
-          <p className="text-xs text-zinc-300 max-w-[180px] truncate">{name}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 interface MapViewProps {
   selectedName: string | null;
   selectedCoords?: { lat: number; lng: number } | null;
@@ -575,9 +517,28 @@ export function MapView({
         })}
       </Map>
 
-      {/* Hex loading overlay — floats above the map */}
+      {/* Hex loading indicator — small pulsing hex in top-right */}
       {isHexLoading && selectedName && (
-        <HexLoadingOverlay name={selectedName} />
+        <div className="absolute top-4 right-4 z-10 group">
+          <svg
+            width="28" height="28"
+            viewBox="-14 -14 28 28"
+            className="animate-pulse cursor-default"
+            style={{ filter: "drop-shadow(0 0 5px rgba(59,130,246,0.7))" }}
+          >
+            <polygon
+              points="10.5,6 0,12 -10.5,6 -10.5,-6 0,-12 10.5,-6"
+              fill="rgba(59,130,246,0.35)"
+              stroke="rgba(96,165,250,0.9)"
+              strokeWidth="1.5"
+            />
+          </svg>
+          {/* Hover tooltip */}
+          <div className="absolute right-full top-1/2 -translate-y-1/2 mr-2 bg-zinc-900/95 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
+            Hex grid loading for{" "}
+            <span className="text-white font-medium">{selectedName}</span>
+          </div>
+        </div>
       )}
 
       {/* Radius slider */}
