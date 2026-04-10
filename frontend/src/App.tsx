@@ -686,6 +686,12 @@ function App() {
   /** "Recompute" button in ScorePanel */
   const handleRecompute = () => {
     if (!selectedName) return;
+    // Clear the old score so the sidebar cleanly transitions to the agent log
+    setScoreCache((prev) => {
+      const next = { ...prev };
+      delete next[selectedName];
+      return next;
+    });
     enqueueReport(selectedName, true);
   };
 

@@ -11,6 +11,7 @@ import {
 import { EmptyState } from "./panels/EmptyState";
 import { PreviewPanel } from "./panels/PreviewPanel";
 import { ScorePanel } from "./panels/ScorePanel";
+import { AgentLogPanel } from "./panels/AgentLogPanel";
 import { ChatbotWidget } from "./ui/ChatbotWidget";
 import type { HousingPressureScore } from "../lib/api";
 import type { HexFeatureProperties } from "../lib/hexApi";
@@ -531,6 +532,11 @@ export function SidePanel({
   const showPreview = !!selectedName && !activeScore;
   const showScore = !!activeScore;
 
+  const isCurrentSchoolGenerating =
+    !!activeJob &&
+    activeJob.status === "running" &&
+    (activeJob.name === selectedName || activeJob.resolvedName === selectedName);
+
   return (
     <aside
       className="w-[440px] flex flex-col relative z-20 overflow-hidden"
@@ -598,14 +604,16 @@ export function SidePanel({
       <div
         className={`transition-opacity duration-300 ${activeTab === "data" || !selectedName ? "opacity-100" : "opacity-0 pointer-events-none absolute"}`}
       >
-        {/* Report bar — hex loading row included inline when a report is also running */}
-        <QueueStatusBar
-          activeJob={activeJob}
-          queuedJobs={queuedJobs}
-          hexLoadingName={hexLoadingName}
-        />
+        {/* Report bar — only when generating for a DIFFERENT school */}
+        {!isCurrentSchoolGenerating && (
+          <QueueStatusBar
+            activeJob={activeJob}
+            queuedJobs={queuedJobs}
+            hexLoadingName={hexLoadingName}
+          />
+        )}
 
-        {/* Standalone hex bars — only when no report bar is visible */}
+        {/* Standalone hex bars — always shown as a compact top bar */}
         {!activeJob && queuedJobs.length === 0 && hexLoadingName && (
           <HexLoadingBar name={hexLoadingName} />
         )}
@@ -656,6 +664,17 @@ export function SidePanel({
           />
         )}
 
+        {/* Full-sidebar agent log — report generating for current school */}
+        <div
+          className={`absolute inset-0 flex flex-col transition-opacity duration-300 ${
+            activeTab === "data" && isCurrentSchoolGenerating
+              ? "opacity-100 z-20"
+              : "opacity-0 pointer-events-none"
+          }`}
+        >
+          {activeJob && <AgentLogPanel logs={activeJob.logs} />}
+        </div>
+
         {/* Empty — nothing selected */}
         <div
           className={`absolute inset-0 flex flex-col transition-opacity duration-300 ${
@@ -673,7 +692,9 @@ export function SidePanel({
         {/* Preview — university selected but not yet computed */}
         <div
           className={`absolute inset-0 transition-opacity duration-300 ${
-            (activeTab === "data" || !selectedName) && showPreview
+            (activeTab === "data" || !selectedName) &&
+            showPreview &&
+            !isCurrentSchoolGenerating
               ? "opacity-100"
               : "opacity-0 pointer-events-none"
           }`}
