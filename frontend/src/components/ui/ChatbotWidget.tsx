@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, Loader2, Hexagon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import type { HousingPressureScore } from "../../lib/api";
@@ -57,7 +57,7 @@ export function ChatbotWidget({
     currentHistory: ChatMessage[],
   ): Promise<{ text: string; newlyScored: HousingPressureScore | null }> => {
     try {
-      const baseUrl = "http://localhost:8000";
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
       const payload = {
         messages: currentHistory,
         selectedName: selectedName || null,

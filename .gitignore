@@ -39,3 +39,6 @@ data/
 
 # Backend cache (now in Firestore)
 backend/cache/
+
+# Vercel
+.vercel/

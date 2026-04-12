@@ -25,3 +25,6 @@ dist-ssr
 
 # UI Inspo
 ui_design_inspo*
+
+# Vercel
+.vercel

@@ -188,7 +188,6 @@ const KNOWN: Record<string, string> = {
   "united states naval academy": "USNA",
   "university at buffalo": "UB",
   "virginia commonwealth university": "VCU",
-  "wake forest university": "WFU",
   "william & mary": "W&M",
   "college of william and mary": "W&M",
   "college of william & mary": "W&M",

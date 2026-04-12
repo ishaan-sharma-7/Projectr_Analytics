@@ -1,4 +1,4 @@
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { UNIVERSITIES } from "../../lib/universityList";
 import type { UniversitySuggestion } from "../../lib/universityList";
 import LocationButton from "../LocationButton";

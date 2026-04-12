@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Download, ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import type { HousingPressureScore } from "../../lib/api";
 import {
   exportToPDF,

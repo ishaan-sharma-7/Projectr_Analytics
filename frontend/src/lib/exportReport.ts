@@ -241,7 +241,6 @@ export async function exportToPDF(score: HousingPressureScore): Promise<void> {
     margin: { left: margin, right: margin },
   });
 
-  // @ts-expect-error jspdf-autotable adds lastAutoTable
   y = (doc as any).lastAutoTable.finalY + 16;
 
   // ── Institutional Strength ──
@@ -294,7 +293,6 @@ export async function exportToPDF(score: HousingPressureScore): Promise<void> {
       alternateRowStyles: { fillColor: [248, 248, 252] },
       margin: { left: margin, right: margin },
     });
-    // @ts-expect-error
     y = (doc as any).lastAutoTable.finalY + 16;
   }
 
@@ -323,7 +321,6 @@ export async function exportToPDF(score: HousingPressureScore): Promise<void> {
       alternateRowStyles: { fillColor: [248, 248, 252] },
       margin: { left: margin, right: margin },
     });
-    // @ts-expect-error
     y = (doc as any).lastAutoTable.finalY + 16;
   }
 
@@ -354,7 +351,6 @@ export async function exportToPDF(score: HousingPressureScore): Promise<void> {
       alternateRowStyles: { fillColor: [248, 248, 252] },
       margin: { left: margin, right: margin },
     });
-    // @ts-expect-error
     y = (doc as any).lastAutoTable.finalY + 16;
   }
 
@@ -373,7 +369,6 @@ export async function exportToPDF(score: HousingPressureScore): Promise<void> {
       margin: { left: margin, right: margin },
       tableWidth: contentW / 2,
     });
-    // @ts-expect-error
     y = (doc as any).lastAutoTable.finalY + 16;
   }
 
@@ -392,7 +387,6 @@ export async function exportToPDF(score: HousingPressureScore): Promise<void> {
       margin: { left: margin, right: margin },
       tableWidth: contentW / 2,
     });
-    // @ts-expect-error
     y = (doc as any).lastAutoTable.finalY + 16;
   }
 
@@ -411,7 +405,6 @@ export async function exportToPDF(score: HousingPressureScore): Promise<void> {
       margin: { left: margin, right: margin },
       tableWidth: contentW / 2,
     });
-    // @ts-expect-error
     y = (doc as any).lastAutoTable.finalY + 16;
   }
 
@@ -459,16 +452,6 @@ export async function exportToDocx(score: HousingPressureScore): Promise<void> {
       text,
       heading: level,
       spacing: { before: 240, after: 120 },
-    });
-  }
-
-  function kv(key: string, value: string) {
-    return new Paragraph({
-      spacing: { after: 60 },
-      children: [
-        new TextRun({ text: `${key}: `, bold: true, size: 20 }),
-        new TextRun({ text: value, size: 20 }),
-      ],
     });
   }
 
@@ -539,7 +522,7 @@ export async function exportToDocx(score: HousingPressureScore): Promise<void> {
   const ord = score.occupancy_ordinance;
   const dem = score.demographics;
 
-  const children: (Paragraph | Table)[] = [
+  const children: (InstanceType<typeof Paragraph> | InstanceType<typeof Table>)[] = [
     // Title
     new Paragraph({
       children: [new TextRun({ text: uni.name, bold: true, size: 36 })],
@@ -1053,7 +1036,6 @@ export async function exportComparisonToPDF(
     margin: { left: margin, right: margin },
   });
 
-  // @ts-expect-error jspdf-autotable adds lastAutoTable
   y = (doc as any).lastAutoTable.finalY + 16;
 
   // ── Key metrics comparison ──

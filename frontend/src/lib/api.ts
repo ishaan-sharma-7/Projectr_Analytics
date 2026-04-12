@@ -138,7 +138,7 @@ export interface UniversityListItem {
   score_label: "high" | "medium" | "low" | "none";
 }
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export async function fetchUniversities(): Promise<UniversityListItem[]> {
   const res = await fetch(`${API_BASE}/universities`);

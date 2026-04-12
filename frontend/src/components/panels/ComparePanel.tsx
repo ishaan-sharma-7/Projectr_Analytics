@@ -3,7 +3,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { Download, ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import { ScoreGauge } from "../ui/ScoreGauge";
 import { generateCompareInsight } from "../../lib/compareInsight";
 import type { HousingPressureScore } from "../../lib/api";
